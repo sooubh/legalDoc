@@ -95,6 +95,12 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     { id: 'citations', label: translations[language].citations }
   ];
 
+  const levelLabelMap: Record<SimplificationLevel, string> = {
+    professional: 'Professional',
+    simple: 'Simple',
+    eli5: 'ELI5',
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -102,7 +108,10 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
         <div className="flex items-center space-x-3">
           <FileText className="h-6 w-6 text-blue-600" />
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{analysis.documentType}</h2>
+            <div className="flex items-center space-x-3">
+              <h2 className="text-2xl font-bold text-gray-900">{analysis.documentType}</h2>
+              <span className="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200">{levelLabelMap[simplificationLevel]}</span>
+            </div>
             <p className="text-gray-600">{translations[language].documentType}</p>
           </div>
         </div>
@@ -116,7 +125,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       </div>
 
       {/* Navigation */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+      <div className="bg-white/80 backdrop-blur rounded-lg shadow border border-gray-200 p-2">
         <nav className="flex space-x-1">
           {sections.map((section) => (
             <button
@@ -125,7 +134,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
                 activeSection === section.id
                   ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               {section.label}
@@ -135,7 +144,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       </div>
 
       {/* Content */}
-      <div className="bg-white rounded-2xl shadow-lg">
+      <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200">
         {activeSection === 'summary' && (
           <div className="p-8">
             <h3 className="text-xl font-bold text-gray-900 mb-4">
