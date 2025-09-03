@@ -5,7 +5,7 @@ import { Upload, Loader2, Send, CheckCircle2, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface DocumentInputProps {
-  onSubmit: (content: string) => void;
+  onSubmit: (content: string, fileMeta?: { pdfUrl?: string; mime?: string }) => void;
   isAnalyzing: boolean;
   language: 'en' | 'hi';
 }
@@ -18,6 +18,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
   const [uploadedFileName, setUploadedFileName] = useState<string>('');
   const [uploadedFileType, setUploadedFileType] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const translations = {
     en: {
@@ -74,6 +75,10 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
     setUploadProgress(10);
 
     if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf') {
+      try {
+        const url = URL.createObjectURL(file);
+        setPdfUrl(url);
+      } catch {}
       extractTextFromPdf(file, (percent) => setUploadProgress(Math.min(99, Math.max(10, Math.floor(percent)))))
         .then((text) => {
           setDocumentText(text);
@@ -84,6 +89,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
           setUploadProgress(0);
           setIsUploading(false);
           setDocumentText('');
+          setPdfUrl(null);
           // eslint-disable-next-line no-alert
           alert('Could not extract text from PDF. Please try another file.');
         });
@@ -108,6 +114,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
       setUploadProgress(0);
       setIsUploading(false);
       setDocumentText('');
+      setPdfUrl(null);
       // eslint-disable-next-line no-alert
       alert('Could not read the selected file. Please try another file or paste text.');
     };
@@ -120,13 +127,14 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
 
   const handleSubmit = () => {
     if (documentText.trim()) {
-      onSubmit(documentText);
+      onSubmit(documentText, { pdfUrl: pdfUrl || undefined, mime: uploadedFileType });
     }
   };
 
   const loadSample = () => {
     // Keep button behavior minimal or remove in future if not needed
     setDocumentText('');
+    setPdfUrl(null);
   };
 
   // PDF text extraction using pdf.js

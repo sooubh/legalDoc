@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { DocumentAnalysis, SimplificationLevel } from '../types/legal';
+import type { ChatRequest, ChatMessage } from '../types/chat';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
@@ -146,4 +147,55 @@ function mapToDocumentAnalysis(data: any): DocumentAnalysis {
   return analysis;
 }
 
+export async function chatWithGemini(req: ChatRequest): Promise<ChatMessage> {
+  if (!genAI) {
+    throw new Error('Missing Gemini API key. Set VITE_GEMINI_API_KEY in your environment.');
+  }
+
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
+  const systemPreamble = [
+    'You are LegalEase AI, a helpful legal assistant that answers questions strictly based on the provided document content and the ongoing conversation history.',
+    'Behavior rules:',
+    '- Use the uploaded document as the ground truth. If the answer is not in the document, say you are unsure and suggest what to look for.',
+    '- Keep answers concise and clear. Use bullet points when helpful.',
+    '- Respect the selected language for your responses.',
+    '- Maintain context and refer back to earlier messages naturally.',
+  ].join('\n');
+
+  // Build a single message with document and a compacted history to reduce token use
+  const historyText = req.history
+    .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+    .join('\n');
+
+  const userPrompt = [
+    systemPreamble,
+    '',
+    `Language: ${req.language === 'hi' ? 'Hindi' : 'English'}`,
+    '',
+    'Document Context (verbatim):',
+    '---',
+    req.document,
+    '---',
+    '',
+    'Conversation so far:',
+    historyText || '(no prior messages) ',
+    '',
+    'Current user question:',
+    req.message,
+  ].join('\n');
+
+  const response = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: userPrompt }]}],
+    generationConfig: {
+      temperature: 0.3,
+      maxOutputTokens: 2048,
+    },
+  });
+
+  const text = response.response.text().trim();
+  // eslint-disable-next-line no-console
+  console.log('[Gemini][chat]', text);
+  return { role: 'model', content: text };
+}
 

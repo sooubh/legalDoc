@@ -9,6 +9,10 @@ import OriginalContent from './components/OriginalContent';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DocumentAnalysis, SimplificationLevel } from './types/legal';
 import { analyzeDocumentWithGemini } from './services/gemini';
+import ChatPanel from './components/ChatPanel';
+import ChatFloating from './components/ChatFloating';
+import type { ChatMessage } from './types/chat';
+import { chatWithGemini } from './services/gemini';
 
 function App() {
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
@@ -16,10 +20,16 @@ function App() {
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
   const [simplificationLevel, setSimplificationLevel] = useState<SimplificationLevel>('simple');
   const [submittedContent, setSubmittedContent] = useState<string>('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isChatting, setIsChatting] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
 
-  const handleDocumentSubmit = async (content: string) => {
+  const handleDocumentSubmit = async (content: string, fileMeta?: { pdfUrl?: string; mime?: string }) => {
     setIsAnalyzing(true);
     setSubmittedContent(content);
+    setChatMessages([]);
+    setPdfPreviewUrl(fileMeta?.pdfUrl ?? null);
     try {
       const result = await analyzeDocumentWithGemini({
         content,
@@ -32,6 +42,30 @@ function App() {
       alert('Analysis failed. Please set VITE_GEMINI_API_KEY and try again.');
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleSendChat = async (text: string) => {
+    const next: ChatMessage = { role: 'user', content: text };
+    setChatMessages((prev) => [...prev, next]);
+    setIsChatting(true);
+    try {
+      const reply = await chatWithGemini({
+        document: submittedContent,
+        language,
+        history: chatMessages,
+        message: text,
+      });
+      setChatMessages((prev) => [...prev, reply]);
+    } catch (err) {
+      console.error(err);
+      const fallback: ChatMessage = {
+        role: 'model',
+        content: language === 'hi' ? 'क्षमा करें, अभी उत्तर देने में समस्या आ रही है।' : 'Sorry, I could not answer right now.',
+      };
+      setChatMessages((prev) => [...prev, fallback]);
+    } finally {
+      setIsChatting(false);
     }
   };
 
@@ -84,8 +118,8 @@ function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="order-2 lg:order-1">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="order-2 lg:order-1 lg:col-span-2">
                   <AnalysisResults 
                     analysis={analysis} 
                     language={language}
@@ -94,7 +128,7 @@ function App() {
                   />
                 </div>
                 <div className="order-1 lg:order-2">
-                  <OriginalContent content={submittedContent} />
+                  <OriginalContent content={submittedContent} pdfUrl={pdfPreviewUrl ?? undefined} />
                 </div>
               </div>
             </motion.div>
@@ -103,6 +137,17 @@ function App() {
       </main>
       
       {/* Footer removed */}
+
+      {/* Floating Chat */}
+      <ChatFloating
+        isOpen={isChatOpen}
+        onToggle={() => setIsChatOpen((v) => !v)}
+        document={submittedContent}
+        messages={chatMessages}
+        onSend={handleSendChat}
+        isBusy={isChatting}
+        language={language}
+      />
     </div>
   );
 }
