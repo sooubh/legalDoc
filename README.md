@@ -1,0 +1,240 @@
+## LegalEase AI – Document Analyzer
+
+A fast, modern web app that analyzes legal documents clause-by-clause, generates plain-language explanations, and provides role-specific perspectives (e.g., Tenant vs Landlord, Employee vs Employer, Consumer vs Business). Built with Vite + React + TypeScript + Tailwind and powered by Google's Gemini API.
+
+### Key Features
+
+- **Document analysis**: Breaks documents into clauses with titles, original text, simplified explanations, risk levels, and analysis.
+- **Role-specific perspectives**: For each clause, shows tailored interpretations, obligations, and risks for relevant roles:
+  - Tenancy: Tenant, Landlord
+  - Employment: Employee, Employer
+  - Consumer contracts: Consumer, Business
+- **Plain summary**: A brief summary of the whole document in selected language.
+- **Risk radar**: Consolidated list of risks with severities and recommendations.
+- **Action points**: Concrete follow-ups derived from the analysis.
+- **Citations (optional)**: Includes real, verifiable sources only when confidently inferable.
+- **Bilingual support**: English and Hindi outputs for summaries/explanations.
+- **Multiple simplification levels**: `professional`, `simple`, `eli5`.
+
+### Tech Stack
+
+- **Frontend**: React, TypeScript, Tailwind CSS, Vite
+- **Model API**: Google Generative AI (Gemini)
+
+### Getting Started
+
+#### 1) Prerequisites
+
+- Node.js 18+
+- A Google Gemini API key
+
+#### 2) Install dependencies
+
+```bash
+npm install
+```
+
+#### 3) Environment variables
+
+Create a `.env` file in the project root (same folder as `package.json`):
+
+```bash
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Vite exposes env vars prefixed with `VITE_`. The app reads `VITE_GEMINI_API_KEY` at runtime.
+
+#### 4) Start the dev server
+
+```bash
+npm run dev
+```
+
+#### 5) Build for production
+
+```bash
+npm run build
+npm run preview
+```
+
+### Project Structure
+
+```text
+legal/
+  src/
+    components/
+      AnalysisResults.tsx      # Renders summary, clauses, role-specific views, risks, actions, citations
+      DocumentInput.tsx        # Collects the document and analysis settings
+      ChatPanel.tsx, ChatFloating.tsx # Optional Q&A on top of the document
+      Header.tsx, Footer.tsx, LoadingScreen.tsx, OriginalContent.tsx
+    services/
+      gemini.ts                # Prompt assembly, API calls, response mapping
+    types/
+      legal.ts                 # Core types including Clause, RolePerspective, DocumentAnalysis
+      chat.ts                  # Chat message and request types
+    App.tsx, main.tsx, index.css
+  vite.config.ts, tailwind.config.js, tsconfig*.json
+```
+
+### Core Data Model (TypeScript)
+
+```ts
+export type SimplificationLevel = "professional" | "simple" | "eli5";
+
+export type RoleType =
+  | "Tenant"
+  | "Landlord"
+  | "Employee"
+  | "Employer"
+  | "Consumer"
+  | "Business";
+
+export interface RolePerspective {
+  role: RoleType;
+  interpretation: string;
+  obligations: string[];
+  risks: string[];
+}
+
+export interface Clause {
+  id: string;
+  title: string;
+  originalText: string;
+  simplifiedText: string;
+  riskLevel: "low" | "medium" | "high";
+  explanation: string;
+  rolePerspectives?: RolePerspective[];
+}
+
+export interface Risk {
+  id: string;
+  clause: string;
+  description: string;
+  severity: "low" | "medium" | "high";
+  recommendation: string;
+}
+
+export interface Citation {
+  title: string;
+  url: string;
+  description: string;
+}
+
+export interface DocumentAnalysis {
+  id: string;
+  documentType: string;
+  plainSummary: string;
+  clauses: Clause[];
+  risks: Risk[];
+  actionPoints: string[];
+  citations: Citation[];
+}
+```
+
+### Prompting and Response Mapping
+
+The `src/services/gemini.ts` file builds a strict JSON-only prompt and maps responses into the strongly typed `DocumentAnalysis` shape.
+
+- The prompt instructs Gemini to:
+  - Identify clauses with `title`, `originalText`, `simplifiedText`, `riskLevel`, `explanation`.
+  - Include `rolePerspectives` per clause where relevant. Each item includes `role`, `interpretation`, `obligations`, `risks`.
+  - Provide risks, action points, and citations only if confidently inferable.
+  - Respect selected language (English/Hindi) and simplification level.
+- The mapper is defensive:
+  - Parses JSON only; any non-JSON output raises a parsing error.
+  - Falls back to defaults for missing fields and validates enum values.
+
+### UI Flow
+
+1. User enters/pastes document and selects language + simplification level in `DocumentInput`.
+2. App calls `analyzeDocumentWithGemini` with the document text and settings.
+3. `AnalysisResults` renders five tabs:
+   - Plain Summary
+   - Clause Lens (with role-specific views inside each clause accordion)
+   - Risk Radar
+   - Action Points
+   - Legal Citations
+4. Optional chat panel uses the same document context for Q&A.
+
+### Visualization Outputs (Timelines, Flows, Responsibilities)
+
+- Use `generateVisualizationsWithGemini` to produce a `VisualizationBundle` with:
+  - `timelines`: obligations as milestones with when-descriptions (absolute or relative)
+  - `flows`: process graphs for termination/renewal/disputes with nodes and edges
+  - `responsibilities`: a side-by-side matrix comparing responsibilities for two parties
+- Example:
+
+```ts
+import { generateVisualizationsWithGemini } from "./src/services/gemini";
+
+const visuals = await generateVisualizationsWithGemini({
+  document: contractText,
+  language: "en",
+  partyALabel: "Tenant",
+  partyBLabel: "Landlord",
+});
+
+// visuals.timelines -> Gantt-ready data
+// visuals.flows -> can be converted to Mermaid/flowchart-js
+// visuals.responsibilities -> table-ready data
+```
+
+### Role-specific Views in the UI
+
+In `AnalysisResults.tsx`, each expanded clause shows a "Role-specific views" section when `rolePerspectives` is present. For each role, it renders:
+
+- **Interpretation**: A concise explanation of the clause from that role’s perspective.
+- **Obligations**: Bullet points listing what that role must do/avoid.
+- **Risks**: Bullet points listing risks or watch-outs.
+
+### Internationalization (English/Hindi)
+
+- The analysis prompt switches language for `plainSummary` and explanations based on user selection.
+- The UI text uses a small translation map (`en`/`hi`) for common labels.
+
+### Styling
+
+- Tailwind CSS utility classes with a light, accessible theme.
+- Components use soft borders, subtle shadows, and a responsive grid.
+
+### Performance Considerations
+
+- **Model selection**: Uses `gemini-2.0-flash` for fast, cost-effective responses.
+- **Token usage**: Prompt compaction for chat; JSON-only responses for analysis.
+- **Client rendering**: Clause accordions virtualize content by expanding on demand.
+
+### Security and Reliability
+
+- API key is never committed; supplied via Vite env var `VITE_GEMINI_API_KEY`.
+- The app logs raw model output and the mapped object to aid debugging during development. Remove or reduce logging for production builds.
+- Defensive JSON parsing and minimal runtime validation to avoid UI breakage.
+
+### Extensibility Guide
+
+- **Add more roles**: Extend `RoleType` in `types/legal.ts`, update prompt roles, and optionally add UI badges.
+- **Add languages**: Extend the UI translations and pass the new language flag through to prompting.
+- **Add models**: Swap `MODEL_NAME` in `services/gemini.ts` or add a selector in settings.
+- **Server-side proxy**: If you need to hide the key fully, add a small server (e.g., Cloud Functions/Node) that proxies requests to Gemini.
+
+### Troubleshooting
+
+- "Missing Gemini API key": Ensure `.env` contains `VITE_GEMINI_API_KEY` and that you restarted `npm run dev`.
+- "Failed to parse Gemini response as JSON": The model returned text around JSON. Reduce temperature or retry. The current prompt already requests JSON-only; transient errors can still occur.
+- Nothing appears under Role-specific views: The model may have deemed roles irrelevant given the text. Try specifying document type hints in the document or re-run with a different simplification level.
+
+### Scripts
+
+```bash
+# Start dev server
+npm run dev
+
+# Type-check and build
+npm run build
+
+# Preview production build locally
+npm run preview
+```
+
+### License
+
+This project is provided as-is for demonstration and educational purposes. Review and adapt before using in production. AI-generated content is not legal advice.

@@ -10,7 +10,7 @@ interface ChatPanelProps {
   language: 'en' | 'hi';
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ document, messages, onSend, isBusy = false, language }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, messages, onSend, isBusy = false, language }) => {
   const [input, setInput] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +70,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document, messages, onSend, isBus
                   ? 'bg-blue-600 text-white border-blue-700 rounded-br-sm'
                   : 'bg-gray-50 text-gray-900 border-gray-200 rounded-bl-sm'
               }`}>
-                {m.content}
+                {m.role === 'user' ? (
+                  <span>{m.content}</span>
+                ) : (
+                  <div className="prose prose-sm max-w-none prose-headings:mt-2 prose-p:my-2 prose-li:my-0 whitespace-pre-wrap">
+                    {m.content}
+                  </div>
+                )}
               </div>
             </div>
           ))

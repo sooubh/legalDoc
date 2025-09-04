@@ -7,12 +7,13 @@ import AnalysisResults from './components/AnalysisResults';
 import LoadingScreen from './components/LoadingScreen';
 import OriginalContent from './components/OriginalContent';
 import { AnimatePresence, motion } from 'framer-motion';
-import { DocumentAnalysis, SimplificationLevel } from './types/legal';
-import { analyzeDocumentWithGemini } from './services/gemini';
+import { DocumentAnalysis, SimplificationLevel, VisualizationBundle } from './types/legal';
+import { analyzeDocumentWithGemini, generateVisualizationsWithGemini } from './services/gemini';
 import ChatPanel from './components/ChatPanel';
 import ChatFloating from './components/ChatFloating';
 import type { ChatMessage } from './types/chat';
 import { chatWithGemini } from './services/gemini';
+import Visualizations from './components/Visualizations';
 
 function App() {
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
@@ -24,6 +25,8 @@ function App() {
   const [isChatting, setIsChatting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
+  const [isVisualsLoading, setIsVisualsLoading] = useState(false);
 
   const handleDocumentSubmit = async (content: string, fileMeta?: { pdfUrl?: string; mime?: string }) => {
     setIsAnalyzing(true);
@@ -37,6 +40,18 @@ function App() {
         simplificationLevel,
       });
       setAnalysis(result);
+
+      // Generate visualization bundle in the background
+      setIsVisualsLoading(true);
+      generateVisualizationsWithGemini({
+        document: content,
+        language,
+        partyALabel: 'Party A',
+        partyBLabel: 'Party B',
+      })
+        .then(setVisuals)
+        .catch((e) => console.warn('Visualization generation failed', e))
+        .finally(() => setIsVisualsLoading(false));
     } catch (err) {
       console.error(err);
       alert('Analysis failed. Please set VITE_GEMINI_API_KEY and try again.');
@@ -126,9 +141,21 @@ function App() {
                     simplificationLevel={simplificationLevel}
                     onNewAnalysis={() => setAnalysis(null)}
                   />
+                  <div className="mt-6">
+                    <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+                  </div>
                 </div>
                 <div className="order-1 lg:order-2">
                   <OriginalContent content={submittedContent} pdfUrl={pdfPreviewUrl ?? undefined} />
+                  <div className="mt-6">
+                    <ChatPanel
+                      document={submittedContent}
+                      messages={chatMessages}
+                      onSend={handleSendChat}
+                      isBusy={isChatting}
+                      language={language}
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>

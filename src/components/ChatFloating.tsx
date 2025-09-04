@@ -33,35 +33,34 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document,
         <MessageCircle className="h-6 w-6" />
       </button>
 
-      {/* Backdrop */}
+      {/* Backdrop + Fullscreen Panel */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
-          onClick={onToggle}
-        />
-      )}
-
-      {/* Panel */}
-      <div className={`fixed bottom-6 right-6 z-50 w-[min(100vw-2rem,420px)] transition-transform ${isOpen ? 'translate-y-0' : 'translate-y-[120%]'} `}>
-        <div className="relative">
-          <div className="absolute -top-3 -right-3">
-            <button
-              onClick={onToggle}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-gray-700 border border-gray-200 shadow hover:bg-gray-50"
-              aria-label={language === 'hi' ? 'बंद करें' : 'Close'}
-            >
-              <X className="h-4 w-4" />
-            </button>
+        <div className="fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/40" onClick={onToggle} />
+          <div className="relative z-10 m-4 w[calc(100vw-2rem)] h-[calc(100vh-2rem)] grid grid-cols-1 grid-rows-[1fr_1.2fr] gap-4">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+              <div className="p-2 flex items-center justify-between border-b border-gray-200">
+                <div className="font-semibold text-gray-900">{language === 'hi' ? 'अपलोड किया गया दस्तावेज़' : 'Uploaded Document'}</div>
+                <button onClick={onToggle} className="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200">
+                  <X className="h-4 w-4 mr-1" /> {language === 'hi' ? 'बंद करें' : 'Close'}
+                </button>
+              </div>
+              <div className="p-4 h-[calc(100%-48px)] overflow-auto text-sm text-gray-800 whitespace-pre-wrap">
+                {document || (language === 'hi' ? 'कोई दस्तावेज़ नहीं' : 'No document')}
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+              <ChatPanel
+                document={document}
+                messages={messages}
+                onSend={onSend}
+                isBusy={isBusy}
+                language={language}
+              />
+            </div>
           </div>
-          <ChatPanel
-            document={document}
-            messages={messages}
-            onSend={onSend}
-            isBusy={isBusy}
-            language={language}
-          />
         </div>
-      </div>
+      )}
     </>
   );
 };

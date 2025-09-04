@@ -123,6 +123,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           <span>{translations[language].newDocument}</span>
         </button>
       </div>
+      
 
       {/* Navigation */}
       <div className="bg-white/80 backdrop-blur rounded-lg shadow border border-gray-200 p-2">
@@ -197,6 +198,46 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                       <h4 className="font-medium text-gray-900 mb-2">Analysis:</h4>
                       <p className="text-gray-700">{clause.explanation}</p>
                     </div>
+
+                    {clause.rolePerspectives && clause.rolePerspectives.length > 0 && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-medium text-gray-900 mb-3">Role-specific views:</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {clause.rolePerspectives.map((rp, idx) => (
+                            <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-white">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-semibold text-gray-900">{rp.role}</span>
+                              </div>
+                              {rp.interpretation && (
+                                <div className="mb-3">
+                                  <p className="text-sm text-gray-800">{rp.interpretation}</p>
+                                </div>
+                              )}
+                              {rp.obligations && rp.obligations.length > 0 && (
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium text-gray-900 mb-1">Obligations:</p>
+                                  <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
+                                    {rp.obligations.map((ob, i) => (
+                                      <li key={i}>{ob}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {rp.risks && rp.risks.length > 0 && (
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 mb-1">Risks:</p>
+                                  <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
+                                    {rp.risks.map((rk, i) => (
+                                      <li key={i}>{rk}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
