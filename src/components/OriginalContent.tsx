@@ -1,4 +1,5 @@
 import React from 'react';
+import PdfViewer from './PdfViewer';
 
 interface OriginalContentProps {
   content: string;
@@ -13,12 +14,8 @@ const OriginalContent: React.FC<OriginalContentProps> = ({ content, pdfUrl }) =>
         <p className="text-gray-600 text-sm">Uploaded / pasted content</p>
       </div>
       {pdfUrl ? (
-        <div className="p-0 max-h-[75vh] overflow-auto">
-          <iframe
-            src={pdfUrl}
-            title="PDF Preview"
-            className="w-full h-[75vh]"
-          />
+        <div className="p-0">
+          <PdfViewer url={pdfUrl} height={750} />
         </div>
       ) : (
         <div className="p-6 max-h-[75vh] overflow-auto">
