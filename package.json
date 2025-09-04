@@ -18,16 +18,15 @@
     "lucide-react": "^0.344.0",
     "pdfjs-dist": "^5.4.149",
     "react": "^18.3.1",
-    "react-markdown": "^9.0.3",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.3",
     "recharts": "^2.12.7",
     "remark-gfm": "^4.0.0",
     "vis-timeline": "^7.7.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
-    "@types/remark-gfm": "^3.0.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
