@@ -18,26 +18,32 @@ const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = fa
   // Selectable flow index
   const [flowIndex, setFlowIndex] = useState(0);
   const { nodes, edges } = useMemo(() => {
-    if (!visuals || !visuals.flows || visuals.flows.length === 0) {
+    try {
+      if (!visuals || !visuals.flows || visuals.flows.length === 0) {
+        return { nodes: [], edges: [] };
+      }
+      const safeIndex = Math.min(flowIndex, Math.max(visuals.flows.length - 1, 0));
+      const flow: ProcessFlow = visuals.flows[safeIndex];
+      // Simple auto-layout grid: place decisions in their own column for readability
+      const rfNodes: Node[] = flow.nodes.map((n, idx) => ({
+        id: n.id,
+        data: { label: n.label },
+        position: { x: 80 + (n.type === 'decision' ? 300 : (idx % 3) * 180), y: 60 + Math.floor(idx / 3) * 140 },
+        type: n.type === 'decision' ? 'input' : undefined,
+      }));
+      const rfEdges: Edge[] = flow.edges.map((e, idx) => ({
+        id: `${e.from}-${e.to}-${idx}`,
+        source: e.from,
+        target: e.to,
+        label: e.label,
+        animated: !!e.label,
+      }));
+      return { nodes: rfNodes, edges: rfEdges };
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[Visualizations] Failed to build flow nodes/edges', { flowIndex, error: e, visuals });
       return { nodes: [], edges: [] };
     }
-    const safeIndex = Math.min(flowIndex, Math.max(visuals.flows.length - 1, 0));
-    const flow: ProcessFlow = visuals.flows[safeIndex];
-    // Simple auto-layout grid: place decisions in their own column for readability
-    const rfNodes: Node[] = flow.nodes.map((n, idx) => ({
-      id: n.id,
-      data: { label: n.label },
-      position: { x: 80 + (n.type === 'decision' ? 300 : (idx % 3) * 180), y: 60 + Math.floor(idx / 3) * 140 },
-      type: n.type === 'decision' ? 'input' : undefined,
-    }));
-    const rfEdges: Edge[] = flow.edges.map((e, idx) => ({
-      id: `${e.from}-${e.to}-${idx}`,
-      source: e.from,
-      target: e.to,
-      label: e.label,
-      animated: !!e.label,
-    }));
-    return { nodes: rfNodes, edges: rfEdges };
   }, [visuals, flowIndex]);
 
   useEffect(() => {
@@ -55,13 +61,16 @@ const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = fa
         timeline = new vis.Timeline(timelineRef.current!, items, {});
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.warn('Failed to init vis-timeline', e);
+        console.error('[Visualizations] Failed to init vis-timeline', { error: e, timeline: firstTimeline });
       }
     })();
     return () => {
       try {
         if (timeline && timeline.destroy) timeline.destroy();
-      } catch {}
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('[Visualizations] Failed to destroy timeline', { error: e });
+      }
     };
   }, [visuals]);
 
@@ -81,13 +90,16 @@ const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = fa
         modalTimeline = new vis.Timeline(timelineModalRef.current!, items, {});
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.warn('Failed to init vis-timeline (modal)', e);
+        console.error('[Visualizations] Failed to init vis-timeline (modal)', { error: e, timeline: firstTimeline });
       }
     })();
     return () => {
       try {
         if (modalTimeline && modalTimeline.destroy) modalTimeline.destroy();
-      } catch {}
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('[Visualizations] Failed to destroy modal timeline', { error: e });
+      }
     };
   }, [isTimelineFullscreen, visuals]);
 

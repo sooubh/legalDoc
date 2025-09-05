@@ -15,7 +15,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, messages, on
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    try {
+      listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[ChatPanel] Failed to auto-scroll messages', { error: e });
+    }
   }, [messages.length, isBusy]);
 
   const placeholder = useMemo(() => (
@@ -27,7 +32,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, messages, on
     const trimmed = input.trim();
     if (!trimmed || isBusy) return;
     setInput('');
-    await onSend(trimmed);
+    try {
+      await onSend(trimmed);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[ChatPanel] onSend failed', { input: trimmed, error: err });
+    }
   };
 
   const emptyState = (

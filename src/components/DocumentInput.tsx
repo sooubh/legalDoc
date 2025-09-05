@@ -3,6 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?url';
 import { Upload, Loader2, Send, CheckCircle2, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Tesseract from 'tesseract.js/dist/tesseract.esm.min.js';
 
 interface DocumentInputProps {
   onSubmit: (content: string, fileMeta?: { pdfUrl?: string; mime?: string }) => void;
@@ -78,18 +79,36 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
       try {
         const url = URL.createObjectURL(file);
         setPdfUrl(url);
-      } catch {}
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[DocumentInput] Failed to create object URL for PDF', { fileName: file.name, error: err });
+      }
       extractTextFromPdf(file, (percent) => setUploadProgress(Math.min(99, Math.max(10, Math.floor(percent)))))
-        .then((text) => {
-          setDocumentText(text);
+        .then(async (text) => {
+          let finalText = text?.trim() || '';
+          // If regular extraction yields very little, attempt OCR
+          if (finalText.length < 40) {
+            try {
+              const ocrText = await ocrExtractTextFromPdf(file, language, (p) => setUploadProgress(Math.min(99, Math.max(10, Math.floor(p)))));
+              if (ocrText.trim().length > finalText.length) {
+                finalText = ocrText.trim();
+              }
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.error('[DocumentInput] OCR fallback failed', { fileName: file.name, error: err });
+            }
+          }
+          setDocumentText(finalText);
           setUploadProgress(100);
           setTimeout(() => setIsUploading(false), 600);
         })
-        .catch(() => {
+        .catch((err) => {
           setUploadProgress(0);
           setIsUploading(false);
           setDocumentText('');
           setPdfUrl(null);
+          // eslint-disable-next-line no-console
+          console.error('[DocumentInput] PDF text extraction failed', { fileName: file.name, error: err });
           // eslint-disable-next-line no-alert
           alert('Could not extract text from PDF. Please try another file.');
         });
@@ -110,11 +129,13 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
       setUploadProgress(100);
       setTimeout(() => setIsUploading(false), 600);
     };
-    reader.onerror = () => {
+    reader.onerror = (e) => {
       setUploadProgress(0);
       setIsUploading(false);
       setDocumentText('');
       setPdfUrl(null);
+      // eslint-disable-next-line no-console
+      console.error('[DocumentInput] File read failed', { fileName: file.name, error: e });
       // eslint-disable-next-line no-alert
       alert('Could not read the selected file. Please try another file or paste text.');
     };
@@ -144,21 +165,111 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
     const arrayBuffer = await file.arrayBuffer();
     onProgress?.(20);
     const loadingTask = (pdfjsLib as any).getDocument({ data: arrayBuffer });
-    const pdf = await loadingTask.promise;
+    let pdf: any;
+    try {
+      pdf = await loadingTask.promise;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[DocumentInput] Failed to load PDF for extraction', { fileName: file.name, error: err });
+      throw err;
+    }
     const numPages = pdf.numPages;
     const pageTexts: string[] = [];
 
     for (let i = 1; i <= numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const strings = content.items.map((it: any) => ('str' in it ? it.str : '')).filter(Boolean);
-      pageTexts.push(strings.join(' '));
-      const base = 30;
-      const span = 70;
-      onProgress?.(base + Math.round((i / numPages) * span));
+      try {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const strings = content.items.map((it: any) => ('str' in it ? it.str : '')).filter(Boolean);
+        pageTexts.push(strings.join(' '));
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[DocumentInput] Failed to extract text on page', { fileName: file.name, page: i, error: err });
+        pageTexts.push('');
+      } finally {
+        const base = 30;
+        const span = 40; // reserve remaining for OCR if needed
+        onProgress?.(base + Math.round((i / numPages) * span));
+      }
     }
 
     return pageTexts.join('\n\n');
+  }
+
+  function mapOcrLang(lang: 'en' | 'hi'): string {
+    return lang === 'hi' ? 'hin' : 'eng';
+  }
+
+  async function ocrExtractTextFromPdf(
+    file: File,
+    lang: 'en' | 'hi',
+    onProgress?: (percent: number) => void
+  ): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    let pdf: any;
+    try {
+      pdf = await (pdfjsLib as any).getDocument({ data: arrayBuffer }).promise;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[DocumentInput] Failed to load PDF for OCR', { fileName: file.name, error: err });
+      throw err;
+    }
+    const numPages = pdf.numPages as number;
+
+    const texts: string[] = [];
+    const tessLang = mapOcrLang(lang);
+
+    for (let i = 1; i <= numPages; i++) {
+      let page: any;
+      try {
+        page = await pdf.getPage(i);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[DocumentInput] Failed to get page for OCR', { fileName: file.name, page: i, error: err });
+        texts.push('');
+        continue;
+      }
+      const viewport = page.getViewport({ scale: 2 }); // higher scale for better OCR
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      if (!context) {
+        // eslint-disable-next-line no-console
+        console.error('[DocumentInput] Canvas 2D context unavailable for OCR', { fileName: file.name, page: i });
+        texts.push('');
+        continue;
+      }
+      try {
+        await page.render({ canvasContext: context, viewport }).promise;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[DocumentInput] Failed to render page for OCR', { fileName: file.name, page: i, error: err });
+        texts.push('');
+        continue;
+      }
+
+      // Tesseract recognition
+      try {
+        const { data } = await Tesseract.recognize(canvas, tessLang, {
+          logger: (m: { status?: string; progress?: number }) => {
+            if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+              const base = 70; // continue from where extractTextFromPdf left off
+              const perPage = (100 - base) / numPages;
+              const pageProgress = base + perPage * (i - 1 + m.progress);
+              onProgress?.(Math.min(99, Math.floor(pageProgress)));
+            }
+          },
+        });
+        texts.push(data.text || '');
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[DocumentInput] OCR recognition failed on page', { fileName: file.name, page: i, lang: tessLang, error: err });
+        texts.push('');
+      }
+    }
+
+    return texts.join('\n\n');
   }
 
   return (

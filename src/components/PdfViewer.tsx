@@ -31,7 +31,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url, height = 600 }) => {
         setNumPages(doc.numPages);
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error('Failed to load PDF', e);
+        console.error('[PdfViewer] Failed to load PDF', { url, error: e });
       }
     })();
     return () => {
@@ -47,13 +47,17 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url, height = 600 }) => {
         const viewport = page.getViewport({ scale });
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
-        if (!context) return;
+        if (!context) {
+          // eslint-disable-next-line no-console
+          console.error('[PdfViewer] Canvas 2D context not available', { pageNumber, scale });
+          return;
+        }
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         await page.render({ canvasContext: context, viewport }).promise;
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error('Failed to render PDF page', e);
+        console.error('[PdfViewer] Failed to render PDF page', { pageNumber, scale, error: e });
       }
     })();
   }, [pdf, pageNumber, scale]);
@@ -65,10 +69,18 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url, height = 600 }) => {
   const fitWidth = () => {
     if (!containerRef.current || !canvasRef.current || !pdf) return;
     pdf.getPage(pageNumber).then((page) => {
-      const viewport = page.getViewport({ scale: 1 });
-      const containerWidth = containerRef.current!.clientWidth - 16;
-      const newScale = containerWidth / viewport.width;
-      setScale(newScale);
+      try {
+        const viewport = page.getViewport({ scale: 1 });
+        const containerWidth = containerRef.current!.clientWidth - 16;
+        const newScale = containerWidth / viewport.width;
+        setScale(newScale);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('[PdfViewer] fitWidth failed', { pageNumber, error: e });
+      }
+    }).catch((e) => {
+      // eslint-disable-next-line no-console
+      console.error('[PdfViewer] fitWidth: failed to get page', { pageNumber, error: e });
     });
   };
 

@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { DocumentAnalysis, SimplificationLevel, ClauseEnforceabilityResult, VisualizationBundle } from '../types/legal';
 import type { ChatRequest, ChatMessage } from '../types/chat';
+import { jsonrepair } from 'jsonrepair';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
@@ -20,6 +21,96 @@ export interface AnalyzeParams {
   simplificationLevel: SimplificationLevel;
 }
 
+function truncateForLog(text: string, max = 2000): string {
+  if (text.length <= max) return text;
+  return text.slice(0, max) + `\n... [truncated ${text.length - max} chars]`;
+}
+
+function extractJsonFromText(raw: string): string | null {
+  // Prefer fenced ```json blocks
+  const fenceMatch = raw.match(/```\s*json\s*([\s\S]*?)```/i);
+  if (fenceMatch && fenceMatch[1]) {
+    return fenceMatch[1].trim();
+  }
+  // Any fenced block
+  const anyFence = raw.match(/```[\s\S]*?```/);
+  if (anyFence) {
+    const inner = anyFence[0].replace(/```/g, '').trim();
+    // Try to locate first { ... }
+    const braceStart = inner.indexOf('{');
+    if (braceStart >= 0) {
+      const sliced = inner.slice(braceStart);
+      const balanced = extractBalancedBraces(sliced);
+      if (balanced) return balanced;
+    }
+  }
+  // Try directly from the whole text: take substring from first { with balancing
+  const start = raw.indexOf('{');
+  if (start >= 0) {
+    const sliced = raw.slice(start);
+    const balanced = extractBalancedBraces(sliced);
+    if (balanced) return balanced;
+  }
+  return null;
+}
+
+function extractBalancedBraces(text: string): string | null {
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) {
+        return text.slice(0, i + 1);
+      }
+    }
+  }
+  return null;
+}
+
+function tryParse(str: string): any {
+  return JSON.parse(str);
+}
+
+function tryRepairThenParse(str: string): any {
+  const repaired = jsonrepair(str);
+  return JSON.parse(repaired);
+}
+
+function safeParseJson(raw: string): any {
+  // 1) Direct parse
+  try {
+    return tryParse(raw);
+  } catch {}
+  // 2) Repair raw then parse
+  try {
+    return tryRepairThenParse(raw);
+  } catch (eRepairRaw) {
+    // eslint-disable-next-line no-console
+    console.warn('[Gemini][parse] Raw repair failed', { error: eRepairRaw });
+  }
+  // 3) Extract JSON portion
+  const extracted = extractJsonFromText(raw);
+  if (extracted) {
+    // 3a) Parse extracted
+    try {
+      return tryParse(extracted);
+    } catch {}
+    // 3b) Repair extracted then parse
+    try {
+      return tryRepairThenParse(extracted);
+    } catch (eRepairExtracted) {
+      // eslint-disable-next-line no-console
+      console.error('[Gemini][parse] Failed to parse extracted JSON even after repair', { error: eRepairExtracted, extracted: truncateForLog(extracted) });
+      throw eRepairExtracted;
+    }
+  }
+  // eslint-disable-next-line no-console
+  console.error('[Gemini][parse] Raw response not JSON', { raw: truncateForLog(raw) });
+  throw new Error('Non-JSON response');
+}
+
 export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<DocumentAnalysis> {
   const { content, language, simplificationLevel } = params;
 
@@ -34,26 +125,26 @@ export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<
   const response = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: prompt }]}],
     generationConfig: {
-      temperature: 0.3,
+      temperature: 0.2,
       maxOutputTokens: 4096,
       responseMimeType: 'application/json',
     },
   });
 
   const text = response.response.text();
-  // Log the raw generated content for debugging/inspection
   // eslint-disable-next-line no-console
-  console.log('[Gemini][raw]', text);
+  console.log('[Gemini][raw]', truncateForLog(text));
 
   let data: unknown;
   try {
-    data = JSON.parse(text);
+    data = safeParseJson(text);
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[Gemini] Failed to parse analysis JSON', { error: err, raw: truncateForLog(text) });
     throw new Error('Failed to parse Gemini response as JSON');
   }
 
   const analysis = mapToDocumentAnalysis(data);
-  // Log the mapped analysis object
   // eslint-disable-next-line no-console
   console.log('[Gemini][mapped]', analysis);
   return analysis;
@@ -61,7 +152,7 @@ export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<
 
 function buildPrompt(content: string, language: 'en' | 'hi', level: SimplificationLevel): string {
   return [
-    'You are a legal analyst AI. Analyze the following legal document text and return a strict JSON object that adheres to this TypeScript interface:',
+    'You are a legal analyst AI. Analyze the following legal document text and return ONLY a strict JSON object conforming to this schema. Do not include any commentary or markdown fences.',
     '',
     'interface Clause {',
     "  id: string;",
@@ -102,7 +193,7 @@ function buildPrompt(content: string, language: 'en' | 'hi', level: Simplificati
     "- For each clause, include rolePerspectives with tailored interpretations for relevant roles depending on document type: Tenancy (Tenant/Landlord), Employment (Employee/Employer), Consumer contract (Consumer/Business). If unclear, include the most plausible roles.",
     '- Each role perspective must include: interpretation (plain-language), obligations (bullet-like strings), risks (bullet-like strings).',
     '- Provide realistic, non-fabricated citations with working URLs only if clearly inferable; otherwise return an empty citations array.',
-    '- Do not include any commentary outside the JSON. Return ONLY the JSON.',
+    '- Return ONLY JSON. No markdown, no code fences, no commentary.',
     '',
     'Document Text:',
     content,
@@ -213,7 +304,7 @@ export async function chatWithGemini(req: ChatRequest): Promise<ChatMessage> {
 
   const text = response.response.text().trim();
   // eslint-disable-next-line no-console
-  console.log('[Gemini][chat]', text);
+  console.log('[Gemini][chat]', truncateForLog(text));
   return { role: 'model', content: text };
 }
 
@@ -268,12 +359,14 @@ export async function analyzeClauseEnforceabilityWithGemini(params: Enforceabili
 
   const text = response.response.text();
   // eslint-disable-next-line no-console
-  console.log('[Gemini][enforceability][raw]', text);
+  console.log('[Gemini][enforceability][raw]', truncateForLog(text));
 
   let data: unknown;
   try {
-    data = JSON.parse(text);
+    data = safeParseJson(text);
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[Gemini] Failed to parse enforceability JSON', { error: err, raw: truncateForLog(text) });
     throw new Error('Failed to parse Gemini enforceability response as JSON');
   }
 
@@ -350,7 +443,7 @@ export async function generateVisualizationsWithGemini(params: VisualizationPara
   const response = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: prompt }]}],
     generationConfig: {
-      temperature: 0.3,
+      temperature: 0.2,
       maxOutputTokens: 4096,
       responseMimeType: 'application/json',
     },
@@ -358,12 +451,14 @@ export async function generateVisualizationsWithGemini(params: VisualizationPara
 
   const text = response.response.text();
   // eslint-disable-next-line no-console
-  console.log('[Gemini][visualizations][raw]', text);
+  console.log('[Gemini][visualizations][raw]', truncateForLog(text));
 
   let data: unknown;
   try {
-    data = JSON.parse(text);
+    data = safeParseJson(text);
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[Gemini] Failed to parse visualization JSON', { error: err, raw: truncateForLog(text) });
     throw new Error('Failed to parse Gemini visualization response as JSON');
   }
 
