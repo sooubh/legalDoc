@@ -11,21 +11,16 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@xyflow/react": "^12.0.3",
-    "chart.js": "^4.4.3",
     "framer-motion": "^12.23.12",
-    "gojs": "^2.3.19",
     "jsonrepair": "^3.13.0",
     "lucide-react": "^0.344.0",
+    "mermaid": "11.11.0",
     "pdfjs-dist": "^5.4.149",
     "react": "^18.3.1",
-    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.3",
-    "recharts": "^2.12.7",
     "remark-gfm": "^4.0.0",
-    "tesseract.js": "^6.0.1",
-    "vis-timeline": "^7.7.3"
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

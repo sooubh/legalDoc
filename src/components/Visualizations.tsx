@@ -1,8 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { VisualizationBundle, ProcessFlow } from '../types/legal';
-import { ReactFlow, Background, Controls, MiniMap, BackgroundVariant, type Node, type Edge } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import 'vis-timeline/dist/vis-timeline-graph2d.min.css';
+import MermaidDiagram from './MermaidDiagram';
 
 interface VisualizationsProps {
   visuals: VisualizationBundle | null;
@@ -10,98 +8,49 @@ interface VisualizationsProps {
 }
 
 const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = false }) => {
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const timelineModalRef = useRef<HTMLDivElement>(null);
   const [isFlowFullscreen, setIsFlowFullscreen] = useState(false);
   const [isTimelineFullscreen, setIsTimelineFullscreen] = useState(false);
 
   // Selectable flow index
   const [flowIndex, setFlowIndex] = useState(0);
-  const { nodes, edges } = useMemo(() => {
+  const mermaidFlow = useMemo(() => {
     try {
-      if (!visuals || !visuals.flows || visuals.flows.length === 0) {
-        return { nodes: [], edges: [] };
-      }
+      if (!visuals || !visuals.flows || visuals.flows.length === 0) return '';
       const safeIndex = Math.min(flowIndex, Math.max(visuals.flows.length - 1, 0));
       const flow: ProcessFlow = visuals.flows[safeIndex];
-      // Simple auto-layout grid: place decisions in their own column for readability
-      const rfNodes: Node[] = flow.nodes.map((n, idx) => ({
-        id: n.id,
-        data: { label: n.label },
-        position: { x: 80 + (n.type === 'decision' ? 300 : (idx % 3) * 180), y: 60 + Math.floor(idx / 3) * 140 },
-        type: n.type === 'decision' ? 'input' : undefined,
-      }));
-      const rfEdges: Edge[] = flow.edges.map((e, idx) => ({
-        id: `${e.from}-${e.to}-${idx}`,
-        source: e.from,
-        target: e.to,
-        label: e.label,
-        animated: !!e.label,
-      }));
-      return { nodes: rfNodes, edges: rfEdges };
+      const nodeLines = flow.nodes
+        .map((n) => {
+          const shape = n.type === 'start' ? '(( ': n.type === 'end' ? ') ' : n.type === 'decision' ? '{ ' : '[ ';
+          const close = n.type === 'start' ? ' ))' : n.type === 'end' ? ' )' : n.type === 'decision' ? ' }' : ' ]';
+          return `${n.id}${shape}${n.label}${close}`;
+        })
+        .join('\n');
+      const edgeLines = flow.edges
+        .map((e) => `${e.from} -->${e.label ? `|${e.label}|` : ''} ${e.to}`)
+        .join('\n');
+      return `flowchart TD\n${nodeLines}\n${edgeLines}`;
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.error('[Visualizations] Failed to build flow nodes/edges', { flowIndex, error: e, visuals });
-      return { nodes: [], edges: [] };
+      console.error('[Visualizations] Failed to build mermaid flow', { flowIndex, error: e, visuals });
+      return '';
     }
   }, [visuals, flowIndex]);
 
-  useEffect(() => {
-    // Render timeline using vis-timeline via dynamic import (ESM-safe)
-    if (!visuals || !timelineRef.current) return;
-    const firstTimeline = visuals.timelines?.[0];
-    if (!firstTimeline) return;
-    let timeline: any;
-    (async () => {
-      try {
-        const vis = await import('vis-timeline/standalone');
-        const items = new vis.DataSet(
-          firstTimeline.milestones.map((m) => ({ id: m.id, content: m.title, start: m.when }))
-        );
-        timeline = new vis.Timeline(timelineRef.current!, items, {});
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('[Visualizations] Failed to init vis-timeline', { error: e, timeline: firstTimeline });
+  const mermaidTimeline = useMemo(() => {
+    try {
+      const firstTimeline = visuals?.timelines?.[0];
+      if (!firstTimeline) return '';
+      const lines: string[] = ['timeline', `  title: ${firstTimeline.label || 'Timeline'}`, `  section Events`];
+      for (const m of firstTimeline.milestones) {
+        lines.push(`  ${m.title}: ${m.when}`);
       }
-    })();
-    return () => {
-      try {
-        if (timeline && timeline.destroy) timeline.destroy();
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('[Visualizations] Failed to destroy timeline', { error: e });
-      }
-    };
+      return lines.join('\n');
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[Visualizations] Failed to build mermaid timeline', e);
+      return '';
+    }
   }, [visuals]);
-
-  useEffect(() => {
-    // Initialize fullscreen timeline when modal opens
-    if (!isTimelineFullscreen) return;
-    if (!visuals || !timelineModalRef.current) return;
-    const firstTimeline = visuals.timelines?.[0];
-    if (!firstTimeline) return;
-    let modalTimeline: any;
-    (async () => {
-      try {
-        const vis = await import('vis-timeline/standalone');
-        const items = new vis.DataSet(
-          firstTimeline.milestones.map((m) => ({ id: m.id, content: m.title, start: m.when }))
-        );
-        modalTimeline = new vis.Timeline(timelineModalRef.current!, items, {});
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('[Visualizations] Failed to init vis-timeline (modal)', { error: e, timeline: firstTimeline });
-      }
-    })();
-    return () => {
-      try {
-        if (modalTimeline && modalTimeline.destroy) modalTimeline.destroy();
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('[Visualizations] Failed to destroy modal timeline', { error: e });
-      }
-    };
-  }, [isTimelineFullscreen, visuals]);
 
   if (isLoading) {
     return (
@@ -159,14 +108,10 @@ const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = fa
               </div>
             )}
             <div className="h-[480px]">
-              {nodes.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-gray-500 text-sm">No flow data</div>
+              {mermaidFlow ? (
+                <MermaidDiagram code={mermaidFlow} className="h-full" />
               ) : (
-                <ReactFlow nodes={nodes} edges={edges} fitView>
-                  <MiniMap />
-                  <Controls />
-                  <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-                </ReactFlow>
+                <div className="h-full flex items-center justify-center text-gray-500 text-sm">No flow data</div>
               )}
             </div>
           </div>
@@ -180,8 +125,8 @@ const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = fa
                 Fullscreen
               </button>
             </div>
-            {visuals.timelines?.length ? (
-              <div ref={timelineRef} className="h-[480px]" />
+            {mermaidTimeline ? (
+              <MermaidDiagram code={mermaidTimeline} className="h-[480px]" />
             ) : (
               <div className="h-[480px] flex items-center justify-center text-gray-500 text-sm">No timeline data</div>
             )}
@@ -224,14 +169,10 @@ const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = fa
               <button onClick={() => setIsFlowFullscreen(false)} className="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-50">Close</button>
             </div>
             <div className="flex-1">
-              {nodes.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-gray-500 text-sm">No flow data</div>
+              {mermaidFlow ? (
+                <MermaidDiagram code={mermaidFlow} className="h-full" />
               ) : (
-                <ReactFlow nodes={nodes} edges={edges} fitView>
-                  <MiniMap />
-                  <Controls />
-                  <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-                </ReactFlow>
+                <div className="h-full flex items-center justify-center text-gray-500 text-sm">No flow data</div>
               )}
             </div>
           </div>
@@ -247,8 +188,8 @@ const Visualizations: React.FC<VisualizationsProps> = ({ visuals, isLoading = fa
               <button onClick={() => setIsTimelineFullscreen(false)} className="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-50">Close</button>
             </div>
             <div className="flex-1">
-              {visuals.timelines?.length ? (
-                <div ref={timelineModalRef} className="h-full" />
+              {mermaidTimeline ? (
+                <MermaidDiagram code={mermaidTimeline} className="h-full" />
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-500 text-sm">No timeline data</div>
               )}
