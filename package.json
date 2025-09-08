@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@huggingface/inference": "^4.7.1",
     "framer-motion": "^12.23.12",
     "jsonrepair": "^3.13.0",
     "lucide-react": "^0.344.0",
