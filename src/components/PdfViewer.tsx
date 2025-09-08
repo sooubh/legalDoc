@@ -4,7 +4,6 @@ import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy, type PDFPagePr
 import 'pdfjs-dist/build/pdf.worker.mjs';
 
 // Configure worker (vite-friendly)
-// @ts-expect-error - vite will resolve the worker from the ESM build
 GlobalWorkerOptions.workerSrc = 'pdfjs-dist/build/pdf.worker.mjs';
 
 interface PdfViewerProps {
