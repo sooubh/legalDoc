@@ -13,6 +13,7 @@ interface ChatFloatingProps {
   language: 'en' | 'hi';
 }
 
+
 const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document, messages, onSend, isBusy = false, language }) => {
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
