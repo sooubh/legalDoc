@@ -322,6 +322,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                   </div>
                 </div>
               ))}
+              
             </div>
           </div>
         )}
