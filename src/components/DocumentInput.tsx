@@ -46,6 +46,44 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
     }
   };
 
+  type Sample = { id: string; label: string; text: string };
+  const sampleContracts: Record<'en' | 'hi', Sample[]> = {
+    en: [
+      {
+        id: 'service-agreement',
+        label: 'Service Agreement',
+        text: `SERVICE AGREEMENT\n\nThis Service Agreement ("Agreement") is made between ClientCo LLC ("Client") and Provider Inc. ("Provider").\n\n1. Scope of Services. Provider will design, develop, test, and deliver features described in Statement of Work #1, including weekly demos, documentation, and handover. Provider will use commercially reasonable efforts to meet milestones.\n\n2. Term and Renewal. Initial term: six (6) months starting the Effective Date. The Agreement auto-renews month-to-month unless either party gives 30 days' notice before renewal.\n\n3. Fees and Expenses. (a) Monthly retainer: USD 10,000, invoiced in advance, payable net-30. (b) Out-of-pocket expenses (cloud, licenses) pre-approved by Client will be reimbursed at cost. Late payments accrue 1.5% per month.\n\n4. Change Management. Material changes to scope require a written change order specifying impact on timeline and fees.\n\n5. Intellectual Property. (a) Client IP: Client owns Deliverables specifically created for Client upon full payment. (b) Provider Background IP: Provider retains ownership of pre-existing and general reusable tools, granting Client a perpetual, worldwide, royalty-free license to use them as embedded in Deliverables.\n\n6. Confidentiality. Each party agrees to protect Confidential Information with reasonable care and use it solely for performance under this Agreement.\n\n7. Data Protection. Provider will implement reasonable technical and organizational security measures and promptly notify Client of any security incident impacting Client Data.\n\n8. Warranties and Disclaimer. Provider warrants Services will be performed in a professional and workmanlike manner. EXCEPT AS EXPRESSLY PROVIDED, SERVICES AND DELIVERABLES ARE PROVIDED "AS IS".\n\n9. Indemnification. Provider will defend and indemnify Client against third-party IP infringement claims arising from Deliverables, excluding Client-provided materials or unauthorized modifications.\n\n10. Limitation of Liability. Neither party is liable for indirect, incidental, special, or consequential damages. Aggregate liability will not exceed fees paid in the three (3) months preceding the claim.\n\n11. Termination. Either party may terminate for material breach not cured within fifteen (15) days of written notice. Upon termination, Client shall pay fees due through the effective termination date.\n\n12. Governing Law; Venue. This Agreement is governed by the laws of Delaware, USA, with exclusive venue in New Castle County courts.\n\nEffective Date: 2024-01-15\nAuthorized Signatures: ______________________`
+      },
+      {
+        id: 'nda',
+        label: 'Mutual NDA',
+        text: `MUTUAL NON-DISCLOSURE AGREEMENT\n\nThis Mutual NDA ("Agreement") is between Alpha Corp ("Party A") and Beta Ltd ("Party B").\n\n1. Purpose. Parties intend to explore a potential business relationship involving technology collaboration and will share certain Confidential Information for that purpose.\n\n2. Definition. "Confidential Information" means non-public information disclosed by a party that is marked confidential or should reasonably be understood as confidential, including product roadmaps, code, designs, customer data, and pricing.\n\n3. Obligations. Receiving Party will (a) use Confidential Information only for the Purpose, (b) not disclose it to third parties except to employees and contractors bound by similar obligations, and (c) protect it using reasonable care.\n\n4. Exclusions. Confidential Information does not include information that is publicly available, already known without duty of confidentiality, independently developed, or rightfully obtained from a third party without breach.\n\n5. Compelled Disclosure. Receiving Party may disclose Confidential Information when required by law, provided it gives prompt notice (if lawful) and cooperates to seek protective treatment.\n\n6. Term. The disclosure period is one (1) year; confidentiality obligations survive for three (3) years thereafter. Trade secrets remain protected as long as they qualify under applicable law.\n\n7. No License. No licenses are granted by this Agreement other than as expressly set forth.\n\n8. Return/Destruction. Upon request, Receiving Party will promptly return or destroy Confidential Information and certify destruction.\n\n9. Remedies. Breach may cause irreparable harm; disclosing party is entitled to equitable relief in addition to other remedies.\n\n10. Miscellaneous. This Agreement does not create an obligation to enter into any further agreement.\n\nEffective Date: 2024-03-10\nAuthorized Signatures: ______________________`
+      },
+      {
+        id: 'residential-lease',
+        label: 'Residential Lease',
+        text: `RESIDENTIAL LEASE AGREEMENT\n\nLandlord: Green Properties LLC ("Landlord")\nTenant: John Doe ("Tenant")\nPremises: 123 Maple Street, Unit 4B, Springfield, ST 00000\n\n1. Term. Twelve (12) months beginning May 1, 2024 and ending April 30, 2025.\n\n2. Rent. Monthly rent USD 1,800 due on the 1st of each month. Rent received after the 5th incurs a late fee of USD 75.\n\n3. Security Deposit. USD 1,800 due at signing; may be used for unpaid rent or damages beyond normal wear and tear and will be returned within 30 days subject to itemized deductions.\n\n4. Utilities. Tenant pays electricity and internet. Landlord pays water and trash.\n\n5. Use and Occupancy. Residential use only; no illegal activity; maximum occupancy two (2) adults.\n\n6. Maintenance. Tenant must keep the Premises clean and promptly report issues. Landlord will handle structural, plumbing, and electrical repairs within a reasonable time.\n\n7. Alterations. No material alterations without Landlord's prior written consent.\n\n8. Pets. One (1) cat or small dog permitted with prior consent and a non-refundable USD 300 pet fee; Tenant responsible for pet-related damages.\n\n9. Entry. Landlord may enter with 24 hours' notice for inspection, maintenance, or showing, or immediately in emergencies.\n\n10. Insurance. Tenant encouraged to maintain renter's insurance.\n\n11. Default; Remedies. Non-payment or material breach allows Landlord to give notice and pursue remedies per applicable law.\n\n12. Governing Law. State law of the Premises governs this Lease.\n\nSignatures: ______________________`
+      }
+    ],
+    hi: [
+      {
+        id: 'service-agreement',
+        label: 'सेवा अनुबंध',
+        text: `सेवा अनुबंध (Service Agreement)\n\nयह अनुबंध क्लाइंटको एलएलसी ("क्लाइंट") और प्रोवाइडर इंक. ("प्रोवाइडर") के बीच किया गया है।\n\n1. सेवाओं का दायरा. प्रोवाइडर स्टेटमेंट ऑफ वर्क #1 में वर्णित फीचर्स का डिजाइन, विकास, परीक्षण और डिलीवरी करेगा; साप्ताहिक डेमो, दस्तावेज़ीकरण और हैंडओवर शामिल होंगे।\n\n2. अवधि और नवीनीकरण. प्रारंभिक अवधि छह (6) माह; इसके बाद स्वतः मासिक नवीनीकरण जब तक कि कोई पक्ष 30 दिन पूर्व लिखित सूचना न दे।\n\n3. शुल्क एवं व्यय. (क) मासिक रिटेनर: USD 10,000 (इनवॉइस अग्रिम, नेट-30)। (ख) पूर्व-स्वीकृत बाह्य व्यय लागत पर प्रतिपूर्ति। विलंब पर 1.5% मासिक ब्याज।\n\n4. परिवर्तन प्रबंधन. कार्य-क्षेत्र में महत्वपूर्ण परिवर्तन हेतु लिखित परिवर्तन आदेश आवश्यक होगा।\n\n5. बौद्धिक संपदा. (क) क्लाइंट आईपी: क्लाइंट के लिए विशेष रूप से बनाए गए डिलीवेरेबल्स का स्वामित्व पूर्ण भुगतान पर क्लाइंट को। (ख) प्रोवाइडर पृष्ठभूमि आईपी: प्रोवाइडर अपने पूर्व-विद्यमान/पुन: उपयोग योग्य टूल का स्वामी रहेगा; डिलीवेरेबल्स में निहित रूप में क्लाइंट को उनका स्थायी, विश्वव्यापी, रॉयल्टी-मुक्त लाइसेंस मिलेगा।\n\n6. गोपनीयता. पक्ष गोपनीय जानकारी की उचित सुरक्षा करेंगे और केवल अनुबंध निष्पादन हेतु उपयोग करेंगे।\n\n7. डेटा सुरक्षा. प्रोवाइडर उचित तकनीकी/संगठनात्मक सुरक्षा उपाय लागू करेगा और सुरक्षा घटना होने पर शीघ्र सूचित करेगा।\n\n8. वारंटी एवं अस्वीकरण. प्रोवाइडर सेवाएँ व्यावसायिक एवं कार्यकुशल तरीके से प्रदान करने की वारंटी देता है; अन्य सभी वारंटियाँ अस्वीकारित हैं।\n\n9. क्षतिपूर्ति. डिलीवेरेबल्स से उत्पन्न तृतीय-पक्ष आईपी उल्लंघन दावों के विरुद्ध प्रोवाइडर रक्षा/क्षतिपूर्ति करेगा (क्लाइंट सामग्री/अनधिकृत परिवर्तनों को छोड़कर)।\n\n10. दायित्व सीमा. किसी भी पक्ष की अप्रत्यक्ष/विशेष/परिणामी हानि हेतु कोई उत्तरदायित्व नहीं; कुल उत्तरदायित्व पिछले तीन (3) माह की फीस से अधिक नहीं।\n\n11. समाप्ति. भौतिक उल्लंघन पर 15 दिन में उपचार न होने पर पक्ष अनुबंध समाप्त कर सकता है; समाप्ति तिथि तक देय शुल्क देय होंगे।\n\n12. प्रभार्य विधि; क्षेत्राधिकार. यह अनुबंध डेलावेयर, यूएसए के कानूनों द्वारा शासित होगा; विशेष क्षेत्राधिकार न्यू कैसल काउंटी की अदालतें।\n\nप्रभावी तिथि: 2024-01-15\nहस्ताक्षर: ______________________`
+      },
+      {
+        id: 'nda',
+        label: 'परस्पर गोपनीयता समझौता (NDA)',
+        text: `परस्पर गैर-प्रकटीकरण समझौता (Mutual NDA)\n\nयह समझौता अल्फा कॉर्प ("पक्ष अ") और बीटा लिमिटेड ("पक्ष ब") के बीच है।\n\n1. उद्देश्य. संभावित व्यावसायिक सहयोग का मूल्यांकन करने हेतु पक्ष गोपनीय जानकारी साझा कर सकते हैं।\n\n2. परिभाषा. "गोपनीय जानकारी" गैर-सार्वजनिक जानकारी है जो गोपनीय चिह्नित हो या उचित रूप से गोपनीय समझी जाए, जैसे रोडमैप, कोड, डिज़ाइन, ग्राहक डेटा, मूल्य निर्धारण।\n\n3. दायित्व. प्राप्तकर्ता (क) गोपनीय जानकारी का उपयोग केवल उद्देश्य हेतु करेगा, (ख) तृतीय पक्ष को प्रकटीकरण नहीं करेगा सिवाय उन कर्मचारियों/ठेकेदारों के जो समान दायित्वों से बँधे हैं, और (ग) उचित सावधानी से सुरक्षा करेगा।\n\n4. अपवाद. सार्वजनिक, पूर्व-ज्ञात, स्वतंत्र विकसित, या वैध तृतीय पक्ष से प्राप्त जानकारी गोपनीय नहीं मानी जाएगी।\n\n5. आवश्यक प्रकटीकरण. क़ानूनन आवश्यक प्रकटीकरण की स्थिति में यथासंभव अग्रिम सूचना और संरक्षण के उपायों में सहयोग।\n\n6. अवधि. प्रकटीकरण अवधि एक (1) वर्ष; गोपनीयता दायित्व तीन (3) वर्ष तक प्रभावी रहेंगे; व्यापार-गोपनीयियाँ क़ानून अनुसार संरक्षित रहेंगी।\n\n7. लाइसेंस नहीं. इस समझौते के अंतर्गत कोई लाइसेंस प्रदान नहीं किया जाता जब तक स्पष्ट रूप से न कहा गया हो।\n\n8. वापसी/नष्ट करना. अनुरोध पर प्राप्तकर्ता गोपनीय जानकारी वापस करेगा या नष्ट करेगा और प्रमाणित करेगा।\n\n9. उपचार. उल्लंघन से अपूरणीय क्षति हो सकती है; प्रकटीकरणकर्ता को निषेधाज्ञा सहित उपाय प्राप्त होंगे।\n\n10. विविध. यह समझौता किसी आगे के अनुबंध का दायित्व उत्पन्न नहीं करता।\n\nप्रभावी तिथि: 2024-03-10\nहस्ताक्षर: ______________________`
+      },
+      {
+        id: 'residential-lease',
+        label: 'आवासीय पट्टा (Residential Lease)',
+        text: `आवासीय पट्टा अनुबंध\n\nभू-स्वामी: ग्रीन प्रॉपर्टीज एलएलसी ("भू-स्वामी")\nकिरायेदार: जॉन डो ("किरायेदार")\nपरिसर: 123 मेपल स्ट्रीट, यूनिट 4B, स्प्रिंगफील्ड, ST 00000\n\n1. अवधि. 1 मई 2024 से 30 अप्रैल 2025 तक बारह (12) माह।\n\n2. किराया. मासिक किराया USD 1,800; प्रत्येक माह की 1 तारीख को देय; 5 तारीख के बाद भुगतान पर USD 75 विलंब शुल्क।\n\n3. सुरक्षा जमा. USD 1,800 हस्ताक्षर पर देय; सामान्य घिसावट से परे क्षति/बकाया किराये के समायोजन के बाद 30 दिनों में वापसी (आइटमाइज्ड कटौतियाँ लागू)।\n\n4. उपयोगिताएँ. किरायेदार: बिजली, इंटरनेट; भू-स्वामी: पानी, कचरा।\n\n5. उपयोग. केवल आवासीय उपयोग; अवैध गतिविधि वर्जित; अधिकतम दो (2) वयस्क।\n\n6. रखरखाव. परिसर की सफाई/रखरखाव और समस्याओं की शीघ्र सूचना; भू-स्वामी संरचना/प्लंबिंग/विद्युत मरम्मत उचित समय में करेगा।\n\n7. परिवर्तन. लिखित पूर्व-सहमति के बिना भौतिक परिवर्तन नहीं।\n\n8. पालतू पशु. पूर्व स्वीकृति और USD 300 गैर-वापसी योग्य शुल्क के साथ एक (1) पालतू अनुमत; क्षति के लिए किरायेदार उत्तरदायी।\n\n9. प्रवेश. निरीक्षण/रख-रखाव/दिखाने हेतु 24 घंटे पूर्व सूचना पर प्रवेश; आपातकाल में तुरंत।\n\n10. बीमा. किरायेदार को रेंटर बीमा रखने की सलाह।\n\n11. डिफ़ॉल्ट/उपाय. भुगतान न होना या भौतिक उल्लंघन पर विधि अनुसार नोटिस और उपाय।\n\n12. प्रभार्य विधि. परिसर के राज्य का क़ानून लागू होगा।\n\nहस्ताक्षर: ______________________`
+      }
+    ]
+  };
+
   // Ensure the input reflects the latest pasted text or extracted file content
 
   const handleDrag = (e: React.DragEvent) => {
@@ -152,10 +190,23 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
     }
   };
 
+  const [selectedSampleId, setSelectedSampleId] = useState<string>(() => sampleContracts[language][0]?.id || '');
+
+  // Sync selected sample when language changes so the id exists in the new list
+  React.useEffect(() => {
+    const first = sampleContracts[language][0]?.id || '';
+    setSelectedSampleId(first);
+  }, [language]);
+
   const loadSample = () => {
-    // Keep button behavior minimal or remove in future if not needed
-    setDocumentText('');
+    const list = sampleContracts[language];
+    const chosen = list.find(s => s.id === selectedSampleId) || list[0];
+    const sample = chosen?.text || '';
     setPdfUrl(null);
+    setUploadedFileName('');
+    setUploadedFileType('');
+    setDocumentText(sample);
+    onSubmit(sample);
   };
 
   // PDF text extraction using pdf.js
@@ -386,12 +437,24 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
           />
           
           <div className="flex justify-between items-center">
-            <button
-              onClick={loadSample}
-              className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline"
-            >
-              {translations[language].sampleText}
-            </button>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Sample:</label>
+              <select
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                value={selectedSampleId}
+                onChange={(e) => setSelectedSampleId(e.target.value)}
+              >
+                {sampleContracts[language].map((s) => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={loadSample}
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline"
+              >
+                {translations[language].sampleText}
+              </button>
+            </div>
             
             <button
               onClick={handleSubmit}

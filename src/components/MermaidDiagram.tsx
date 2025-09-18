@@ -45,7 +45,7 @@ const MermaidDiagramComponent: React.FC<MermaidDiagramProps> = ({ code, classNam
       {error ? (
         <div className="text-red-600 text-sm">{error}</div>
       ) : (
-        <div ref={containerRef} className="overflow-auto" />
+        <div ref={containerRef} className="overflow-auto [&_svg]:w-full [&_svg]:h-auto" />
       )}
     </div>
   );

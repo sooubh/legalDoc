@@ -161,7 +161,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
                 </select>
               </div>
             )}
-            <div className="h-[480px]">
+            <div className="h-[480px] overflow-auto">
               {mermaidFlow ? (
                 <MermaidDiagram code={mermaidFlow} className="h-full" />
               ) : (
@@ -184,7 +184,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
               </button>
             </div>
             {mermaidTimeline ? (
-              <MermaidDiagram code={mermaidTimeline} className="h-[480px]" />
+              <MermaidDiagram code={mermaidTimeline} className="h-[480px] overflow-auto" />
             ) : (
               <div className="h-[480px] flex items-center justify-center text-gray-500 text-sm">
                 No timeline data
