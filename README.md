@@ -15,6 +15,12 @@ A fast, modern web app that analyzes legal documents clause-by-clause, generates
 - **Citations (optional)**: Includes real, verifiable sources only when confidently inferable.
 - **Bilingual support**: English and Hindi outputs for summaries/explanations.
 - **Multiple simplification levels**: `professional`, `simple`, `eli5`.
+-
+- **Try Sample Contracts (EN/HI)**: Built-in long-form samples with selector:
+  - Service Agreement, Mutual NDA, Residential Lease
+  - Choose a sample and click "Try Sample Contract" to auto-fill and analyze
+- **Robust inputs**: Paste text or drag-and-drop PDFs; PDF text extraction with pdf.js and OCR fallback via Tesseract when needed
+- **Visualizations**: Auto-generated flowcharts and timelines with fullscreen view and scrollable containers to avoid overlap
 
 ### Tech Stack
 
@@ -64,9 +70,10 @@ legal/
   src/
     components/
       AnalysisResults.tsx      # Renders summary, clauses, role-specific views, risks, actions, citations
-      DocumentInput.tsx        # Collects the document and analysis settings
+      DocumentInput.tsx        # Paste/upload, sample selector, triggers analysis
       ChatPanel.tsx, ChatFloating.tsx # Optional Q&A on top of the document
-      Header.tsx, Footer.tsx, LoadingScreen.tsx, OriginalContent.tsx
+      Header.tsx, LoadingScreen.tsx, OriginalContent.tsx
+      MermaidDiagram.tsx       # Mermaid renderer (responsive SVG, scroll-safe)
     services/
       gemini.ts                # Prompt assembly, API calls, response mapping
     types/
@@ -146,7 +153,7 @@ The `src/services/gemini.ts` file builds a strict JSON-only prompt and maps resp
 
 ### UI Flow
 
-1. User enters/pastes document and selects language + simplification level in `DocumentInput`.
+1. User enters/pastes, uploads a PDF, or selects a sample in `DocumentInput`; choose language + simplification level.
 2. App calls `analyzeDocumentWithGemini` with the document text and settings.
 3. `AnalysisResults` renders five tabs:
    - Plain Summary
@@ -155,6 +162,11 @@ The `src/services/gemini.ts` file builds a strict JSON-only prompt and maps resp
    - Action Points
    - Legal Citations
 4. Optional chat panel uses the same document context for Q&A.
+
+Notes:
+
+- Sample selector (EN/HI) auto-fills text and immediately triggers analysis.
+- Flowchart and Timeline panels are scrollable and have fullscreen modals.
 
 ### Visualization Outputs (Timelines, Flows, Responsibilities)
 
@@ -179,6 +191,11 @@ const visuals = await generateVisualizationsWithGemini({
 // visuals.responsibilities -> table-ready data
 ```
 
+Rendering:
+
+- Flowchart and Timeline are rendered with Mermaid inside fixed-height, scrollable containers to prevent overlap.
+- Fullscreen buttons open large modal views for detailed inspection.
+
 ### Role-specific Views in the UI
 
 In `AnalysisResults.tsx`, each expanded clause shows a "Role-specific views" section when `rolePerspectives` is present. For each role, it renders:
@@ -199,7 +216,7 @@ In `AnalysisResults.tsx`, each expanded clause shows a "Role-specific views" sec
 
 ### Performance Considerations
 
-- **Model selection**: Uses `gemini-2.0-flash` for fast, cost-effective responses.
+- **Model selection**: Uses `gemini-2.0-flash` (or current Gemini Flash) for fast, cost-effective responses.
 - **Token usage**: Prompt compaction for chat; JSON-only responses for analysis.
 - **Client rendering**: Clause accordions virtualize content by expanding on demand.
 
@@ -221,6 +238,7 @@ In `AnalysisResults.tsx`, each expanded clause shows a "Role-specific views" sec
 - "Missing Gemini API key": Ensure `.env` contains `VITE_GEMINI_API_KEY` and that you restarted `npm run dev`.
 - "Failed to parse Gemini response as JSON": The model returned text around JSON. Reduce temperature or retry. The current prompt already requests JSON-only; transient errors can still occur.
 - Nothing appears under Role-specific views: The model may have deemed roles irrelevant given the text. Try specifying document type hints in the document or re-run with a different simplification level.
+- Flowchart/Timeline overlap: Containers are now scrollable; if a diagram still looks clipped, use the Fullscreen button.
 
 ### Scripts
 
