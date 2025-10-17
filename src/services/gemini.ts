@@ -118,36 +118,117 @@ export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<
     throw new Error('Missing Gemini API key. Set VITE_GEMINI_API_KEY in your environment.');
   }
 
+  const chunks = splitTextIntoChunks(content, 4000, 400);
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-  const prompt = buildPrompt(content, language, simplificationLevel);
+  // Aggregate containers
+  const merged: DocumentAnalysis = {
+    id: String(Date.now()),
+    documentType: '',
+    plainSummary: '',
+    clauses: [],
+    risks: [],
+    actionPoints: [],
+    citations: [],
+  };
 
-  const response = await model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: prompt }]}],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 4096,
-      responseMimeType: 'application/json',
-    },
-  });
+  const seenClauseKeys = new Set<string>();
+  const seenRiskKeys = new Set<string>();
+  const seenAction = new Set<string>();
+  const seenCitationUrl = new Set<string>();
 
-  const text = response.response.text();
-  // eslint-disable-next-line no-console
-  console.log('[Gemini][raw]', truncateForLog(text));
+  // Analyze each chunk focusing on clauses/risks/actions/citations for reliability
+  for (let i = 0; i < chunks.length; i++) {
+    const part = chunks[i];
+    const prompt = buildChunkPrompt(part, language, simplificationLevel, i + 1, chunks.length);
+    const response = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }]}],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+        responseMimeType: 'application/json',
+      },
+    });
 
-  let data: unknown;
-  try {
-    data = safeParseJson(text);
-  } catch (err) {
+    const text = response.response.text();
     // eslint-disable-next-line no-console
-    console.error('[Gemini] Failed to parse analysis JSON', { error: err, raw: truncateForLog(text) });
-    throw new Error('Failed to parse Gemini response as JSON');
+    console.log('[Gemini][chunk][raw]', { idx: i + 1, of: chunks.length, text: truncateForLog(text) });
+
+    let data: any;
+    try {
+      data = safeParseJson(text);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[Gemini] Failed to parse chunk JSON', { chunk: i + 1, error: err });
+      continue;
+    }
+    const partial = mapToDocumentAnalysis(data);
+
+    // Merge documentType if empty
+    if (!merged.documentType && partial.documentType) merged.documentType = partial.documentType;
+    // Merge clauses
+    for (const c of partial.clauses) {
+      const key = `${c.title}::${c.originalText}`.toLowerCase();
+      if (key && !seenClauseKeys.has(key)) {
+        seenClauseKeys.add(key);
+        merged.clauses.push(c);
+      }
+    }
+    // Merge risks
+    for (const r of partial.risks) {
+      const key = `${r.clause}::${r.description}`.toLowerCase();
+      if (key && !seenRiskKeys.has(key)) {
+        seenRiskKeys.add(key);
+        merged.risks.push(r);
+      }
+    }
+    // Merge actions
+    for (const a of partial.actionPoints) {
+      const s = (a || '').trim();
+      if (s && !seenAction.has(s.toLowerCase())) {
+        seenAction.add(s.toLowerCase());
+        merged.actionPoints.push(s);
+      }
+    }
+    // Merge citations (validate URL-ish)
+    for (const ct of partial.citations) {
+      const url = (ct.url || '').trim();
+      if (url && isLikelyUrl(url) && !seenCitationUrl.has(url)) {
+        seenCitationUrl.add(url);
+        merged.citations.push(ct);
+      }
+    }
   }
 
-  const analysis = mapToDocumentAnalysis(data);
+  // Build a final concise summary if empty
+  if (!merged.plainSummary) {
+    try {
+      const sumPrompt = buildSummaryPrompt({
+        language,
+        level: simplificationLevel,
+        clauses: merged.clauses.slice(0, 30), // keep short
+        risks: merged.risks.slice(0, 30),
+      });
+      const sumResp = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: sumPrompt }]}],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 512 },
+      });
+      merged.plainSummary = sumResp.response.text().trim();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('[Gemini][summary] Failed to build final summary', e);
+    }
+  }
+
+  if (!merged.documentType) merged.documentType = 'Legal Document';
   // eslint-disable-next-line no-console
-  console.log('[Gemini][mapped]', analysis);
-  return analysis;
+  console.log('[Gemini][merged]', {
+    clauses: merged.clauses.length,
+    risks: merged.risks.length,
+    actions: merged.actionPoints.length,
+    citations: merged.citations.length,
+  });
+  return merged;
 }
 
 function buildPrompt(content: string, language: 'en' | 'hi', level: SimplificationLevel): string {
@@ -198,6 +279,67 @@ function buildPrompt(content: string, language: 'en' | 'hi', level: Simplificati
     'Document Text:',
     content,
   ].join('\n');
+}
+
+function buildChunkPrompt(content: string, language: 'en' | 'hi', level: SimplificationLevel, index: number, total: number): string {
+  return [
+    `You are a legal analyst AI. You will receive chunk ${index}/${total} of a legal document. Analyze ONLY this chunk and return a strict JSON object with these fields:`,
+    '',
+    'interface Clause { id: string; title: string; originalText: string; simplifiedText: string; riskLevel: "low" | "medium" | "high"; explanation: string; rolePerspectives?: { role: "Tenant" | "Landlord" | "Employee" | "Employer" | "Consumer" | "Business"; interpretation: string; obligations: string[]; risks: string[]; }[] }',
+    'interface Risk { id: string; clause: string; description: string; severity: "low" | "medium" | "high"; recommendation: string; }',
+    'interface Citation { title: string; url: string; description: string; }',
+    'interface DocumentAnalysis { documentType?: string; plainSummary?: string; clauses: Clause[]; risks: Risk[]; actionPoints: string[]; citations: Citation[]; }',
+    '',
+    `- Language for explanations: ${language === 'hi' ? 'Hindi' : 'English'}.`,
+    `- Simplification level for simplifiedText: ${level}.`,
+    '- Do not fabricate. If a field is not inferable from this chunk, leave it empty (e.g., empty arrays).',
+    '- Prefer quoting clause.originalText from this chunk.',
+    '- Citations must have plausible working URLs; otherwise return an empty array.',
+    '- Return ONLY JSON. No commentary.',
+    '',
+    'Chunk Text:',
+    content,
+  ].join('\n');
+}
+
+function buildSummaryPrompt(input: { language: 'en' | 'hi'; level: SimplificationLevel; clauses: any[]; risks: any[]; }): string {
+  return [
+    'Write a concise plain-language summary (4-6 sentences) of the contract based on the following extracted clauses and risks. Return plain text only.',
+    `Language: ${input.language === 'hi' ? 'Hindi' : 'English'}. Tone: ${input.level === 'eli5' ? 'very simple' : input.level === 'simple' ? 'clear, non-legal' : 'concise professional'}.`,
+    '',
+    'Clauses:',
+    JSON.stringify(input.clauses.slice(0, 20)),
+    '',
+    'Risks:',
+    JSON.stringify(input.risks.slice(0, 20)),
+  ].join('\n');
+}
+
+function splitTextIntoChunks(text: string, targetLen = 4000, overlap = 400): string[] {
+  if (!text || text.length <= targetLen) return [text];
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < text.length) {
+    const end = Math.min(text.length, start + targetLen);
+    let slice = text.slice(start, end);
+    // try to end at paragraph boundary
+    const lastBreak = slice.lastIndexOf('\n\n');
+    if (end < text.length && lastBreak > targetLen * 0.6) {
+      slice = slice.slice(0, lastBreak);
+    }
+    chunks.push(slice);
+    if (end >= text.length) break;
+    start = start + (slice.length - Math.min(overlap, slice.length));
+  }
+  return chunks;
+}
+
+function isLikelyUrl(u: string): boolean {
+  try {
+    const url = new URL(u);
+    return !!url.protocol && !!url.hostname;
+  } catch {}
+  return false;
 }
 
 function mapToDocumentAnalysis(data: any): DocumentAnalysis {

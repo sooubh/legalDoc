@@ -4,7 +4,9 @@ A fast, modern web app that analyzes legal documents clause-by-clause, generates
 
 ### Key Features
 
-- **Document analysis**: Breaks documents into clauses with titles, original text, simplified explanations, risk levels, and analysis.
+- **Chunked document analysis**: Splits long documents into overlapping chunks for reliable extraction. Merges clauses, risks, action points, and citations across chunks with de-duplication.
+  - Ensures Risk Radar, Action Points, and Legal Citations populate consistently on large inputs.
+- **Clause insights**: Breaks documents into clauses with titles, original text, simplified explanations, risk levels, and analysis.
 - **Role-specific perspectives**: For each clause, shows tailored interpretations, obligations, and risks for relevant roles:
   - Tenancy: Tenant, Landlord
   - Employment: Employee, Employer
@@ -21,6 +23,9 @@ A fast, modern web app that analyzes legal documents clause-by-clause, generates
   - Choose a sample and click "Try Sample Contract" to auto-fill and analyze
 - **Robust inputs**: Paste text or drag-and-drop PDFs; PDF text extraction with pdf.js and OCR fallback via Tesseract when needed
 - **Visualizations**: Auto-generated flowcharts and timelines with fullscreen view and scrollable containers to avoid overlap
+- **Modern UI shell**: Sidebar navigation (Upload, Results, Visuals, Chat, Profile, More), top bar with disclaimer, and sticky PDF viewer panel in Results.
+- **Fullscreen pop view**: One-click Fullscreen on Analysis, Visualizations, and Original Document opens a modal covering the entire window.
+- **Light/Dark theme**: Class-based dark mode with persistent toggle in the sidebar bottom section.
 
 ### Tech Stack
 
@@ -72,10 +77,15 @@ legal/
       AnalysisResults.tsx      # Renders summary, clauses, role-specific views, risks, actions, citations
       DocumentInput.tsx        # Paste/upload, sample selector, triggers analysis
       ChatPanel.tsx, ChatFloating.tsx # Optional Q&A on top of the document
-      Header.tsx, LoadingScreen.tsx, OriginalContent.tsx
+      AppShell.tsx              # Top bar + sidebar shell with theme toggle and bottom actions
+      FullscreenModal.tsx       # Reusable fullscreen pop-over wrapper
+      OriginalContent.tsx       # Sticky panel wrapper for document content/PDF
+      PdfViewer.tsx             # Embedded PDF.js canvas viewer (height-aware)
       MermaidDiagram.tsx       # Mermaid renderer (responsive SVG, scroll-safe)
+      ProfilePage.tsx           # Placeholder profile view
+      MorePage.tsx              # Placeholder more/settings/help view
     services/
-      gemini.ts                # Prompt assembly, API calls, response mapping
+      gemini.ts                # Chunked analysis, JSON prompts, API calls, response mapping
     types/
       legal.ts                 # Core types including Clause, RolePerspective, DocumentAnalysis
       chat.ts                  # Chat message and request types
@@ -138,30 +148,37 @@ export interface DocumentAnalysis {
 }
 ```
 
-### Prompting and Response Mapping
+### Prompting, Chunking and Response Mapping
 
-The `src/services/gemini.ts` file builds a strict JSON-only prompt and maps responses into the strongly typed `DocumentAnalysis` shape.
+The `src/services/gemini.ts` file builds strict JSON-only prompts and maps responses into the strongly typed `DocumentAnalysis` shape. It performs chunked analysis to improve reliability on long documents.
 
-- The prompt instructs Gemini to:
+- The prompts instruct Gemini to:
   - Identify clauses with `title`, `originalText`, `simplifiedText`, `riskLevel`, `explanation`.
   - Include `rolePerspectives` per clause where relevant. Each item includes `role`, `interpretation`, `obligations`, `risks`.
   - Provide risks, action points, and citations only if confidently inferable.
   - Respect selected language (English/Hindi) and simplification level.
+- Chunking strategy:
+  - Splits text into ~4k-character chunks with ~400-character overlap, tries to end at paragraph boundaries.
+  - Analyzes each chunk independently with a chunk-focused prompt.
+  - Merges and de-duplicates results across chunks (stable keys for clauses/risks, URL validation for citations).
+  - Synthesizes a final plain summary if needed based on merged items.
 - The mapper is defensive:
   - Parses JSON only; any non-JSON output raises a parsing error.
   - Falls back to defaults for missing fields and validates enum values.
 
 ### UI Flow
 
-1. User enters/pastes, uploads a PDF, or selects a sample in `DocumentInput`; choose language + simplification level.
-2. App calls `analyzeDocumentWithGemini` with the document text and settings.
-3. `AnalysisResults` renders five tabs:
+1. User lands in the sidebar shell; Upload page shows `DocumentInput` (paste/upload/sample + language + simplification).
+2. App calls `analyzeDocumentWithGemini` with chunking enabled.
+3. Results page shows `AnalysisResults` with five tabs:
    - Plain Summary
    - Clause Lens (with role-specific views inside each clause accordion)
    - Risk Radar
    - Action Points
    - Legal Citations
-4. Optional chat panel uses the same document context for Q&A.
+4. Sticky Original Document panel (with PDF viewer) stays fixed at the right.
+5. Visualizations appear below Analysis (flows, timelines, responsibilities), each with Fullscreen.
+6. Optional chat available via floating button or Chat page.
 
 Notes:
 
@@ -209,10 +226,11 @@ In `AnalysisResults.tsx`, each expanded clause shows a "Role-specific views" sec
 - The analysis prompt switches language for `plainSummary` and explanations based on user selection.
 - The UI text uses a small translation map (`en`/`hi`) for common labels.
 
-### Styling
+### Styling & Theming
 
 - Tailwind CSS utility classes with a light, accessible theme.
 - Components use soft borders, subtle shadows, and a responsive grid.
+- Dark mode uses `dark` class on `document.documentElement` (configured via `tailwind.config.js` with `darkMode: "class"`). Toggle is in the sidebar bottom.
 
 ### Performance Considerations
 

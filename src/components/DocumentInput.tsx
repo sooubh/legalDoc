@@ -327,16 +327,16 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
     <div className="space-y-8">
       {/* Hero Section */}
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-bold text-gray-900">
+        <h2 className="text-4xl font-bold text-gray-900 dark:text-slate-100">
           {translations[language].title}
         </h2>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        <p className="text-xl text-gray-600 dark:text-slate-300 max-w-3xl mx-auto">
           {translations[language].subtitle}
         </p>
       </div>
 
       {/* Input Section */}
-      <div className="relative rounded-2xl p-6 space-y-6 bg-white/80 backdrop-blur shadow-[0_10px_30px_rgba(2,6,23,0.06)] border border-slate-200 max-w-xl mx-auto">
+      <div className="relative rounded-2xl p-6 space-y-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur shadow-[0_10px_30px_rgba(2,6,23,0.06)] border border-slate-200 dark:border-slate-700 max-w-xl mx-auto">
         <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/60" />
 
         {/* Upload progress bar */}
@@ -370,7 +370,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
               className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 bg-white shadow-sm"
             >
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-200">
                   {uploadProgress >= 100 ? (
                     <CheckCircle2 className="h-5 w-5" />
                   ) : (
@@ -388,10 +388,10 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
         </AnimatePresence>
         {/* File Upload */}
         <div
-          className={`relative rounded-xl p-8 text-center transition-all duration-200 ${
+            className={`relative rounded-xl p-8 text-center transition-all duration-200 ${
             dragActive 
-              ? 'border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 shadow-inner' 
-              : 'border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+              ? 'border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 dark:from-slate-800 dark:to-slate-800 shadow-inner' 
+              : 'border-2 border-dashed border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-800'
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -409,10 +409,10 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Upload className="h-12 w-12 text-blue-500 mx-auto mb-4 drop-shadow-sm" />
           </motion.div>
-          <p className="text-lg font-semibold text-gray-900 mb-2">
+          <p className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">
             {translations[language].dragText}
           </p>
-          <p className="text-sm text-gray-500">PDF, DOC, DOCX, TXT</p>
+          <p className="text-sm text-gray-500 dark:text-slate-400">PDF, DOC, DOCX, TXT</p>
         </div>
 
         {/* Divider */}
@@ -426,21 +426,21 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
 
         {/* Text Input */}
         <div className="space-y-4">
-          <label className="block text-lg font-medium text-gray-700">
+          <label className="block text-lg font-medium text-gray-700 dark:text-slate-200">
             {translations[language].pasteText}
           </label>
           <textarea
             value={documentText}
             onChange={(e) => setDocumentText(e.target.value)}
             placeholder={translations[language].placeholder}
-            className="w-full h-64 p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm shadow-inner bg-white/70"
+            className="w-full h-64 p-4 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm shadow-inner bg-white/70 dark:bg-slate-900/70 dark:text-slate-100"
           />
           
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">Sample:</label>
+              <label className="text-sm text-gray-600 dark:text-slate-300">Sample:</label>
               <select
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                className="border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 rounded px-2 py-1 text-sm"
                 value={selectedSampleId}
                 onChange={(e) => setSelectedSampleId(e.target.value)}
               >
@@ -450,7 +450,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
               </select>
               <button
                 onClick={loadSample}
-                className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline"
+                className="text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200 font-medium transition-colors hover:underline"
               >
                 {translations[language].sampleText}
               </button>

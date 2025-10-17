@@ -12,6 +12,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
 }) => {
   const [isFlowFullscreen, setIsFlowFullscreen] = useState(false);
   const [isTimelineFullscreen, setIsTimelineFullscreen] = useState(false);
+  const [isRespFullscreen, setIsRespFullscreen] = useState(false);
 
   // Selectable flow index
   const [flowIndex, setFlowIndex] = useState(0);
@@ -200,8 +201,16 @@ const Visualizations: React.FC<VisualizationsProps> = ({
 
         {visuals.responsibilities && (
           <div className="border border-gray-200 rounded-lg p-4 bg-white overflow-x-auto">
-            <div className="text-base font-semibold text-gray-900 mb-3">
-              {visuals.responsibilities.label}
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-base font-semibold text-gray-900">
+                {visuals.responsibilities.label}
+              </div>
+              <button
+                onClick={() => setIsRespFullscreen(true)}
+                className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+              >
+                Fullscreen
+              </button>
             </div>
             <table className="min-w-full text-sm">
               <thead>
@@ -282,6 +291,45 @@ const Visualizations: React.FC<VisualizationsProps> = ({
                   No timeline data
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Responsibilities Fullscreen Modal */}
+      {isRespFullscreen && visuals.responsibilities && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl w-[95vw] h-[90vh] p-3 flex flex-col">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-semibold text-gray-900">
+                {visuals.responsibilities.label} (Fullscreen)
+              </div>
+              <button
+                onClick={() => setIsRespFullscreen(false)}
+                className="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-700">
+                    <th className="py-2 pr-4">Topic</th>
+                    <th className="py-2 pr-4">{visuals.responsibilities.partyALabel}</th>
+                    <th className="py-2 pr-4">{visuals.responsibilities.partyBLabel}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visuals.responsibilities.items.map((it, idx) => (
+                    <tr key={idx} className="border-t border-gray-200">
+                      <td className="py-2 pr-4 font-medium text-gray-900">{it.topic}</td>
+                      <td className="py-2 pr-4 text-gray-800">{it.partyA}</td>
+                      <td className="py-2 pr-4 text-gray-800">{it.partyB}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

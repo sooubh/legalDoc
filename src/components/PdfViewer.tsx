@@ -22,9 +22,10 @@ if (typeof window !== "undefined") {
 }
 interface PdfViewerProps {
   url: string;
+  height?: number | string;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
+const PdfViewer: React.FC<PdfViewerProps> = ({ url, height }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
@@ -145,8 +146,10 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
       });
   };
 
+  const containerHeight = typeof height === "number" ? `${height}px` : height || "70vh";
+
   return (
-    <div className="fixed top-[140px] left-0 w-[70vw] h-[calc(100vh-140px)] bg-white shadow-lg flex flex-col z-40">
+    <div className="relative w-full bg-white flex flex-col" style={{ height: containerHeight }}>
       <div className="sticky top-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-white z-10">
         <div className="flex items-center gap-2">
           <button
@@ -188,11 +191,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
           </button>
         </div>
       </div>
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-hidden"
-        style={{ height: "calc(100vh - 188px)" }}
-      >
+      <div ref={containerRef} className="flex-1 overflow-auto">
         <canvas ref={canvasRef} className="block mx-auto" />
       </div>
     </div>

@@ -1,15 +1,5 @@
-import React, { useState } from "react";
-import {
-  FileText,
-  Upload,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Globe,
-  Search,
-  Download,
-} from "lucide-react";
-import Header from "./components/Header";
+import { useState } from "react";
+import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
 import AnalysisResults from "./components/AnalysisResults";
 // Footer removed per user request
@@ -30,20 +20,18 @@ import ChatFloating from "./components/ChatFloating";
 import type { ChatMessage } from "./types/chat";
 import { chatWithGemini } from "./services/gemini";
 import Visualizations from "./components/Visualizations";
+import ProfilePage from "./components/ProfilePage";
+import MorePage from "./components/MorePage";
+import FullscreenModal from "./components/FullscreenModal";
 
 function App() {
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [language, setLanguage] = useState<"en" | "hi">("en");
-  const [simplificationLevel, setSimplificationLevel] =
+  const [language, _setLanguage] = useState<"en" | "hi">("en");
+  const [simplificationLevel, _setSimplificationLevel] =
     useState<SimplificationLevel>("simple");
 
-  // Add a style to push content below the fixed header
-  const mainContentStyle = {
-    marginTop: "140px", // Increased margin to prevent header overlap
-    position: "relative",
-    width: "100%",
-  };
+  const [route, setRoute] = useState<"upload" | "results" | "visuals" | "chat" | "profile" | "more">("upload");
   const [submittedContent, setSubmittedContent] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatting, setIsChatting] = useState(false);
@@ -51,6 +39,13 @@ function App() {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
   const [isVisualsLoading, setIsVisualsLoading] = useState(false);
+  const [recentChats, setRecentChats] = useState<{ id: string; title: string; timestamp: number }[]>(() => {
+    try {
+      const raw = localStorage.getItem('recentChats');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+  const [fs, setFs] = useState<null | { key: 'analysis' | 'visuals' | 'document' }>(null);
 
   const handleDocumentSubmit = async (
     content: string,
@@ -99,6 +94,14 @@ function App() {
         message: text,
       });
       setChatMessages((prev) => [...prev, reply]);
+      // Update recent chats sidebar store
+      try {
+        const title = (text || 'Message').slice(0, 40);
+        const id = String(Date.now());
+        const next = [{ id, title, timestamp: Date.now() }, ...recentChats].slice(0, 20);
+        setRecentChats(next);
+        localStorage.setItem('recentChats', JSON.stringify(next));
+      } catch {}
     } catch (err) {
       console.error(err);
       const fallback: ChatMessage = {
@@ -115,97 +118,149 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen w-screen h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <Header
-        language={language}
-        onLanguageChange={setLanguage}
-        simplificationLevel={simplificationLevel}
-        onSimplificationChange={setSimplificationLevel}
-      />
+    <AppShell
+      current={route}
+      onNavigate={(r) => setRoute(r as any)}
+      recentChats={recentChats}
+      onSelectChat={() => { /* could load specific chat if persisted */ }}
+    >
+      <AnimatePresence mode="wait">
+        {route === "upload" && (
+          <motion.div
+            key="upload"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="bg-white rounded-2xl shadow p-6 border border-gray-100">
+              <DocumentInput
+                onSubmit={(c, meta) => {
+                  handleDocumentSubmit(c, meta);
+                  setRoute("results");
+                }}
+                isAnalyzing={isAnalyzing}
+                language={language}
+              />
+            </div>
+          </motion.div>
+        )}
 
-      <main className="w-full h-full px-0 py-0 mt-[140px]">
-        <AnimatePresence mode="wait">
-          {!analysis && !isAnalyzing && (
-            <motion.div
-              key="input-centered"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="flex justify-center items-center w-full h-full"
-            >
-              <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-3xl">
-                <DocumentInput
-                  onSubmit={handleDocumentSubmit}
-                  isAnalyzing={isAnalyzing}
-                  language={language}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {isAnalyzing && (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
+        {route === "results" && (
+          <motion.div
+            key="results"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isAnalyzing ? (
               <LoadingScreen />
-            </motion.div>
-          )}
-
-          {analysis && !isAnalyzing && (
-            <motion.div
-              key="results-split"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full mt-6">
-                <div className="flex flex-col gap-6">
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+            ) : analysis ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="font-semibold text-gray-900">Analysis</div>
+                      <button onClick={() => setFs({ key: 'analysis' })} className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50">Fullscreen</button>
+                    </div>
                     <AnalysisResults
                       analysis={analysis}
                       language={language}
                       simplificationLevel={simplificationLevel}
-                      onNewAnalysis={() => setAnalysis(null)}
+                      onNewAnalysis={() => {
+                        setAnalysis(null);
+                        setRoute("upload");
+                      }}
                     />
                   </div>
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-                    <Visualizations
-                      visuals={visuals}
-                      isLoading={isVisualsLoading}
-                    />
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="font-semibold text-gray-900">Visualizations</div>
+                      <button onClick={() => setFs({ key: 'visuals' })} className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50">Fullscreen</button>
+                    </div>
+                    <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
                   </div>
                 </div>
-                <div className="flex flex-col gap-6">
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+                <div className="space-y-6">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-6 sticky top-0">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="font-semibold text-gray-900">Original Document</div>
+                      <button onClick={() => setFs({ key: 'document' })} className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50">Fullscreen</button>
+                    </div>
                     <OriginalContent
                       content={submittedContent}
                       pdfUrl={pdfPreviewUrl ?? undefined}
-                    />
-                  </div>
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-                    <ChatPanel
-                      document={submittedContent}
-                      messages={chatMessages}
-                      onSend={handleSendChat}
-                      isBusy={isChatting}
-                      language={language}
+                      height={"calc(100vh - 96px)"}
                     />
                   </div>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+            ) : (
+              <div className="text-gray-600">No analysis yet. Upload a document first.</div>
+            )}
+          </motion.div>
+        )}
 
-      {/* Footer removed */}
+        {route === "visuals" && (
+          <motion.div
+            key="visuals"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
+              <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+            </div>
+          </motion.div>
+        )}
 
-      {/* Floating Chat */}
+        {route === "chat" && (
+          <motion.div
+            key="chat"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
+              <ChatPanel
+                document={submittedContent}
+                messages={chatMessages}
+                onSend={handleSendChat}
+                isBusy={isChatting}
+                language={language}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {route === "profile" && (
+          <motion.div
+            key="profile"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ProfilePage />
+          </motion.div>
+        )}
+
+        {route === "more" && (
+          <motion.div
+            key="more"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <MorePage />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <ChatFloating
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((v) => !v)}
@@ -215,7 +270,43 @@ function App() {
         isBusy={isChatting}
         language={language}
       />
-    </div>
+
+      {fs && (
+        <FullscreenModal
+          title={fs.key === 'analysis' ? 'Analysis' : fs.key === 'visuals' ? 'Visualizations' : 'Original Document'}
+          onClose={() => setFs(null)}
+        >
+          {fs.key === 'analysis' && (
+            <div className="p-4">
+              <AnalysisResults
+                analysis={analysis as any}
+                language={language}
+                simplificationLevel={simplificationLevel}
+                onNewAnalysis={() => {
+                  setAnalysis(null);
+                  setRoute('upload');
+                  setFs(null);
+                }}
+              />
+            </div>
+          )}
+          {fs.key === 'visuals' && (
+            <div className="p-4">
+              <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+            </div>
+          )}
+          {fs.key === 'document' && (
+            <div className="p-4">
+              <OriginalContent
+                content={submittedContent}
+                pdfUrl={pdfPreviewUrl ?? undefined}
+                height={"calc(94vh - 56px)"}
+              />
+            </div>
+          )}
+        </FullscreenModal>
+      )}
+    </AppShell>
   );
 }
 

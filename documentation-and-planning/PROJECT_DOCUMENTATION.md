@@ -6,13 +6,13 @@ LegalEase AI is a web app that analyzes legal documents into clear, structured o
 
 ### 2) Key Features
 
-- Document analysis with structured output (clauses, risks, actions, citations)
+- Chunked document analysis with de-duplication (clauses, risks, actions, citations)
 - Role-specific perspectives (e.g., Tenant/Landlord, Employee/Employer)
 - Bilingual output (English/Hindi) and multiple simplification levels
 - Try Sample Contracts (EN/HI): Service Agreement, Mutual NDA, Residential Lease
 - Text paste and PDF upload with pdf.js extraction and Tesseract OCR fallback
 - Auto-generated Visualizations: Flowchart, Timeline, Responsibilities matrix
-- Scroll-safe and fullscreen diagrams to avoid overlap or clipping
+- Scroll-safe panels, sticky PDF viewer in Results, and fullscreen modals for Analysis/Visuals/Document
 - Optional chat on top of the analyzed document
 
 ### 3) Architecture
@@ -20,7 +20,7 @@ LegalEase AI is a web app that analyzes legal documents into clear, structured o
 - UI: React (Vite), TypeScript, Tailwind CSS
 - Services: `src/services/gemini.ts` builds prompts, calls Gemini, maps JSON response to strong types
 - Types: `src/types/legal.ts`, `src/types/chat.ts`
-- Components: `DocumentInput`, `AnalysisResults`, `Visualizations`, `MermaidDiagram`, `ChatPanel`, `ChatFloating`, `OriginalContent`, `LoadingScreen`
+- Components: `AppShell` (sidebar/topbar), `DocumentInput`, `AnalysisResults`, `Visualizations`, `MermaidDiagram`, `ChatPanel`, `ChatFloating`, `OriginalContent`, `PdfViewer`, `FullscreenModal`, `ProfilePage`, `MorePage`, `LoadingScreen`
 - Diagram rendering: `MermaidDiagram.tsx` dynamically imports Mermaid and injects responsive SVG
 
 ### 4) Setup & Environment
@@ -44,11 +44,11 @@ See `src/types/legal.ts` for full details.
 
 ### 6) Core Workflows
 
-- Document Analysis Workflow
+- Document Analysis Workflow (Chunked)
 
   - Input document (paste/upload/sample) in `DocumentInput`
-  - `analyzeDocumentWithGemini` called with content, language, simplification level
-  - Response mapped to `DocumentAnalysis`; UI renders tabs in `AnalysisResults`
+  - `analyzeDocumentWithGemini` splits content into chunks and calls Gemini per chunk
+  - Partial results mapped then merged; UI renders tabs in `AnalysisResults`
 
 - Visualization Generation Workflow
 
@@ -61,10 +61,12 @@ See `src/types/legal.ts` for full details.
 
 ### 7) UI Flow
 
-1. Landing shows `DocumentInput` (paste/upload/sample + language + simplification)
-2. On submit, loading screen; then `AnalysisResults` + `OriginalContent` side panel
-3. Visualizations appear under results (flows, timelines, responsibilities)
-4. Chat panel/floating chat available for Q&A
+1. AppShell sidebar shows pages: Upload, Results, Visuals, Chat, Profile, More
+2. Upload page: `DocumentInput` (paste/upload/sample + language + simplification)
+3. Results: `AnalysisResults` + sticky `OriginalContent` (PDF viewer)
+4. Visuals: flows/timelines/responsibilities
+5. Fullscreen buttons on Analysis/Visuals/Original Document open modal pop views
+6. Chat available via floating button or Chat page
 
 ### 8) Sample Contracts
 
