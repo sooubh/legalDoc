@@ -120,36 +120,36 @@ const Visualizations: React.FC<VisualizationsProps> = ({
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200">
-      <div className="p-8 space-y-6">
+    <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200 w-full max-w-6xl mx-auto">
+      <div className="p-8 flex flex-col gap-8">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
             Visualizations
           </h3>
-          <p className="text-gray-700">
+          <p className="text-gray-700 text-base">
             {visuals.textSummary ||
               "Automatically extracted timelines and process flows."}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          <div className="border border-gray-200 rounded-lg p-2 min-h-[520px]">
-            <div className="flex items-center justify-between px-2 py-1">
-              <div className="text-sm font-semibold text-gray-900">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="border border-gray-200 rounded-lg p-4 flex flex-col min-h-[400px] h-full bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-base font-semibold text-gray-900">
                 Flowchart
               </div>
               <button
                 onClick={() => setIsFlowFullscreen(true)}
-                className="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
               >
                 Fullscreen
               </button>
             </div>
             {visuals?.flows?.length > 1 && (
-              <div className="px-2 pb-2 flex items-center gap-2 text-xs text-gray-700">
+              <div className="pb-2 flex items-center gap-2 text-xs text-gray-700">
                 <span>Process:</span>
                 <select
-                  className="border border-gray-300 rounded px-1 py-0.5"
+                  className="border border-gray-300 rounded px-2 py-1"
                   value={flowIndex}
                   onChange={(e) => setFlowIndex(Number(e.target.value))}
                 >
@@ -161,9 +161,9 @@ const Visualizations: React.FC<VisualizationsProps> = ({
                 </select>
               </div>
             )}
-            <div className="h-[480px] overflow-auto">
+            <div className="flex-1 min-h-[320px] max-h-[480px] overflow-auto rounded">
               {mermaidFlow ? (
-                <MermaidDiagram code={mermaidFlow} className="h-full" />
+                <MermaidDiagram code={mermaidFlow} className="h-full w-full" />
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-500 text-sm">
                   No flow data
@@ -171,59 +171,62 @@ const Visualizations: React.FC<VisualizationsProps> = ({
               )}
             </div>
           </div>
-          <div className="border border-gray-200 rounded-lg p-2 min-h-[520px]">
-            <div className="flex items-center justify-between px-2 py-1">
-              <div className="text-sm font-semibold text-gray-900">
+          <div className="border border-gray-200 rounded-lg p-4 flex flex-col min-h-[400px] h-full bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-base font-semibold text-gray-900">
                 Timeline
               </div>
               <button
                 onClick={() => setIsTimelineFullscreen(true)}
-                className="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
               >
                 Fullscreen
               </button>
             </div>
-            {mermaidTimeline ? (
-              <MermaidDiagram code={mermaidTimeline} className="h-[480px] overflow-auto" />
-            ) : (
-              <div className="h-[480px] flex items-center justify-center text-gray-500 text-sm">
-                No timeline data
-              </div>
-            )}
+            <div className="flex-1 min-h-[320px] max-h-[480px] overflow-auto rounded">
+              {mermaidTimeline ? (
+                <MermaidDiagram
+                  code={mermaidTimeline}
+                  className="h-full w-full"
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                  No timeline data
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {visuals.responsibilities && (
-          <div className="border border-gray-200 rounded-lg p-4">
-            <div className="text-sm font-semibold text-gray-900 mb-3">
+          <div className="border border-gray-200 rounded-lg p-4 bg-white overflow-x-auto">
+            <div className="text-base font-semibold text-gray-900 mb-3">
               {visuals.responsibilities.label}
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-700">
-                    <th className="py-2 pr-4">Topic</th>
-                    <th className="py-2 pr-4">
-                      {visuals.responsibilities.partyALabel}
-                    </th>
-                    <th className="py-2 pr-4">
-                      {visuals.responsibilities.partyBLabel}
-                    </th>
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-700">
+                  <th className="py-2 pr-4">Topic</th>
+                  <th className="py-2 pr-4">
+                    {visuals.responsibilities.partyALabel}
+                  </th>
+                  <th className="py-2 pr-4">
+                    {visuals.responsibilities.partyBLabel}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visuals.responsibilities.items.map((it, idx) => (
+                  <tr key={idx} className="border-t border-gray-200">
+                    <td className="py-2 pr-4 font-medium text-gray-900">
+                      {it.topic}
+                    </td>
+                    <td className="py-2 pr-4 text-gray-800">{it.partyA}</td>
+                    <td className="py-2 pr-4 text-gray-800">{it.partyB}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {visuals.responsibilities.items.map((it, idx) => (
-                    <tr key={idx} className="border-t border-gray-200">
-                      <td className="py-2 pr-4 font-medium text-gray-900">
-                        {it.topic}
-                      </td>
-                      <td className="py-2 pr-4 text-gray-800">{it.partyA}</td>
-                      <td className="py-2 pr-4 text-gray-800">{it.partyB}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

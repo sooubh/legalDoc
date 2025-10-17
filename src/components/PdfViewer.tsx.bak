@@ -1,5 +1,45 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
+import React, { useEffect, useRef, useState } from "  // Update container width on resize
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateWidth = () => {
+      setContainerWidth(containerRef.current?.clientWidth || 0);
+    };
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(containerRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (!pdf || !canvasRef.current || !containerRef.current) return;
+      try {
+        const page: PDFPageProxy = await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale });
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        if (!context) {
+          console.error('Could not get canvas context');
+          return;
+        }
+
+        // Calculate scale to fit width while maintaining aspect ratio
+        const containerWidth = containerRef.current.clientWidth;
+        const scaleFactor = containerWidth / viewport.width;
+        const adjustedViewport = page.getViewport({ scale: scale * scaleFactor });
+
+        // Set canvas dimensions
+        canvas.width = adjustedViewport.width;
+        canvas.height = adjustedViewport.height;
+
+        // Render page
+        await page.render({
+          canvasContext: context,
+          viewport: adjustedViewport,
+          background: 'rgba(0,0,0,0)',
+        }).promise;mport {
   ChevronLeft,
   ChevronRight,
   ZoomIn,
@@ -12,39 +52,32 @@ import {
   type PDFDocumentProxy,
   type PDFPageProxy,
 } from "pdfjs-dist";
+import "pdfjs-dist/build/pdf.worker.mjs";
 
 // Configure worker (vite-friendly)
-if (typeof window !== "undefined") {
-  GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.mjs",
-    import.meta.url
-  ).toString();
-}
+GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.mjs";
+
 interface PdfViewerProps {
   url: string;
+  height?: number; // px
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
+const PdfViewer: React.FC<PdfViewerProps> = ({ url, height }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [numPages, setNumPages] = useState(1);
   const [scale, setScale] = useState(1.2);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    let currentPdf: PDFDocumentProxy | null = null;
-
     (async () => {
       try {
         const loadingTask = getDocument(url);
         const doc = await loadingTask.promise;
-        if (cancelled) {
-          doc.destroy();
-          return;
-        }
-        currentPdf = doc;
+        if (cancelled) return;
         setPdf(doc);
         setNumPages(doc.numPages);
       } catch (e) {
@@ -52,28 +85,19 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
         console.error("[PdfViewer] Failed to load PDF", { url, error: e });
       }
     })();
-
     return () => {
       cancelled = true;
-      if (currentPdf) {
-        currentPdf.destroy();
-      }
     };
   }, [url]);
 
   useEffect(() => {
-    let currentPage: PDFPageProxy | null = null;
-    let renderTask: any = null;
-
     (async () => {
       if (!pdf || !canvasRef.current) return;
       try {
         const page: PDFPageProxy = await pdf.getPage(pageNumber);
-        currentPage = page;
         const viewport = page.getViewport({ scale });
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
-
         if (!context) {
           // eslint-disable-next-line no-console
           console.error("[PdfViewer] Canvas 2D context not available", {
@@ -82,18 +106,9 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
           });
           return;
         }
-
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport,
-          canvas: canvas,
-        };
-
-        renderTask = page.render(renderContext);
-        await renderTask.promise;
+        await page.render({ canvasContext: context, viewport }).promise;
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error("[PdfViewer] Failed to render PDF page", {
@@ -103,15 +118,6 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
         });
       }
     })();
-
-    return () => {
-      if (renderTask) {
-        renderTask.cancel();
-      }
-      if (currentPage) {
-        currentPage.cleanup();
-      }
-    };
   }, [pdf, pageNumber, scale]);
 
   const goPrev = () => setPageNumber((p) => Math.max(1, p - 1));
@@ -146,8 +152,8 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
   };
 
   return (
-    <div className="fixed top-[140px] left-0 w-[70vw] h-[calc(100vh-140px)] bg-white shadow-lg flex flex-col z-40">
-      <div className="sticky top-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-white z-10">
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <button
             onClick={goPrev}
@@ -188,11 +194,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url }) => {
           </button>
         </div>
       </div>
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-hidden"
-        style={{ height: "calc(100vh - 188px)" }}
-      >
+      <div ref={containerRef} className="overflow-auto" style={{ height }}>
         <canvas ref={canvasRef} className="block mx-auto" />
       </div>
     </div>

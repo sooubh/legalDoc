@@ -1,26 +1,50 @@
-import React, { useState } from 'react';
-import { FileText, Upload, AlertTriangle, CheckCircle, Clock, Globe, Search, Download } from 'lucide-react';
-import Header from './components/Header';
-import DocumentInput from './components/DocumentInput';
-import AnalysisResults from './components/AnalysisResults';
+import React, { useState } from "react";
+import {
+  FileText,
+  Upload,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Globe,
+  Search,
+  Download,
+} from "lucide-react";
+import Header from "./components/Header";
+import DocumentInput from "./components/DocumentInput";
+import AnalysisResults from "./components/AnalysisResults";
 // Footer removed per user request
-import LoadingScreen from './components/LoadingScreen';
-import OriginalContent from './components/OriginalContent';
-import { AnimatePresence, motion } from 'framer-motion';
-import { DocumentAnalysis, SimplificationLevel, VisualizationBundle } from './types/legal';
-import { analyzeDocumentWithGemini, generateVisualizationsWithGemini } from './services/gemini';
-import ChatPanel from './components/ChatPanel';
-import ChatFloating from './components/ChatFloating';
-import type { ChatMessage } from './types/chat';
-import { chatWithGemini } from './services/gemini';
-import Visualizations from './components/Visualizations';
+import LoadingScreen from "./components/LoadingScreen";
+import OriginalContent from "./components/OriginalContent";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  DocumentAnalysis,
+  SimplificationLevel,
+  VisualizationBundle,
+} from "./types/legal";
+import {
+  analyzeDocumentWithGemini,
+  generateVisualizationsWithGemini,
+} from "./services/gemini";
+import ChatPanel from "./components/ChatPanel";
+import ChatFloating from "./components/ChatFloating";
+import type { ChatMessage } from "./types/chat";
+import { chatWithGemini } from "./services/gemini";
+import Visualizations from "./components/Visualizations";
 
 function App() {
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [language, setLanguage] = useState<'en' | 'hi'>('en');
-  const [simplificationLevel, setSimplificationLevel] = useState<SimplificationLevel>('simple');
-  const [submittedContent, setSubmittedContent] = useState<string>('');
+  const [language, setLanguage] = useState<"en" | "hi">("en");
+  const [simplificationLevel, setSimplificationLevel] =
+    useState<SimplificationLevel>("simple");
+
+  // Add a style to push content below the fixed header
+  const mainContentStyle = {
+    marginTop: "140px", // Increased margin to prevent header overlap
+    position: "relative",
+    width: "100%",
+  };
+  const [submittedContent, setSubmittedContent] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatting, setIsChatting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -28,7 +52,10 @@ function App() {
   const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
   const [isVisualsLoading, setIsVisualsLoading] = useState(false);
 
-  const handleDocumentSubmit = async (content: string, fileMeta?: { pdfUrl?: string; mime?: string }) => {
+  const handleDocumentSubmit = async (
+    content: string,
+    fileMeta?: { pdfUrl?: string; mime?: string }
+  ) => {
     setIsAnalyzing(true);
     setSubmittedContent(content);
     setChatMessages([]);
@@ -46,22 +73,22 @@ function App() {
       generateVisualizationsWithGemini({
         document: content,
         language,
-        partyALabel: 'Party A',
-        partyBLabel: 'Party B',
+        partyALabel: "Party A",
+        partyBLabel: "Party B",
       })
         .then(setVisuals)
-        .catch((e) => console.warn('Visualization generation failed', e))
+        .catch((e) => console.warn("Visualization generation failed", e))
         .finally(() => setIsVisualsLoading(false));
     } catch (err) {
       console.error(err);
-      alert('Analysis failed. Please set VITE_GEMINI_API_KEY and try again.');
+      alert("Analysis failed. Please set VITE_GEMINI_API_KEY and try again.");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const handleSendChat = async (text: string) => {
-    const next: ChatMessage = { role: 'user', content: text };
+    const next: ChatMessage = { role: "user", content: text };
     setChatMessages((prev) => [...prev, next]);
     setIsChatting(true);
     try {
@@ -75,8 +102,11 @@ function App() {
     } catch (err) {
       console.error(err);
       const fallback: ChatMessage = {
-        role: 'model',
-        content: language === 'hi' ? 'क्षमा करें, अभी उत्तर देने में समस्या आ रही है।' : 'Sorry, I could not answer right now.',
+        role: "model",
+        content:
+          language === "hi"
+            ? "क्षमा करें, अभी उत्तर देने में समस्या आ रही है।"
+            : "Sorry, I could not answer right now.",
       };
       setChatMessages((prev) => [...prev, fallback]);
     } finally {
@@ -85,15 +115,15 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <Header 
-        language={language} 
+    <div className="min-h-screen w-screen h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <Header
+        language={language}
         onLanguageChange={setLanguage}
         simplificationLevel={simplificationLevel}
         onSimplificationChange={setSimplificationLevel}
       />
-      
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+
+      <main className="w-full h-full px-0 py-0 mt-[140px]">
         <AnimatePresence mode="wait">
           {!analysis && !isAnalyzing && (
             <motion.div
@@ -102,11 +132,11 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="max-w-3xl mx-auto"
+              className="flex justify-center items-center w-full h-full"
             >
-              <div className="bg-white rounded-2xl shadow-lg p-8">
-                <DocumentInput 
-                  onSubmit={handleDocumentSubmit} 
+              <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-3xl">
+                <DocumentInput
+                  onSubmit={handleDocumentSubmit}
                   isAnalyzing={isAnalyzing}
                   language={language}
                 />
@@ -133,21 +163,31 @@ function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="order-2 lg:order-1 lg:col-span-2">
-                  <AnalysisResults 
-                    analysis={analysis} 
-                    language={language}
-                    simplificationLevel={simplificationLevel}
-                    onNewAnalysis={() => setAnalysis(null)}
-                  />
-                  <div className="mt-6">
-                    <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full mt-6">
+                <div className="flex flex-col gap-6">
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+                    <AnalysisResults
+                      analysis={analysis}
+                      language={language}
+                      simplificationLevel={simplificationLevel}
+                      onNewAnalysis={() => setAnalysis(null)}
+                    />
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+                    <Visualizations
+                      visuals={visuals}
+                      isLoading={isVisualsLoading}
+                    />
                   </div>
                 </div>
-                <div className="order-1 lg:order-2">
-                  <OriginalContent content={submittedContent} pdfUrl={pdfPreviewUrl ?? undefined} />
-                  <div className="mt-6">
+                <div className="flex flex-col gap-6">
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+                    <OriginalContent
+                      content={submittedContent}
+                      pdfUrl={pdfPreviewUrl ?? undefined}
+                    />
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                     <ChatPanel
                       document={submittedContent}
                       messages={chatMessages}
@@ -162,7 +202,7 @@ function App() {
           )}
         </AnimatePresence>
       </main>
-      
+
       {/* Footer removed */}
 
       {/* Floating Chat */}
