@@ -3,20 +3,33 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Your web app's Firebase configuration is now loaded from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyCQb6htbUHR-47xK6VE-hGpbe3_0sa2gWo",
-  authDomain: "gen-ai-77.firebaseapp.com",
-  projectId: "gen-ai-77",
-  storageBucket: "gen-ai-77.firebasestorage.app",
-  messagingSenderId: "42593977465",
-  appId: "1:42593977465:web:253083dcd6e835df9c40a8",
-  measurementId: "G-FGBBS16113"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
+
+// Simple validation to ensure that all required environment variables are present
+const requiredFirebaseConfigKeys: (keyof typeof firebaseConfig)[] = [
+  'apiKey',
+  'authDomain',
+  'projectId',
+  'storageBucket',
+  'messagingSenderId',
+  'appId'
+];
+
+for (const key of requiredFirebaseConfigKeys) {
+    if (!firebaseConfig[key]) {
+        console.error(`Firebase config error: Missing environment variable ${'VITE_FIREBASE_' + key.toUpperCase()}`);
+    }
+}
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

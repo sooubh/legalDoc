@@ -16,6 +16,7 @@ import {
   analyzeDocumentWithGemini,
   generateVisualizationsWithGemini,
 } from "./services/gemini";
+import { saveAnalysisToHistory, getAnalysisHistoryForUser } from './services/analysis';
 import ChatPanel from "./components/ChatPanel";
 import ChatFloating from "./components/ChatFloating";
 import Visualizations from "./components/Visualizations";
@@ -45,16 +46,7 @@ function App() {
     key: "analysis" | "visuals" | "document";
   }>(null);
 
-  const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>(
-    () => {
-      try {
-        const saved = localStorage.getItem("analysisHistory");
-        return saved ? JSON.parse(saved) : [];
-      } catch {
-        return [];
-      }
-    }
-  );
+  const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
 
   useEffect(() => {
@@ -63,19 +55,16 @@ function App() {
       if (user) {
         setUser(user);
         setRoute("upload");
+        // Load user's analysis history from Firestore
+        getAnalysisHistoryForUser().then(setAnalysisHistory);
       } else {
         setUser(null);
         setRoute("login");
+        setAnalysisHistory([]); // Clear history on logout
       }
     });
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("analysisHistory", JSON.stringify(analysisHistory));
-    } catch {}
-  }, [analysisHistory]);
 
   const handleDocumentSubmit = async (
     content: string,
@@ -102,10 +91,9 @@ function App() {
       });
       setVisuals(visualsResult);
 
-      // Save to history
-      const newAnalysis: AnalysisHistoryItem = {
-        id: Date.now().toString(),
-        timestamp: Date.now(),
+      // Save to history in Firestore
+      const newAnalysis: Omit<AnalysisHistoryItem, 'id'> = {
+        timestamp: Date.now(), // This will be replaced by server timestamp in the backend function
         title: result.summary?.slice(0, 100) || "Document Analysis",
         analysis: result,
         visuals: visualsResult,
@@ -115,8 +103,12 @@ function App() {
           documentType: fileMeta?.mime,
         },
       };
-      setAnalysisHistory((prev) => [newAnalysis, ...prev].slice(0, 50));
-      setSelectedAnalysisId(newAnalysis.id);
+      
+      const newId = await saveAnalysisToHistory(newAnalysis);
+      const newAnalysisWithId = { ...newAnalysis, id: newId };
+
+      setAnalysisHistory((prev) => [newAnalysisWithId, ...prev].slice(0, 50));
+      setSelectedAnalysisId(newAnalysisWithId.id);
       setIsVisualsLoading(false);
     } catch (err) {
       console.error(err);
