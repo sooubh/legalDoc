@@ -1,20 +1,16 @@
 import React, { useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import ChatPanel from './ChatPanel';
-import type { ChatMessage } from '../types/chat';
 
 interface ChatFloatingProps {
   isOpen: boolean;
   onToggle: () => void;
   document: string;
-  messages: ChatMessage[];
-  onSend: (msg: string) => Promise<void> | void;
-  isBusy?: boolean;
   language: 'en' | 'hi';
 }
 
 
-const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document, messages, onSend, isBusy = false, language }) => {
+const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document, language }) => {
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) onToggle();
@@ -53,9 +49,6 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document,
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
               <ChatPanel
                 document={document}
-                messages={messages}
-                onSend={onSend}
-                isBusy={isBusy}
                 language={language}
               />
             </div>
@@ -67,5 +60,3 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document,
 };
 
 export default ChatFloating;
-
-

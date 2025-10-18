@@ -37,7 +37,6 @@ function App() {
     "login" | "signup" | "upload" | "results" | "visuals" | "chat" | "profile" | "more"
   >("login");
   const [submittedContent, setSubmittedContent] = useState<string>("");
-  const [isChatting, setIsChatting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
@@ -310,7 +309,6 @@ function App() {
             <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
               <ChatPanel
                 document={submittedContent}
-                isBusy={isChatting}
                 language={language}
               />
             </div>
@@ -346,7 +344,6 @@ function App() {
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((v) => !v)}
         document={submittedContent}
-        isBusy={isChatting}
         language={language}
       />
 

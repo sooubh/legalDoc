@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +13,18 @@ const LoginPage: React.FC = () => {
       await signInWithEmailAndPassword(auth, email, password);
       // On successful login, you can redirect the user or update the app state.
       console.log('User logged in successfully!');
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      // On successful login, you can redirect the user or update the app state.
+      console.log('User logged in with Google successfully!');
     } catch (err: any) {
       setError(err.message);
     }
@@ -48,6 +60,24 @@ const LoginPage: React.FC = () => {
           Login
         </button>
       </form>
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+        <div className="mt-6">
+          <button
+            onClick={handleGoogleLogin}
+            className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            Sign in with Google
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
