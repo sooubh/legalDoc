@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
 import AnalysisResults from "./components/AnalysisResults";
 import type { AnalysisHistoryItem } from "./types/history";
-// Footer removed per user request
 import LoadingScreen from "./components/LoadingScreen";
 import OriginalContent from "./components/OriginalContent";
 import { AnimatePresence, motion } from "framer-motion";
@@ -18,14 +18,15 @@ import {
 } from "./services/gemini";
 import ChatPanel from "./components/ChatPanel";
 import ChatFloating from "./components/ChatFloating";
-import type { ChatMessage } from "./types/chat";
-import { chatWithGemini } from "./services/gemini";
 import Visualizations from "./components/Visualizations";
 import ProfilePage from "./components/ProfilePage";
 import MorePage from "./components/MorePage";
 import FullscreenModal from "./components/FullscreenModal";
+import LoginPage from './components/LoginPage';
+import SignupPage from './components/SignupPage';
 
 function App() {
+  const [user, setUser] = useState<User | null>(null);
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [language, _setLanguage] = useState<"en" | "hi">("en");
@@ -33,10 +34,9 @@ function App() {
     useState<SimplificationLevel>("simple");
 
   const [route, setRoute] = useState<
-    "upload" | "results" | "visuals" | "chat" | "profile" | "more"
-  >("upload");
+    "login" | "signup" | "upload" | "results" | "visuals" | "chat" | "profile" | "more"
+  >("login");
   const [submittedContent, setSubmittedContent] = useState<string>("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatting, setIsChatting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -59,6 +59,20 @@ function App() {
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
 
   useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        setRoute("upload");
+      } else {
+        setUser(null);
+        setRoute("login");
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     try {
       localStorage.setItem("analysisHistory", JSON.stringify(analysisHistory));
     } catch {}
@@ -70,7 +84,6 @@ function App() {
   ) => {
     setIsAnalyzing(true);
     setSubmittedContent(content);
-    setChatMessages([]);
     setPdfPreviewUrl(fileMeta?.pdfUrl ?? null);
     try {
       const result = await analyzeDocumentWithGemini({
@@ -128,35 +141,37 @@ function App() {
     }
     setRoute("results");
   };
-
-  const handleSendChat = async (text: string) => {
-    const next: ChatMessage = { role: "user", content: text };
-    setChatMessages((prev) => [...prev, next]);
-    setIsChatting(true);
-    try {
-      const reply = await chatWithGemini({
-        document: submittedContent,
-        language,
-        history: chatMessages,
-        message: text,
-      });
-      setChatMessages((prev) => [...prev, reply]);
-      // Update recent chats sidebar store
-      // Chat history storage removed
-    } catch (err) {
-      console.error(err);
-      const fallback: ChatMessage = {
-        role: "model",
-        content:
-          language === "hi"
-            ? "क्षमा करें, अभी उत्तर देने में समस्या आ रही है।"
-            : "Sorry, I could not answer right now.",
-      };
-      setChatMessages((prev) => [...prev, fallback]);
-    } finally {
-      setIsChatting(false);
-    }
-  };
+  
+  if (!user) {
+    return (
+      <div className="w-screen h-screen bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
+        <div className="w-full max-w-md">
+          {route === 'login' && (
+            <>
+              <LoginPage />
+              <p className="text-center mt-4">
+                Don't have an account?{' '}
+                <button onClick={() => setRoute('signup')} className="text-blue-600 hover:underline">
+                  Sign up
+                </button>
+              </p>
+            </>
+          )}
+          {route === 'signup' && (
+            <>
+              <SignupPage />
+              <p className="text-center mt-4">
+                Already have an account?{' '}
+                <button onClick={() => setRoute('login')} className="text-blue-600 hover:underline">
+                  Login
+                </button>
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <AppShell
@@ -295,8 +310,6 @@ function App() {
             <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
               <ChatPanel
                 document={submittedContent}
-                messages={chatMessages}
-                onSend={handleSendChat}
                 isBusy={isChatting}
                 language={language}
               />
@@ -333,8 +346,6 @@ function App() {
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((v) => !v)}
         document={submittedContent}
-        messages={chatMessages}
-        onSend={handleSendChat}
         isBusy={isChatting}
         language={language}
       />

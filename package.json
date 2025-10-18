@@ -13,6 +13,8 @@
     "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.7.1",
+    "firebase": "^12.4.0",
+    "firebase-admin": "^13.5.0",
     "framer-motion": "^12.23.12",
     "jsonrepair": "^3.13.0",
     "lucide-react": "^0.344.0",

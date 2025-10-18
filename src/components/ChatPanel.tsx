@@ -1,18 +1,32 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, MessageSquare, Loader2 } from 'lucide-react';
 import type { ChatMessage } from '../types/chat';
+import { db } from '../services/firebase';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
 
 interface ChatPanelProps {
   document: string;
-  messages: ChatMessage[];
-  onSend: (message: string) => Promise<void> | void;
   isBusy?: boolean;
   language: 'en' | 'hi';
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, messages, onSend, isBusy = false, language }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, isBusy = false, language }) => {
   const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const q = query(collection(db, "messages"), orderBy("timestamp"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const messages: ChatMessage[] = [];
+      querySnapshot.forEach((doc) => {
+        messages.push(doc.data() as ChatMessage);
+      });
+      setMessages(messages);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     try {
@@ -33,7 +47,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, messages, on
     if (!trimmed || isBusy) return;
     setInput('');
     try {
-      await onSend(trimmed);
+      await addDoc(collection(db, "messages"), {
+        role: 'user', 
+        content: trimmed, 
+        timestamp: serverTimestamp(),
+      });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[ChatPanel] onSend failed', { input: trimmed, error: err });
@@ -126,5 +144,3 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, messages, on
 };
 
 export default ChatPanel;
-
-
