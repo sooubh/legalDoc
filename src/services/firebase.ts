@@ -19,10 +19,22 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Debug: Log the config to see if env vars are loaded
+console.log('Firebase Config:', {
+  apiKey: firebaseConfig.apiKey ? '✅ Loaded' : '❌ Missing',
+  authDomain: firebaseConfig.authDomain ? '✅ Loaded' : '❌ Missing',
+  projectId: firebaseConfig.projectId ? '✅ Loaded' : '❌ Missing',
+  storageBucket: firebaseConfig.storageBucket ? '✅ Loaded' : '❌ Missing',
+  messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Loaded' : '❌ Missing',
+  appId: firebaseConfig.appId ? '✅ Loaded' : '❌ Missing',
+});
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Get a reference to the Firestore service
 const db = getFirestore(app);
+
+console.log('Firebase initialized successfully!');
 
 export { db };

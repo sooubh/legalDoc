@@ -17,6 +17,7 @@ interface AppShellProps {
   analysisHistory?: AnalysisHistoryItem[];
   selectedAnalysisId?: string;
   onSelectAnalysis?: (item: AnalysisHistoryItem) => void;
+  onFetchHistory?: () => void;
 }
 
 const navItems: NavItem[] = [
@@ -33,6 +34,7 @@ const AppShell: React.FC<AppShellProps> = ({
   analysisHistory = [],
   selectedAnalysisId,
   onSelectAnalysis,
+  onFetchHistory,
 }) => {
   const [theme, setTheme] = useState<"light" | "dark">(
     () =>
@@ -160,11 +162,12 @@ const AppShell: React.FC<AppShellProps> = ({
           isHistoryOpen ? "w-80" : "w-0"
         } overflow-hidden`}
       >
-        {isHistoryOpen && analysisHistory.length > 0 && (
+        {isHistoryOpen && (
           <AnalysisHistorySidebar
             items={analysisHistory}
             onSelect={onSelectAnalysis!}
             selectedId={selectedAnalysisId}
+            onFetch={onFetchHistory}
           />
         )}
       </aside>

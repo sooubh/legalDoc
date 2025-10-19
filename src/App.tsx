@@ -52,13 +52,43 @@ function App() {
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
 
+  // Local browser history helpers
+  const loadLocalAnalyses = (): AnalysisHistoryItem[] => {
+    try {
+      const raw = localStorage.getItem('localAnalyses');
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr as AnalysisHistoryItem[] : [];
+    } catch (e) {
+      console.error('Failed to load localAnalyses', e);
+      return [];
+    }
+  };
+
+  const appendLocalAnalysis = (entry: AnalysisHistoryItem) => {
+    try {
+      const current = loadLocalAnalyses();
+      const next = [entry, ...current].slice(0, 100);
+      localStorage.setItem('localAnalyses', JSON.stringify(next));
+      setAnalysisHistory(next);
+    } catch (e) {
+      console.error('Failed to append to localAnalyses', e);
+    }
+  };
+
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
-        // Load user's analysis history from Firestore
-        getAnalysisHistoryForUser().then(setAnalysisHistory);
+        // Load local history by default; cloud history can be fetched on demand
+        setAnalysisHistory(loadLocalAnalyses());
+        
+        // Try to load Firestore history, but don't fail if it doesn't work
+        getAnalysisHistoryForUser()
+          .then(setAnalysisHistory)
+          .catch((error) => {
+            console.warn('Failed to load Firestore history, using local only:', error);
+          });
 
         // Check for an unsaved analysis in local storage
         const unsavedAnalysisJson = localStorage.getItem('unsavedAnalysis');
@@ -123,6 +153,21 @@ function App() {
       };
       localStorage.setItem('unsavedAnalysis', JSON.stringify(unsavedAnalysis));
 
+      // Also persist to local browser history (separate from Firebase)
+      const localItem: AnalysisHistoryItem = {
+        id: `local-${Date.now()}`,
+        title: result.documentType?.slice(0, 100) || 'Document Analysis',
+        analysis: result,
+        originalContent: content,
+        analysisResults: JSON.stringify(result),
+        visuals: visualsResult,
+        metadata: { language, simplificationLevel },
+        // Store a simple ISO string; sidebar handles both Firestore and JS dates
+        // Cast to any to satisfy the AnalysisHistoryItem Timestamp type at compile time
+        timestamp: new Date() as any,
+      };
+      appendLocalAnalysis(localItem);
+
     } catch (err) {
       console.error(err);
       alert("Analysis failed. Please set VITE_GEMINI_API_KEY and try again.");
@@ -159,6 +204,16 @@ function App() {
     } catch (error) {
       console.error("Failed to save analysis:", error);
       alert("There was an error saving your analysis. Please try again.");
+    }
+  };
+
+  const handleFetchHistory = async () => {
+    try {
+      const items = await getAnalysisHistoryForUser();
+      setAnalysisHistory(items);
+    } catch (e) {
+      console.error('Failed to fetch analysis history:', e);
+      alert('Failed to fetch analysis history.');
     }
   };
 
@@ -226,6 +281,7 @@ function App() {
       analysisHistory={analysisHistory}
       selectedAnalysisId={selectedAnalysisId}
       onSelectAnalysis={handleSelectAnalysis}
+      onFetchHistory={handleFetchHistory}
     >
       <AnimatePresence mode="wait">
         {route === "upload" && (

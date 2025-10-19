@@ -12,12 +12,14 @@ interface AnalysisHistorySidebarProps {
   items: AnalysisHistoryItem[];
   onSelect: (item: AnalysisHistoryItem) => void;
   selectedId?: string;
+  onFetch?: () => void;
 }
 
 const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
   items,
   onSelect,
   selectedId,
+  onFetch,
 }) => {
   const [expanded, setExpanded] = React.useState<{ [key: string]: boolean }>({});
 
@@ -25,9 +27,17 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // ✅ Convert Firestore Timestamp → JS Date
+  // ✅ Convert Firestore Timestamp or JS Date → JS Date
+  const toJsDate = (ts: any): Date => {
+    // Firestore Timestamp has toDate(); local items may be Date
+    if (ts && typeof ts.toDate === 'function') return ts.toDate();
+    if (ts instanceof Date) return ts;
+    const parsed = new Date(ts);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  };
+
   const formatDate = (timestamp: AnalysisHistoryItem["timestamp"]) => {
-    const date = timestamp.toDate();
+    const date = toJsDate(timestamp as any);
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -36,7 +46,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
   };
 
   const formatTime = (timestamp: AnalysisHistoryItem["timestamp"]) => {
-    const date = timestamp.toDate();
+    const date = toJsDate(timestamp as any);
     return date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
@@ -60,6 +70,14 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
         <p className="text-sm text-gray-500 dark:text-slate-400">
           Previous document analyses
         </p>
+        <div className="mt-2">
+          <button
+            onClick={onFetch}
+            className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+          >
+            Fetch from cloud
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto">
