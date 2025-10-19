@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import {
   ChevronDown,
@@ -10,6 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { DocumentAnalysis, SimplificationLevel } from "../types/legal";
+import AIGeneratedTimeline from "./AIGeneratedTimeline";
 
 interface AnalysisResultsProps {
   analysis: DocumentAnalysis;
@@ -37,6 +39,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       riskRadar: "Risk Radar",
       actionPoints: "Action Points",
       citations: "Legal Citations",
+      timeline: "Timeline",
       documentType: "Document Type",
       riskLevels: {
         low: "Low Risk",
@@ -57,6 +60,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       riskRadar: "जोखिम रडार",
       actionPoints: "कार्य बिंदु",
       citations: "कानूनी उद्धरण",
+      timeline: "समयरेखा",
       documentType: "दस्तावेज़ प्रकार",
       riskLevels: {
         low: "कम जोखिम",
@@ -110,6 +114,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     { id: "risks", label: translations[language].riskRadar },
     { id: "actions", label: translations[language].actionPoints },
     { id: "citations", label: translations[language].citations },
+    { id: "timeline", label: translations[language].timeline },
   ];
 
   const levelLabelMap: Record<SimplificationLevel, string> = {
@@ -117,6 +122,14 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     simple: "Simple",
     eli5: "ELI5",
   };
+
+  const formattedTimeline = analysis.timeline
+  ? analysis.timeline.map((event) => ({
+      title: event.date || "Unknown Date",
+      cardTitle: event.event || "Untitled Event",
+      cardDetailedText: event.summary || "No description available.",
+    }))
+  : [];
 
   return (
     <div className="space-y-6">
@@ -407,6 +420,19 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        
+        {activeSection === "timeline" && (
+          <div className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">
+              {translations[language].timeline}
+            </h3>
+            {formattedTimeline.length > 0 ? (
+                <AIGeneratedTimeline events={formattedTimeline} />
+            ) : (
+                <p className="text-gray-500">No timeline data available.</p>
+            )}
           </div>
         )}
       </div>

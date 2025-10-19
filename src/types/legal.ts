@@ -33,6 +33,12 @@ export interface Citation {
   description: string;
 }
 
+export interface TimelineEvent {
+  date: string;
+  event: string;
+  summary: string;
+}
+
 export interface DocumentAnalysis {
   id: string;
   documentType: string;
@@ -41,6 +47,7 @@ export interface DocumentAnalysis {
   risks: Risk[];
   actionPoints: string[];
   citations: Citation[];
+  timeline?: TimelineEvent[];
 }
 
 export type EnforceabilityStatus = 'enforceable' | 'restricted' | 'not_enforceable' | 'uncertain';
