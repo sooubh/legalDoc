@@ -84,10 +84,10 @@ export const getAnalysisHistoryForUser = async (): Promise<AnalysisHistoryItem[]
 
     console.log('✅ User authenticated for fetch:', user.uid);
 
+    // Temporarily remove orderBy to avoid index requirement
     const q = query(
       collection(db, 'analysisHistory'),
-      where('userId', '==', user.uid),
-      orderBy('timestamp', 'desc')
+      where('userId', '==', user.uid)
     );
 
     console.log('📖 Executing query...');
