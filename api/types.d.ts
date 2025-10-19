@@ -1,4 +1,3 @@
-import type { Request, Response } from "express";
 
 // This file is for type support only. No code needed here unless you want to add custom types for the API.
 

@@ -3,7 +3,8 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
 import AnalysisResults from "./components/AnalysisResults";
-import type { AnalysisHistoryItem } from "./types/history";
+import { serverTimestamp, Timestamp } from 'firebase/firestore';
+
 import LoadingScreen from "./components/LoadingScreen";
 import OriginalContent from "./components/OriginalContent";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,6 +26,10 @@ import MorePage from "./components/MorePage";
 import FullscreenModal from "./components/FullscreenModal";
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
+import { AnalysisHistoryItem } from "./types/history";
+
+// Define a type for the route
+export type Route = "login" | "signup" | "upload" | "results" | "visuals" | "chat" | "profile" | "more";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -34,9 +39,7 @@ function App() {
   const [simplificationLevel, _setSimplificationLevel] =
     useState<SimplificationLevel>("simple");
 
-  const [route, setRoute] = useState<
-    "login" | "signup" | "upload" | "results" | "visuals" | "chat" | "profile" | "more"
-  >("login");
+  const [route, setRoute] = useState<Route>("login");
   const [submittedContent, setSubmittedContent] = useState<string>("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -93,15 +96,17 @@ function App() {
 
       // Save to history in Firestore
       const newAnalysis: Omit<AnalysisHistoryItem, 'id'> = {
-        timestamp: Date.now(), // This will be replaced by server timestamp in the backend function
-        title: result.summary?.slice(0, 100) || "Document Analysis",
+        title: result.documentType?.slice(0, 100) || "Document Analysis",
         analysis: result,
+        originalContent: content,
+        analysisResults: JSON.stringify(result), // Store the full analysis as a string
         visuals: visualsResult,
         metadata: {
           language,
           simplificationLevel,
           documentType: fileMeta?.mime,
         },
+        timestamp: serverTimestamp() as Timestamp,
       };
       
       const newId = await saveAnalysisToHistory(newAnalysis);
@@ -167,7 +172,7 @@ function App() {
   return (
     <AppShell
       current={route}
-      onNavigate={(r) => setRoute(r as any)}
+      onNavigate={(r) => setRoute(r as Route)}
       analysisHistory={analysisHistory}
       selectedAnalysisId={selectedAnalysisId}
       onSelectAnalysis={handleSelectAnalysis}
@@ -300,7 +305,6 @@ function App() {
           >
             <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
               <ChatPanel
-                document={submittedContent}
                 language={language}
               />
             </div>
@@ -335,9 +339,7 @@ function App() {
       <ChatFloating
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((v) => !v)}
-        document={submittedContent}
-        language={language}
-      />
+        language={language} document={""}      />
 
       {fs && (
         <FullscreenModal
@@ -353,7 +355,7 @@ function App() {
           {fs.key === "analysis" && (
             <div className="p-4">
               <AnalysisResults
-                analysis={analysis as any}
+                analysis={analysis!}
                 language={language}
                 simplificationLevel={simplificationLevel}
                 onNewAnalysis={() => {

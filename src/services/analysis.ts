@@ -17,7 +17,7 @@ export const saveAnalysisToHistory = async (analysisItem: Omit<AnalysisHistoryIt
   const analysisToSave: AnalysisHistoryCreate = {
     ...analysisItem,
     userId: user.uid,
-    timestamp: Timestamp.now().toMillis(), // Use Firestore Timestamp for consistency
+    timestamp: Timestamp.now(), // Use Firestore Timestamp for consistency
   };
 
   const docRef = await addDoc(collection(db, 'analysisHistory'), analysisToSave);

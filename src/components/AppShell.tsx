@@ -47,7 +47,9 @@ const AppShell: React.FC<AppShellProps> = ({
       if (theme === "dark") root.classList.add("dark");
       else root.classList.remove("dark");
       localStorage.setItem("theme", theme);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to set theme:", error);
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
