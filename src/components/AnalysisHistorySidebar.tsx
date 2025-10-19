@@ -19,36 +19,37 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
   onSelect,
   selectedId,
 }) => {
-  const [expanded, setExpanded] = React.useState<{ [key: string]: boolean }>(
-    {}
-  );
+  const [expanded, setExpanded] = React.useState<{ [key: string]: boolean }>({});
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
+  // ✅ Convert Firestore Timestamp → JS Date
+  const formatDate = (timestamp: AnalysisHistoryItem["timestamp"]) => {
+    const date = timestamp.toDate();
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
   };
 
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString("en-US", {
+  const formatTime = (timestamp: AnalysisHistoryItem["timestamp"]) => {
+    const date = timestamp.toDate();
+    return date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
     });
   };
 
-  // Group items by date
+  // ✅ Group items by formatted date
   const groupedItems = items.reduce((acc, item) => {
     const date = formatDate(item.timestamp);
     if (!acc[date]) acc[date] = [];
     acc[date].push(item);
     return acc;
-  }, {} as { [key: string]: AnalysisHistoryItem[] });
+  }, {} as Record<string, AnalysisHistoryItem[]>);
 
   return (
     <div className="h-full flex flex-col">
@@ -107,12 +108,13 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
                         <Clock className="h-3 w-3" />
                         {formatTime(item.timestamp)}
                       </span>
-                      {item.analysis.riskLevel === "high" && (
-                        <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-                          <AlertTriangle className="h-3 w-3" />
-                          High Risk
-                        </span>
-                      )}
+                      {item.analysis.overallRiskLevel === "high" && (
+  <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+    <AlertTriangle className="h-3 w-3" />
+    High Risk
+  </span>
+)}
+
                     </div>
                   </button>
                 ))}

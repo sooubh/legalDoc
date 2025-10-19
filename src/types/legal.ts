@@ -38,7 +38,6 @@ export interface TimelineEvent {
   event: string;
   summary: string;
 }
-
 export interface DocumentAnalysis {
   id: string;
   documentType: string;
@@ -48,6 +47,7 @@ export interface DocumentAnalysis {
   actionPoints: string[];
   citations: Citation[];
   timeline?: TimelineEvent[];
+  overallRiskLevel?: 'low' | 'medium' | 'high'; // ✅ add this
 }
 
 export type EnforceabilityStatus = 'enforceable' | 'restricted' | 'not_enforceable' | 'uncertain';
