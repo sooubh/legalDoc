@@ -5,10 +5,11 @@
 1. [Project Workflow Overview](#project-workflow-overview)
 2. [User Journey Workflows](#user-journey-workflows)
 3. [Technical Workflows](#technical-workflows)
-4. [Data Flow Diagrams](#data-flow-diagrams)
-5. [Component Interaction Workflows](#component-interaction-workflows)
-6. [Error Handling Workflows](#error-handling-workflows)
-7. [Development Workflows](#development-workflows)
+4. [Security Workflows](#security-workflows)
+5. [Data Flow Diagrams](#data-flow-diagrams)
+6. [Component Interaction Workflows](#component-interaction-workflows)
+7. [Error Handling Workflows](#error-handling-workflows)
+8. [Development Workflows](#development-workflows)
 
 ## Project Workflow Overview
 
@@ -34,30 +35,29 @@ User Action → Input Method Selection → Content Processing → Validation
 
 1. **Landing Page**: User sees `DocumentInput` component with three options:
 
-   - Paste text directly
-   - Upload PDF/DOC/TXT file
-   - Select from sample contracts
+   - Paste text directly into a textarea.
+   - Upload a file (PDF, DOC, TXT) via drag-and-drop or a file browser.
+   - Select a sample contract from a dropdown menu (available in English and Hindi).
 
 2. **Input Method Selection**:
 
-   - **Text Paste**: Direct textarea input
-   - **File Upload**: Drag-and-drop or click to browse
-   - **Sample Selection**: Dropdown with 3 contract types (EN/HI)
+   - **Text Paste**: The user's pasted text is directly used for analysis.
+   - **File Upload**: The uploaded file is processed to extract its text content.
+   - **Sample Selection**: A pre-loaded legal document is used for the analysis.
 
 3. **Content Processing**:
 
-   - **Text**: Direct use
-   - **PDF**: pdf.js extraction → OCR fallback if needed
-   - **Sample**: Pre-loaded contract text
+   - **Text**: The text is used as-is.
+   - **PDF**: The text is extracted using `pdf.js`. If this fails, Tesseract OCR is used as a fallback.
+   - **Sample**: The pre-loaded contract text is used directly.
 
 4. **Settings Configuration**:
 
-   - Language selection (English/Hindi)
-   - Simplification level (professional/simple/eli5)
+   - The user can select the language (English/Hindi) and the desired level of simplification (professional, simple, or ELI5).
 
 5. **Validation & Submission**:
-   - Content validation (non-empty)
-   - Submit button triggers analysis
+   - The system checks that the document content is not empty.
+   - The user clicks the "Submit" button to begin the analysis.
 
 #### 1.2 Analysis Phase
 
@@ -67,22 +67,19 @@ Content Submission → API Call → Response Processing → State Updates
 
 **Steps:**
 
-1. **API Call**: `analyzeDocumentWithGemini()` with:
-
-   - Document content
-   - Language preference
-   - Simplification level
+1. **API Call**: The `analyzeDocumentWithGemini()` function is called, sending the document content, language, and simplification level to the Gemini API.
 
 2. **Response Processing**:
 
-   - JSON parsing and validation
-   - Type mapping to `DocumentAnalysis`
-   - Error handling for malformed responses
+   - The JSON response from the API is parsed and validated.
+   - The data is mapped to the `DocumentAnalysis` type.
+   - Any errors in the response are handled gracefully.
 
 3. **State Updates**:
-   - Set analysis results
-   - Clear previous chat messages
-   - Set PDF preview URL (if applicable)
+
+   - The analysis results are stored in the application's state.
+   - Any previous chat messages are cleared.
+   - If a PDF was uploaded, the preview URL is updated.
 
 #### 1.3 Results Display Phase
 
@@ -92,19 +89,16 @@ Analysis Complete → UI Transition → Tabbed Results → Role-Specific Views
 
 **Steps:**
 
-1. **UI Transition**: Loading screen → Results layout
-2. **Results Display**: `AnalysisResults` component with tabs:
+1. **UI Transition**: The application transitions from a loading screen to the results layout.
+2. **Results Display**: The `AnalysisResults` component displays the analysis in a series of tabs:
 
    - Plain Summary
-   - Clause Lens (with role perspectives)
+   - Clause Lens (with role-specific perspectives)
    - Risk Radar
    - Action Points
    - Legal Citations
 
-3. **Role-Specific Views**: Each clause shows:
-   - Interpretation
-   - Obligations
-   - Risks
+3. **Role-Specific Views**: Each clause includes detailed interpretations, obligations, and risks for each role.
 
 ### 2. Visualization Generation Workflow
 
@@ -116,23 +110,14 @@ Analysis Complete → Visualization API Call → Diagram Generation → UI Updat
 
 **Steps:**
 
-1. **Trigger**: After main analysis completes
-2. **API Call**: `generateVisualizationsWithGemini()` with:
-
-   - Document content
-   - Language
-   - Party labels
+1. **Trigger**: This workflow is triggered after the main document analysis is complete.
+2. **API Call**: The `generateVisualizationsWithGemini()` function is called, sending the document content, language, and party labels to the Gemini API.
 
 3. **Response Processing**:
 
-   - Timeline data extraction
-   - Flow diagram generation
-   - Responsibilities matrix creation
+   - The API response is processed to extract data for timelines, flow diagrams, and responsibility matrices.
 
-4. **UI Update**: `Visualizations` component renders:
-   - Mermaid flowcharts
-   - Timeline diagrams
-   - Responsibilities table
+4. **UI Update**: The `Visualizations` component renders the generated diagrams and tables.
 
 #### 2.2 Diagram Rendering Workflow
 
@@ -142,10 +127,10 @@ Visualization Data → Mermaid Processing → SVG Generation → Container Displ
 
 **Steps:**
 
-1. **Data Processing**: Convert API response to Mermaid syntax
-2. **Mermaid Rendering**: Dynamic import and render
-3. **SVG Injection**: Responsive SVG with proper scaling
-4. **Container Management**: Scrollable containers, fullscreen modals
+1. **Data Processing**: The data from the API response is converted into Mermaid.js syntax.
+2. **Mermaid Rendering**: The Mermaid.js library is dynamically imported and used to render the diagrams.
+3. **SVG Injection**: The generated SVG is injected into the DOM and styled to be responsive.
+4. **Container Management**: The diagrams are displayed in scrollable containers with options for fullscreen viewing.
 
 ### 3. Chat Interaction Workflow
 
@@ -157,17 +142,19 @@ Document Analysis → Chat Panel Available → User Question → Response Genera
 
 **Steps:**
 
-1. **Availability**: Chat becomes available after analysis
-2. **Context Setup**: Document content as context
-3. **User Input**: Question in chat interface
-4. **API Call**: `chatWithGemini()` with document context
-5. **Response Display**: Streaming or complete response
+1. **Availability**: The chat panel becomes available after the document analysis is complete.
+2. **Context Setup**: The document content is used as context for the chat.
+3. **User Input**: The user enters a question in the chat interface.
+4. **API Call**: The `chatWithGemini()` function is called, sending the question and document context to the Gemini API.
+5. **Response Display**: The API's response is displayed in the chat panel.
 
 #### 3.2 Floating Chat Workflow
 
 ```
 Chat Toggle → Modal Display → Question Input → Response → Close
 ```
+
+This provides a more focused chat experience in a modal window.
 
 ## Technical Workflows
 
@@ -181,11 +168,11 @@ Request Preparation → API Call → Response Handling → Error Management
 
 **Request Flow:**
 
-1. **Prompt Building**: Structured prompts for analysis/chat/visualization
-2. **Configuration**: Temperature, max tokens, response format
-3. **API Call**: HTTP request to Gemini API
-4. **Response Processing**: JSON parsing, type validation
-5. **Error Handling**: Retry logic, fallback responses
+1. **Prompt Building**: Structured prompts are created for analysis, chat, and visualization tasks.
+2. **Configuration**: The API request is configured with parameters like temperature, max tokens, and response format.
+3. **API Call**: An HTTP request is sent to the Gemini API.
+4. **Response Processing**: The JSON response is parsed and validated against the expected types.
+5. **Error Handling**: The system includes logic for retrying failed requests and handling various error responses.
 
 #### 1.2 Response Mapping Workflow
 
@@ -195,10 +182,10 @@ Raw Response → JSON Parsing → Type Validation → State Update
 
 **Steps:**
 
-1. **JSON Extraction**: Parse response text
-2. **Type Validation**: Ensure required fields exist
-3. **Default Handling**: Fill missing fields with defaults
-4. **State Update**: Update React state with validated data
+1. **JSON Extraction**: The response text is parsed as JSON.
+2. **Type Validation**: The system verifies that all required fields are present in the response.
+3. **Default Handling**: Any missing fields are filled with default values.
+4. **State Update**: The application's state is updated with the validated data.
 
 ### 2. File Processing Workflow
 
@@ -210,11 +197,11 @@ File Upload → PDF.js Extraction → Text Validation → OCR Fallback (if neede
 
 **Steps:**
 
-1. **File Validation**: Check file type and size
-2. **PDF.js Processing**: Extract text from PDF pages
-3. **Text Validation**: Check if sufficient text extracted
-4. **OCR Fallback**: Use Tesseract if text extraction fails
-5. **Progress Tracking**: Show upload progress to user
+1. **File Validation**: The uploaded file is checked for correct type and size.
+2. **PDF.js Processing**: The text is extracted from the PDF using `pdf.js`.
+3. **Text Validation**: The system checks if a sufficient amount of text was extracted.
+4. **OCR Fallback**: If `pdf.js` fails, Tesseract OCR is used as a fallback.
+5. **Progress Tracking**: The user is shown the progress of the upload and processing.
 
 #### 2.2 OCR Processing Workflow
 
@@ -224,10 +211,24 @@ PDF → Canvas Rendering → Tesseract Processing → Text Extraction
 
 **Steps:**
 
-1. **Page Rendering**: Convert PDF pages to canvas
-2. **Language Detection**: Map UI language to Tesseract language
-3. **OCR Processing**: Text recognition with progress tracking
-4. **Text Assembly**: Combine recognized text from all pages
+1. **Page Rendering**: The PDF pages are rendered to a canvas element.
+2. **Language Detection**: The UI language is mapped to the corresponding Tesseract language.
+3. **OCR Processing**: Tesseract.js is used to recognize the text on the canvas.
+4. **Text Assembly**: The recognized text from all pages is combined.
+
+## Security Workflows
+
+### 1. API Key Management
+
+- The Gemini API key is stored in a `.env` file and is not exposed on the client-side. All API calls are proxied through a backend service to protect the key.
+
+### 2. Input Sanitization
+
+- All user inputs are sanitized to prevent cross-site scripting (XSS) and other injection attacks.
+
+### 3. Data Privacy
+
+- No user data is stored on the server. All analysis is done in-memory and is not persisted.
 
 ## Data Flow Diagrams
 

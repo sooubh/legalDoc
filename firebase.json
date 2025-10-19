@@ -1,0 +1,8 @@
+{
+  "firestore": {
+    "database": "gen-ai-test",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

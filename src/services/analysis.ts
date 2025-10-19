@@ -8,40 +8,52 @@ import type { AnalysisHistoryItem } from '../types/history';
 type AnalysisHistoryCreate = Omit<AnalysisHistoryItem, 'id'> & { userId?: string };
 
 export const saveAnalysisToHistory = async (analysisItem: Omit<AnalysisHistoryItem, 'id'>): Promise<string> => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('User not authenticated');
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('User not authenticated. Cannot save analysis to history.');
+    }
+
+    const analysisToSave: AnalysisHistoryCreate = {
+      ...analysisItem,
+      userId: user.uid,
+      timestamp: Timestamp.now(), // Use Firestore Timestamp for consistency
+    };
+
+    const docRef = await addDoc(collection(db, 'analysisHistory'), analysisToSave);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error saving analysis to history:', error);
+    throw new Error('Failed to save analysis history.');
   }
-
-  const analysisToSave: AnalysisHistoryCreate = {
-    ...analysisItem,
-    userId: user.uid,
-    timestamp: Timestamp.now(), // Use Firestore Timestamp for consistency
-  };
-
-  const docRef = await addDoc(collection(db, 'analysisHistory'), analysisToSave);
-  return docRef.id;
 };
 
 export const getAnalysisHistoryForUser = async (): Promise<AnalysisHistoryItem[]> => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (!user) {
-    return [];
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      // If no user is authenticated, return an empty array.
+      // This is not an error, but a valid state.
+      return [];
+    }
+
+    const q = query(
+      collection(db, 'analysisHistory'),
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const history: AnalysisHistoryItem[] = [];
+    querySnapshot.forEach((doc) => {
+      history.push({ id: doc.id, ...doc.data() } as AnalysisHistoryItem);
+    });
+
+    return history;
+  } catch (error) {
+    console.error('Error fetching analysis history:', error);
+    throw new Error('Failed to fetch analysis history.');
   }
-
-  const q = query(
-    collection(db, 'analysisHistory'),
-    where('userId', '==', user.uid),
-    orderBy('timestamp', 'desc')
-  );
-
-  const querySnapshot = await getDocs(q);
-  const history: AnalysisHistoryItem[] = [];
-  querySnapshot.forEach((doc) => {
-    history.push({ id: doc.id, ...doc.data() } as AnalysisHistoryItem);
-  });
-
-  return history;
 };
