@@ -2,8 +2,8 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Rules for the 'analyses' collection
-    match /analyses/{analysisId} {
+    // Rules for the 'analysisHistory' collection
+    match /analysisHistory/{analysisId} {
       // Allow create if the user is authenticated and the document's userId matches the user's UID.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       // Allow read, update, and delete if the user is authenticated and is the owner of the document.
@@ -16,6 +16,12 @@ service cloud.firestore {
         allow create: if request.auth != null && request.auth.uid == userId;
         // Allow users to read their own user document
         allow read: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Rules for the 'messages' collection
+    match /messages/{messageId} {
+      // Allow authenticated users to read and write to the messages collection
+      allow read, write: if request.auth != null;
     }
   }
 }

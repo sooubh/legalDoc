@@ -9,6 +9,7 @@ import {
   ExternalLink,
   FileText,
   ArrowLeft,
+  Save,
 } from "lucide-react";
 import { DocumentAnalysis, SimplificationLevel } from "../types/legal";
 import AIGeneratedTimeline from "./AIGeneratedTimeline";
@@ -18,6 +19,8 @@ interface AnalysisResultsProps {
   language: "en" | "hi";
   simplificationLevel: SimplificationLevel;
   onNewAnalysis: () => void;
+  onSave: () => void;
+  isSaved: boolean;
 }
 
 const AnalysisResults: React.FC<AnalysisResultsProps> = ({
@@ -25,6 +28,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   language,
   simplificationLevel,
   onNewAnalysis,
+  onSave,
+  isSaved,
 }) => {
   const [activeSection, setActiveSection] = useState<string>("summary");
   const [expandedClauses, setExpandedClauses] = useState<Set<string>>(
@@ -34,6 +39,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const translations = {
     en: {
       newDocument: "Analyze New Document",
+      save: "Save",
+      saved: "Saved",
       plainSummary: "Plain Summary",
       clauseLens: "Clause Lens",
       riskRadar: "Risk Radar",
@@ -55,6 +62,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     },
     hi: {
       newDocument: "नया दस्तावेज़ विश्लेषण",
+      save: "सहेजें",
+      saved: "सहेजा गया",
       plainSummary: "सरल सारांश",
       clauseLens: "क्लॉज़ लेंस",
       riskRadar: "जोखिम रडार",
@@ -151,6 +160,15 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             </p>
           </div>
         </div>
+        <div className="flex items-center space-x-2">
+        <button
+          onClick={onSave}
+          disabled={isSaved}
+          className="flex items-center space-x-2 px-4 py-2 text-white bg-blue-600 rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
+        >
+          <Save className="h-4 w-4" />
+          <span>{isSaved ? translations[language].saved : translations[language].save}</span>
+        </button>
         <button
           onClick={onNewAnalysis}
           className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -158,6 +176,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           <ArrowLeft className="h-4 w-4" />
           <span>{translations[language].newDocument}</span>
         </button>
+        </div>
       </div>
 
       {/* Modern Segmented Tab Navigation */}
@@ -178,7 +197,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             >
               {section.label}
             </button>
-          ))}
+          ))}'''
         </div>
       </div>
 
@@ -301,7 +320,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                                     <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
                                       {rp.risks.map((rk, i) => (
                                         <li key={i}>{rk}</li>
-                                      ))}
+                                      ))}'''
                                     </ul>
                                   </div>
                                 )}

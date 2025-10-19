@@ -57,9 +57,23 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
-        setRoute("upload");
         // Load user's analysis history from Firestore
         getAnalysisHistoryForUser().then(setAnalysisHistory);
+
+        // Check for an unsaved analysis in local storage
+        const unsavedAnalysisJson = localStorage.getItem('unsavedAnalysis');
+        if (unsavedAnalysisJson) {
+          const unsavedAnalysis = JSON.parse(unsavedAnalysisJson);
+          setAnalysis(unsavedAnalysis.analysis);
+          setVisuals(unsavedAnalysis.visuals);
+          setSubmittedContent(unsavedAnalysis.submittedContent);
+          setPdfPreviewUrl(unsavedAnalysis.pdfPreviewUrl);
+          _setLanguage(unsavedAnalysis.language);
+          _setSimplificationLevel(unsavedAnalysis.simplificationLevel);
+          setRoute("results");
+        } else {
+          setRoute("upload");
+        }
       } else {
         setUser(null);
         setRoute("login");
@@ -76,6 +90,8 @@ function App() {
     setIsAnalyzing(true);
     setSubmittedContent(content);
     setPdfPreviewUrl(fileMeta?.pdfUrl ?? null);
+    setSelectedAnalysisId(undefined); // Unset selected ID for new analysis
+
     try {
       const result = await analyzeDocumentWithGemini({
         content,
@@ -83,6 +99,7 @@ function App() {
         simplificationLevel,
       });
       setAnalysis(result);
+      setRoute("results");
 
       // Generate visualization bundle in the background
       setIsVisualsLoading(true);
@@ -93,33 +110,55 @@ function App() {
         partyBLabel: "Party B",
       });
       setVisuals(visualsResult);
-
-      // Save to history in Firestore
-      const newAnalysis: Omit<AnalysisHistoryItem, 'id'> = {
-        title: result.documentType?.slice(0, 100) || "Document Analysis",
-        analysis: result,
-        originalContent: content,
-        analysisResults: JSON.stringify(result), // Store the full analysis as a string
-        visuals: visualsResult,
-        metadata: {
-          language,
-          simplificationLevel,
-          documentType: fileMeta?.mime,
-        },
-        timestamp: serverTimestamp() as Timestamp,
-      };
-      
-      const newId = await saveAnalysisToHistory(newAnalysis);
-      const newAnalysisWithId = { ...newAnalysis, id: newId };
-
-      setAnalysisHistory((prev) => [newAnalysisWithId, ...prev].slice(0, 50));
-      setSelectedAnalysisId(newAnalysisWithId.id);
       setIsVisualsLoading(false);
+
+      // Save to local storage
+      const unsavedAnalysis = {
+        analysis: result,
+        visuals: visualsResult,
+        submittedContent: content,
+        pdfPreviewUrl: fileMeta?.pdfUrl ?? null,
+        language,
+        simplificationLevel,
+      };
+      localStorage.setItem('unsavedAnalysis', JSON.stringify(unsavedAnalysis));
+
     } catch (err) {
       console.error(err);
       alert("Analysis failed. Please set VITE_GEMINI_API_KEY and try again.");
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleSaveAnalysis = async () => {
+    if (!analysis || !submittedContent || !visuals) return;
+
+    const newAnalysis: Omit<AnalysisHistoryItem, 'id'> = {
+      title: analysis.documentType?.slice(0, 100) || "Document Analysis",
+      analysis: analysis,
+      originalContent: submittedContent,
+      analysisResults: JSON.stringify(analysis), // Store the full analysis as a string
+      visuals: visuals,
+      metadata: {
+        language,
+        simplificationLevel,
+      },
+      timestamp: serverTimestamp() as Timestamp,
+    };
+    
+    try {
+      const newId = await saveAnalysisToHistory(newAnalysis);
+      const newAnalysisWithId = { ...newAnalysis, id: newId };
+  
+      setAnalysisHistory((prev) => [newAnalysisWithId, ...prev].slice(0, 50));
+      setSelectedAnalysisId(newAnalysisWithId.id);
+  
+      // Clear from local storage after successful save
+      localStorage.removeItem('unsavedAnalysis');
+    } catch (error) {
+      console.error("Failed to save analysis:", error);
+      alert("There was an error saving your analysis. Please try again.");
     }
   };
 
@@ -136,6 +175,17 @@ function App() {
       );
     }
     setRoute("results");
+    // Clear any unsaved analysis from local storage when loading a saved one
+    localStorage.removeItem('unsavedAnalysis');
+  };
+
+  const handleNewAnalysis = () => {
+    setAnalysis(null);
+    setVisuals(null);
+    setSubmittedContent("");
+    setSelectedAnalysisId(undefined);
+    setRoute("upload");
+    localStorage.removeItem('unsavedAnalysis');
   };
   
   if (!user) {
@@ -190,7 +240,6 @@ function App() {
               <DocumentInput
                 onSubmit={(c, meta) => {
                   handleDocumentSubmit(c, meta);
-                  setRoute("results");
                 }}
                 isAnalyzing={isAnalyzing}
                 language={language}
@@ -228,10 +277,9 @@ function App() {
                       analysis={analysis}
                       language={language}
                       simplificationLevel={simplificationLevel}
-                      onNewAnalysis={() => {
-                        setAnalysis(null);
-                        setRoute("upload");
-                      }}
+                      onNewAnalysis={handleNewAnalysis}
+                      onSave={handleSaveAnalysis}
+                      isSaved={analysisHistory.some(item => item.id === selectedAnalysisId)}
                     />
                   </div>
                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-6">
@@ -358,11 +406,9 @@ function App() {
                 analysis={analysis!}
                 language={language}
                 simplificationLevel={simplificationLevel}
-                onNewAnalysis={() => {
-                  setAnalysis(null);
-                  setRoute("upload");
-                  setFs(null);
-                }}
+                onNewAnalysis={handleNewAnalysis}
+                onSave={handleSaveAnalysis}
+                isSaved={analysisHistory.some(item => item.id === selectedAnalysisId)}
               />
             </div>
           )}
