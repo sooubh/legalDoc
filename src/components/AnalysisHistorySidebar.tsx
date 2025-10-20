@@ -6,7 +6,7 @@ import {
   AlertTriangle,
   FileText,
 } from "lucide-react";
-import type { AnalysisHistoryItem } from "../types/history";
+import type { AnalysisHistoryItem } from "../types/history.ts";
 
 interface AnalysisHistorySidebarProps {
   items: AnalysisHistoryItem[];
@@ -42,51 +42,48 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
     });
   };
 
-  // Group items by date
+  // Group items by analysis name (title)
   const groupedItems = items.reduce((acc, item) => {
-    const date = formatDate(item.timestamp);
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(item);
+    const name = item.title || "Untitled Analysis";
+    if (!acc[name]) acc[name] = [];
+    acc[name].push(item);
     return acc;
   }, {} as { [key: string]: AnalysisHistoryItem[] });
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-slate-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-          Analysis History
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-slate-400">
-          Previous document analyses
-        </p>
+      <div className="px-3 py-2 border-b border-gray-200 dark:border-slate-700">
+        <h3 className="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
+          History
+        </h3>
       </div>
 
       <div className="flex-1 overflow-auto">
-        {Object.entries(groupedItems).map(([date, dateItems]) => (
+        {Object.entries(groupedItems).map(([name, nameItems]) => (
           <div
-            key={date}
+            key={name}
             className="border-b border-gray-100 dark:border-slate-800"
           >
             <button
-              onClick={() => toggleExpand(date)}
+              onClick={() => toggleExpand(name)}
               className="w-full px-4 py-2 flex items-center justify-between text-sm font-medium text-gray-900 dark:text-slate-100 hover:bg-gray-50 dark:hover:bg-slate-800"
             >
               <span className="flex items-center gap-2">
-                {expanded[date] ? (
+                {expanded[name] ? (
                   <ChevronDown className="h-4 w-4" />
                 ) : (
                   <ChevronRight className="h-4 w-4" />
                 )}
-                {date}
+                <span className="truncate">{name}</span>
               </span>
               <span className="text-xs text-gray-500 dark:text-slate-400">
-                {dateItems.length} items
+                {nameItems.length} items
               </span>
             </button>
 
-            {expanded[date] && (
+            {expanded[name] && (
               <div className="pb-2">
-                {dateItems.map((item) => (
+                {nameItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => onSelect(item)}
@@ -99,7 +96,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-gray-400" />
                       <span className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate">
-                        {item.title}
+                        {formatDate(item.timestamp)}
                       </span>
                     </div>
                     <div className="ml-6 flex items-center gap-4 mt-1">

@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
 import AnalysisResults from "./components/AnalysisResults";
-import type { AnalysisHistoryItem } from "./types/history";
+import type { AnalysisHistoryItem } from "./types/history.ts";
 import LoadingScreen from "./components/LoadingScreen";
 import OriginalContent from "./components/OriginalContent";
 import { AnimatePresence, motion } from "framer-motion";
@@ -17,8 +17,8 @@ import {
   generateVisualizationsWithGemini,
 } from "./services/gemini";
 import { saveAnalysisToHistory, getAnalysisHistoryForUser } from './services/analysis';
-import ChatPanel from "./components/ChatPanel";
 import ChatFloating from "./components/ChatFloating";
+import CenteredDesktopChatBot from "./components/CenteredDesktopChatBot";
 import Visualizations from "./components/Visualizations";
 import ProfilePage from "./components/ProfilePage";
 import MorePage from "./components/MorePage";
@@ -94,7 +94,7 @@ function App() {
       // Save to history in Firestore
       const newAnalysis: Omit<AnalysisHistoryItem, 'id'> = {
         timestamp: Date.now(), // This will be replaced by server timestamp in the backend function
-        title: result.summary?.slice(0, 100) || "Document Analysis",
+        title: (result as any).plainSummary?.slice(0, 100) || "Document Analysis",
         analysis: result,
         visuals: visualsResult,
         metadata: {
@@ -141,7 +141,7 @@ function App() {
             <>
               <LoginPage />
               <p className="text-center mt-4">
-                Don't have an account?{' '}
+                Don't have an account{' '}
                 <button onClick={() => setRoute('signup')} className="text-blue-600 hover:underline">
                   Sign up
                 </button>
@@ -152,7 +152,7 @@ function App() {
             <>
               <SignupPage />
               <p className="text-center mt-4">
-                Already have an account?{' '}
+                Already have an account{' '}
                 <button onClick={() => setRoute('login')} className="text-blue-600 hover:underline">
                   Login
                 </button>
@@ -181,7 +181,7 @@ function App() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="bg-white rounded-2xl shadow p-6 border border-gray-100">
+            <div className="bg-white rounded-2xl shadow p-4 md:p-6 border border-gray-100">
               <DocumentInput
                 onSubmit={(c, meta) => {
                   handleDocumentSubmit(c, meta);
@@ -205,9 +205,9 @@ function App() {
             {isAnalyzing ? (
               <LoadingScreen />
             ) : analysis ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
                     <div className="flex items-center justify-between mb-3">
                       <div className="font-semibold text-gray-900">
                         Analysis
@@ -229,7 +229,7 @@ function App() {
                       }}
                     />
                   </div>
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-6">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
                     <div className="flex items-center justify-between mb-3">
                       <div className="font-semibold text-gray-900">
                         Visualizations
@@ -247,8 +247,8 @@ function App() {
                     />
                   </div>
                 </div>
-                <div className="space-y-6">
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-6 sticky top-0">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6 lg:sticky lg:top-0">
                     <div className="flex items-center justify-between mb-3">
                       <div className="font-semibold text-gray-900">
                         Original Document
@@ -284,7 +284,7 @@ function App() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow border border-gray-100 p-4 md:p-6">
               <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
             </div>
           </motion.div>
@@ -297,12 +297,10 @@ function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
+            className="h-full"
           >
-            <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-              <ChatPanel
-                document={submittedContent}
-                language={language}
-              />
+            <div className="h-full max-w-4xl mx-auto">
+              <CenteredDesktopChatBot />
             </div>
           </motion.div>
         )}
@@ -351,7 +349,7 @@ function App() {
           onClose={() => setFs(null)}
         >
           {fs.key === "analysis" && (
-            <div className="p-4">
+            <div className="p-4 md:p-6">
               <AnalysisResults
                 analysis={analysis as any}
                 language={language}
@@ -365,12 +363,12 @@ function App() {
             </div>
           )}
           {fs.key === "visuals" && (
-            <div className="p-4">
+            <div className="p-4 md:p-6">
               <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
             </div>
           )}
           {fs.key === "document" && (
-            <div className="p-4">
+            <div className="p-4 md:p-6">
               <OriginalContent
                 content={submittedContent}
                 pdfUrl={pdfPreviewUrl ?? undefined}

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { User, Sun, Moon, MoreHorizontal, History } from "lucide-react";
+import { User, Sun, Moon, Menu, X, Settings, MoreHorizontal } from "lucide-react";
 import AnalysisHistorySidebar from "./AnalysisHistorySidebar";
+import ChatBot from "./ChatBot";
+import ChatBotInput from "./ChatBotInput";
+import DesktopChatTrigger from "./DesktopChatTrigger";
 
 interface NavItem {
   id: string;
@@ -8,7 +11,7 @@ interface NavItem {
   icon?: React.ReactNode;
 }
 
-import type { AnalysisHistoryItem } from "../types/history";
+import type { AnalysisHistoryItem } from "../types/history.ts";
 
 interface AppShellProps {
   current: string;
@@ -52,35 +55,126 @@ const AppShell: React.FC<AppShellProps> = ({
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isChatBotOpen, setIsChatBotOpen] = useState(false);
+  const [isChatBotMinimized, setIsChatBotMinimized] = useState(false);
+
+  // Bottom nav tab selection mapping (four tabs)
+  const tabToRoute = {
+    upload: "upload",
+    results: "results",
+    visuals: "visuals",
+    chat: "chat",
+  } as const;
+
+  const routeToTab = (route: string) => {
+    if (route === "upload") return "upload" as const;
+    if (route === "results") return "results" as const;
+    if (route === "visuals") return "visuals" as const;
+    if (route === "chat") return "chat" as const;
+    return "upload" as const;
+  };
+
+  const selectedTab = routeToTab(current);
+
+  const handleTabKey = (e: React.KeyboardEvent<HTMLLabelElement>, routeId: keyof typeof tabToRoute) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onNavigate(tabToRoute[routeId]);
+    }
+  };
+
+  const handleChatTabClick = () => {
+    if (current === "chat") {
+      // On mobile, open the full-screen chatbot
+      // On desktop, the chat route shows the centered chatbot in main content
+      if (window.innerWidth < 768) {
+        setIsChatBotOpen(true);
+        setIsChatBotMinimized(false);
+      }
+      // On desktop, do nothing as the chat route shows the centered chatbot
+    } else {
+      onNavigate("chat");
+    }
+  };
+
+  const handleOpenChat = () => {
+    setIsChatBotOpen(true);
+    setIsChatBotMinimized(false);
+  };
+
+  const handleCloseChat = () => {
+    setIsChatBotOpen(false);
+    setIsChatBotMinimized(false);
+  };
+
+  const handleToggleMinimize = () => {
+    setIsChatBotMinimized(!isChatBotMinimized);
+  };
+
 
   return (
-    <div className="w-screen h-screen grid grid-cols-[240px_1fr_auto] grid-rows-[64px_1fr] md:grid-cols-[260px_1fr_auto] bg-slate-50 dark:bg-slate-900">
+    <div className="w-screen h-screen grid grid-rows-[56px_1fr_72px] md:grid-rows-[64px_1fr] md:grid-cols-[300px_1fr] bg-slate-50 dark:bg-slate-900">
       {/* Top bar */}
-      <div className="col-span-2 h-16 border-b border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between px-4">
+      <div className="md:col-span-2 h-14 md:h-16 border-b border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between px-3 md:px-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white"
+            aria-label="Open menu"
+            onClick={() => setIsMobileNavOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="h-7 w-7 md:h-8 md:w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm md:text-base">
             L
           </div>
           <div className="leading-tight">
-            <div className="text-gray-900 dark:text-slate-100 font-semibold">
+            <div className="text-gray-900 dark:text-slate-100 font-semibold text-sm md:text-base">
               LegalEase AI
             </div>
-            <div className="text-[10px] text-gray-500 dark:text-slate-400 tracking-wide">
+            <div className="text-[9px] md:text-[10px] text-gray-500 dark:text-slate-400 tracking-wide">
               Demystifying Legal Docs
             </div>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 text-[11px] md:text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
           <span>This is not legal advice. Consult a lawyer for decisions.</span>
+          </div>
+          {/* Header icon actions */}
+          <button
+            onClick={toggleTheme}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+            aria-label="Toggle theme"
+            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={() => onNavigate("profile")}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+            aria-label="Profile"
+            title="Profile"
+          >
+            <User className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      {/* Sidebar */}
-      <aside className="row-start-2 border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+      {/* Sidebar (hidden on mobile) with integrated History */}
+      <aside className="hidden md:block row-start-2 border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
         <div className="h-full flex flex-col">
-          <nav className="p-3 space-y-1">
+          <div className="p-3">
+            <button
+              onClick={() => onNavigate("upload")}
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-200"
+            >
+              + New Analysis
+            </button>
+          </div>
+          <nav className="px-3 space-y-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -96,33 +190,33 @@ const AppShell: React.FC<AppShellProps> = ({
               </button>
             ))}
           </nav>
-          <div className="mt-4 mx-3 p-3 rounded-md bg-slate-50 border border-slate-200 text-xs text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
-            <div className="font-semibold mb-1">Quick tips</div>
-            <ul className="list-disc ml-4 space-y-1">
-              <li>Upload a PDF or paste text</li>
-              <li>Review risks and actions</li>
-              <li>Explore flows and timeline</li>
-            </ul>
+
+          {/* Desktop Chat Trigger */}
+          <div className="px-3 mt-2">
+            <DesktopChatTrigger 
+              onOpenChat={() => onNavigate("chat")}
+              isActive={current === "chat"}
+            />
           </div>
-          <div className="mt-auto p-3 border-t border-gray-200 dark:border-slate-700">
+
+          {/* Integrated History content */}
+          <div className="mt-4 border-t border-gray-200 dark:border-slate-700 flex-1 min-h-0">
+            <AnalysisHistorySidebar
+              items={analysisHistory}
+              onSelect={onSelectAnalysis!}
+              selectedId={selectedAnalysisId}
+            />
+          </div>
+
+          {/* Settings and More buttons at bottom */}
+          <div className="p-3 border-t border-gray-200 dark:border-slate-700">
             <div className="space-y-2">
               <button
-                onClick={() => onNavigate("profile")}
+                onClick={() => onNavigate("settings")}
                 className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
               >
-                <User className="h-4 w-4" />
-                <span>Profile</span>
-              </button>
-              <button
-                onClick={toggleTheme}
-                className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-                <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
               </button>
               <button
                 onClick={() => onNavigate("more")}
@@ -131,41 +225,209 @@ const AppShell: React.FC<AppShellProps> = ({
                 <MoreHorizontal className="h-4 w-4" />
                 <span>More</span>
               </button>
-              <button
-                onClick={() => setIsHistoryOpen((prev) => !prev)}
-                className={`w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border ${
-                  isHistoryOpen
-                    ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
-                    : "border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-                }`}
-              >
-                <History className="h-4 w-4" />
-                <span>History</span>
-              </button>
             </div>
           </div>
         </div>
       </aside>
 
       {/* Content */}
-      <main className="row-start-2 overflow-auto p-4 md:p-6">
-        <div className="max-w-7xl mx-auto">{children}</div>
+      <main className="row-start-2 overflow-auto p-3 md:p-6">
+        <div className="max-w-7xl mx-auto pb-24 md:pb-0 text-[15px] md:text-base leading-[1.45] md:leading-6">{children}</div>
       </main>
 
-      {/* Analysis History Sidebar */}
-      <aside
-        className={`row-span-2 border-l border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-300 ${
-          isHistoryOpen ? "w-80" : "w-0"
-        } overflow-hidden`}
-      >
-        {isHistoryOpen && analysisHistory.length > 0 && (
+      {/* Bottom navigation - Uiverse tabs (JSX version) */}
+      <div className="md:hidden fixed bottom-2 left-0 right-0 z-40 flex justify-center">
+        <div className="container bottom-nav">
+          <div className="tabs" role="tablist" aria-label="Primary navigation">
+            <input
+              type="radio"
+              id="radio-1"
+              name="tabs"
+              checked={selectedTab === 'upload'}
+              onChange={() => onNavigate(tabToRoute.upload)}
+            />
+            <label
+              className="tab"
+              htmlFor="radio-1"
+              role="tab"
+              aria-selected={selectedTab === 'upload'}
+              tabIndex={selectedTab === 'upload' ? 0 : -1}
+              onKeyDown={(e) => handleTabKey(e, 'upload')}
+            >
+              Upload
+            </label>
+
+            <input
+              type="radio"
+              id="radio-2"
+              name="tabs"
+              checked={selectedTab === 'results'}
+              onChange={() => onNavigate(tabToRoute.results)}
+            />
+            <label
+              className="tab"
+              htmlFor="radio-2"
+              role="tab"
+              aria-selected={selectedTab === 'results'}
+              tabIndex={selectedTab === 'results' ? 0 : -1}
+              onKeyDown={(e) => handleTabKey(e, 'results')}
+            >
+              Results
+            </label>
+
+            <input
+              type="radio"
+              id="radio-3"
+              name="tabs"
+              checked={selectedTab === 'visuals'}
+              onChange={() => onNavigate(tabToRoute.visuals)}
+            />
+            <label
+              className="tab"
+              htmlFor="radio-3"
+              role="tab"
+              aria-selected={selectedTab === 'visuals'}
+              tabIndex={selectedTab === 'visuals' ? 0 : -1}
+              onKeyDown={(e) => handleTabKey(e, 'visuals')}
+            >
+              Visuals
+            </label>
+
+            <input
+              type="radio"
+              id="radio-4"
+              name="tabs"
+              checked={selectedTab === 'chat'}
+              onChange={handleChatTabClick}
+            />
+            <label
+              className="tab"
+              htmlFor="radio-4"
+              role="tab"
+              aria-selected={selectedTab === 'chat'}
+              tabIndex={selectedTab === 'chat' ? 0 : -1}
+              onClick={handleChatTabClick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleChatTabClick();
+                }
+              }}
+            >
+              Chat
+            </label>
+
+            <span className="glider"></span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile slide-over sidebar */}
+      {isMobileNavOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsMobileNavOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 shadow-xl flex flex-col">
+            <div className="h-14 px-3 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
+              <div className="font-semibold">Menu</div>
+              <button
+                className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+                aria-label="Close menu"
+                onClick={() => setIsMobileNavOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="p-3 space-y-1 flex-1 overflow-auto">
+              <button
+                onClick={() => {
+                  onNavigate("upload");
+                  setIsMobileNavOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-medium border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-200"
+              >
+                + New Analysis
+              </button>
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onNavigate(item.id);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border mt-1
+                  ${
+                    current === item.id
+                      ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
+                      : "bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">History</div>
           <AnalysisHistorySidebar
             items={analysisHistory}
-            onSelect={onSelectAnalysis!}
+                  onSelect={(item) => {
+                    onSelectAnalysis!(item);
+                    setIsMobileNavOpen(false);
+                  }}
             selectedId={selectedAnalysisId}
           />
-        )}
-      </aside>
+              </div>
+            </nav>
+            <div className="p-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
+              <button
+                onClick={toggleTheme}
+                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={() => {
+                  onNavigate("profile");
+                  setIsMobileNavOpen(false);
+                }}
+                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+                aria-label="Profile"
+              >
+                <User className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile ChatBot Input - shows when chat tab is selected but chatbot is not open */}
+      {current === "chat" && !isChatBotOpen && (
+        <div className="md:hidden">
+          <ChatBotInput onOpenChat={handleOpenChat} />
+        </div>
+      )}
+
+      {/* Mobile ChatBot - full screen chatbot (mobile only) */}
+      <div className="md:hidden">
+        <ChatBot
+          isOpen={isChatBotOpen}
+          onClose={handleCloseChat}
+          isMinimized={isChatBotMinimized}
+          onToggleMinimize={handleToggleMinimize}
+        />
+      </div>
+
+      {/* Desktop ChatBot - sidebar chatbot (desktop only) - Hidden as we use centered chatbot in main content */}
+      {/* <div className="hidden md:block">
+        <DesktopChatBot
+          isOpen={isDesktopChatBotOpen}
+          onClose={handleCloseDesktopChat}
+          isMinimized={isDesktopChatBotMinimized}
+          onToggleMinimize={handleToggleDesktopMinimize}
+        />
+      </div> */}
     </div>
   );
 };

@@ -120,14 +120,14 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url, height }) => {
   const zoomIn = () => setScale((s) => Math.min(3, s + 0.2));
   const zoomOut = () => setScale((s) => Math.max(0.6, s - 0.2));
   const fitWidth = () => {
-    if (!containerRef.current || !canvasRef.current || !pdf) return;
+    if (!containerRef.current || !pdf) return;
     pdf
       .getPage(pageNumber)
       .then((page) => {
         try {
           const viewport = page.getViewport({ scale: 1 });
-          const containerWidth = containerRef.current!.clientWidth - 16;
-          const newScale = containerWidth / viewport.width;
+          const containerWidth = containerRef.current!.clientWidth - 16; // account for padding/scrollbar
+          const newScale = Math.max(0.6, Math.min(3, containerWidth / viewport.width));
           setScale(newScale);
         } catch (e) {
           // eslint-disable-next-line no-console
@@ -146,48 +146,65 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ url, height }) => {
       });
   };
 
+  // Observe container width to keep PDF fit-to-width responsively
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const ro = new ResizeObserver(() => {
+      fitWidth();
+    });
+    ro.observe(containerRef.current);
+
+    // Initial fit
+    fitWidth();
+
+    return () => ro.disconnect();
+    // We intentionally exclude dependencies so this sets up once per mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdf, pageNumber]);
+
   const containerHeight = typeof height === "number" ? `${height}px` : height || "70vh";
 
   return (
     <div className="relative w-full bg-white flex flex-col" style={{ height: containerHeight }}>
-      <div className="sticky top-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-white z-10">
-        <div className="flex items-center gap-2">
+      <div className="sticky top-0 flex items-center justify-between px-2 md:px-3 py-1.5 md:py-2 border-b border-gray-200 bg-white z-10 text-[13px] md:text-sm">
+        <div className="flex items-center gap-1.5 md:gap-2">
           <button
             onClick={goPrev}
             disabled={pageNumber <= 1}
-            className="px-2 py-1 rounded border border-gray-300 text-gray-700 disabled:opacity-50"
+            className="px-1.5 md:px-2 py-1 rounded border border-gray-300 text-gray-700 disabled:opacity-50"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />
           </button>
-          <span className="text-sm text-gray-700">
+          <span className="text-gray-700">
             {pageNumber} / {numPages}
           </span>
           <button
             onClick={goNext}
             disabled={pageNumber >= numPages}
-            className="px-2 py-1 rounded border border-gray-300 text-gray-700 disabled:opacity-50"
+            className="px-1.5 md:px-2 py-1 rounded border border-gray-300 text-gray-700 disabled:opacity-50"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2">
           <button
             onClick={zoomOut}
-            className="px-2 py-1 rounded border border-gray-300 text-gray-700"
+            className="px-1.5 md:px-2 py-1 rounded border border-gray-300 text-gray-700"
           >
-            <ZoomOut className="h-4 w-4" />
+            <ZoomOut className="h-3.5 w-3.5 md:h-4 md:w-4" />
           </button>
           <button
             onClick={zoomIn}
-            className="px-2 py-1 rounded border border-gray-300 text-gray-700"
+            className="px-1.5 md:px-2 py-1 rounded border border-gray-300 text-gray-700"
           >
-            <ZoomIn className="h-4 w-4" />
+            <ZoomIn className="h-3.5 w-3.5 md:h-4 md:w-4" />
           </button>
           <button
             onClick={fitWidth}
-            className="px-2 py-1 rounded border border-gray-300 text-gray-700"
+            className="px-1.5 md:px-2 py-1 rounded border border-gray-300 text-gray-700"
           >
-            <Maximize className="h-4 w-4" />
+            <Maximize className="h-3.5 w-3.5 md:h-4 md:w-4" />
           </button>
         </div>
       </div>
