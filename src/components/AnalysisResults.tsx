@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import {
   ChevronDown,
@@ -8,14 +9,18 @@ import {
   ExternalLink,
   FileText,
   ArrowLeft,
+  Save,
 } from "lucide-react";
 import { DocumentAnalysis, SimplificationLevel } from "../types/legal";
+import AIGeneratedTimeline from "./AIGeneratedTimeline";
 
 interface AnalysisResultsProps {
   analysis: DocumentAnalysis;
   language: "en" | "hi";
   simplificationLevel: SimplificationLevel;
   onNewAnalysis: () => void;
+  onSave: () => void;
+  isSaved: boolean;
 }
 
 const AnalysisResults: React.FC<AnalysisResultsProps> = ({
@@ -23,6 +28,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   language,
   simplificationLevel,
   onNewAnalysis,
+  onSave,
+  isSaved,
 }) => {
   const [activeSection, setActiveSection] = useState<string>("summary");
   const [expandedClauses, setExpandedClauses] = useState<Set<string>>(
@@ -32,11 +39,14 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const translations = {
     en: {
       newDocument: "Analyze New Document",
+      save: "Save",
+      saved: "Saved",
       plainSummary: "Plain Summary",
       clauseLens: "Clause Lens",
       riskRadar: "Risk Radar",
       actionPoints: "Action Points",
       citations: "Legal Citations",
+      timeline: "Timeline",
       documentType: "Document Type",
       riskLevels: {
         low: "Low Risk",
@@ -52,11 +62,14 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     },
     hi: {
       newDocument: "नया दस्तावेज़ विश्लेषण",
+      save: "सहेजें",
+      saved: "सहेजा गया",
       plainSummary: "सरल सारांश",
       clauseLens: "क्लॉज़ लेंस",
       riskRadar: "जोखिम रडार",
       actionPoints: "कार्य बिंदु",
       citations: "कानूनी उद्धरण",
+      timeline: "समयरेखा",
       documentType: "दस्तावेज़ प्रकार",
       riskLevels: {
         low: "कम जोखिम",
@@ -110,6 +123,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     { id: "risks", label: translations[language].riskRadar },
     { id: "actions", label: translations[language].actionPoints },
     { id: "citations", label: translations[language].citations },
+    { id: "timeline", label: translations[language].timeline },
   ];
 
   const levelLabelMap: Record<SimplificationLevel, string> = {
@@ -117,6 +131,14 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     simple: "Simple",
     eli5: "ELI5",
   };
+
+  const formattedTimeline = analysis.timeline
+  ? analysis.timeline.map((event) => ({
+      title: event.date || "Unknown Date",
+      cardTitle: event.event || "Untitled Event",
+      cardDetailedText: event.summary || "No description available.",
+    }))
+  : [];
 
   return (
     <div className="space-y-6">
@@ -138,6 +160,15 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             </p>
           </div>
         </div>
+        <div className="flex items-center space-x-2">
+        <button
+          onClick={onSave}
+          disabled={isSaved}
+          className="flex items-center space-x-2 px-4 py-2 text-white bg-blue-600 rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
+        >
+          <Save className="h-4 w-4" />
+          <span>{isSaved ? translations[language].saved : translations[language].save}</span>
+        </button>
         <button
           onClick={onNewAnalysis}
           className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -145,6 +176,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           <ArrowLeft className="h-4 w-4" />
           <span>{translations[language].newDocument}</span>
         </button>
+        </div>
       </div>
 
       {/* Modern Segmented Tab Navigation */}
@@ -165,7 +197,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             >
               {section.label}
             </button>
-          ))}
+          ))}'''
         </div>
       </div>
 
@@ -288,7 +320,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                                     <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
                                       {rp.risks.map((rk, i) => (
                                         <li key={i}>{rk}</li>
-                                      ))}
+                                      ))}'''
                                     </ul>
                                   </div>
                                 )}
@@ -407,6 +439,19 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        
+        {activeSection === "timeline" && (
+          <div className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">
+              {translations[language].timeline}
+            </h3>
+            {formattedTimeline.length > 0 ? (
+                <AIGeneratedTimeline events={formattedTimeline} />
+            ) : (
+                <p className="text-gray-500">No timeline data available.</p>
+            )}
           </div>
         )}
       </div>

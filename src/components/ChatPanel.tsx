@@ -5,12 +5,11 @@ import { db } from '../services/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
 
 interface ChatPanelProps {
-  document: string;
   isBusy?: boolean;
   language: 'en' | 'hi';
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, isBusy = false, language }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ isBusy = false, language }) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
@@ -32,7 +31,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, isBusy = fal
     try {
       listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('[ChatPanel] Failed to auto-scroll messages', { error: e });
     }
   }, [messages.length, isBusy]);
@@ -53,7 +51,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document: _document, isBusy = fal
         timestamp: serverTimestamp(),
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('[ChatPanel] onSend failed', { input: trimmed, error: err });
     }
   };

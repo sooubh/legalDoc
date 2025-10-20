@@ -3,7 +3,12 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
 import AnalysisResults from "./components/AnalysisResults";
+<<<<<<< HEAD
 import type { AnalysisHistoryItem } from "./types/history.ts";
+=======
+import { serverTimestamp, Timestamp } from 'firebase/firestore';
+
+>>>>>>> 9498b25567a2a51c38b10550e171b5be37e05b5b
 import LoadingScreen from "./components/LoadingScreen";
 import OriginalContent from "./components/OriginalContent";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,6 +30,10 @@ import MorePage from "./components/MorePage";
 import FullscreenModal from "./components/FullscreenModal";
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
+import { AnalysisHistoryItem } from "./types/history";
+
+// Define a type for the route
+export type Route = "login" | "signup" | "upload" | "results" | "visuals" | "chat" | "profile" | "more";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -34,9 +43,7 @@ function App() {
   const [simplificationLevel, _setSimplificationLevel] =
     useState<SimplificationLevel>("simple");
 
-  const [route, setRoute] = useState<
-    "login" | "signup" | "upload" | "results" | "visuals" | "chat" | "profile" | "more"
-  >("login");
+  const [route, setRoute] = useState<Route>("login");
   const [submittedContent, setSubmittedContent] = useState<string>("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -49,14 +56,58 @@ function App() {
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
 
+  // Local browser history helpers
+  const loadLocalAnalyses = (): AnalysisHistoryItem[] => {
+    try {
+      const raw = localStorage.getItem('localAnalyses');
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr as AnalysisHistoryItem[] : [];
+    } catch (e) {
+      console.error('Failed to load localAnalyses', e);
+      return [];
+    }
+  };
+
+  const appendLocalAnalysis = (entry: AnalysisHistoryItem) => {
+    try {
+      const current = loadLocalAnalyses();
+      const next = [entry, ...current].slice(0, 100);
+      localStorage.setItem('localAnalyses', JSON.stringify(next));
+      setAnalysisHistory(next);
+    } catch (e) {
+      console.error('Failed to append to localAnalyses', e);
+    }
+  };
+
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
-        setRoute("upload");
-        // Load user's analysis history from Firestore
-        getAnalysisHistoryForUser().then(setAnalysisHistory);
+        // Load local history by default; cloud history can be fetched on demand
+        setAnalysisHistory(loadLocalAnalyses());
+        
+        // Try to load Firestore history, but don't fail if it doesn't work
+        getAnalysisHistoryForUser()
+          .then(setAnalysisHistory)
+          .catch((error) => {
+            console.warn('Failed to load Firestore history, using local only:', error);
+          });
+
+        // Check for an unsaved analysis in local storage
+        const unsavedAnalysisJson = localStorage.getItem('unsavedAnalysis');
+        if (unsavedAnalysisJson) {
+          const unsavedAnalysis = JSON.parse(unsavedAnalysisJson);
+          setAnalysis(unsavedAnalysis.analysis);
+          setVisuals(unsavedAnalysis.visuals);
+          setSubmittedContent(unsavedAnalysis.submittedContent);
+          setPdfPreviewUrl(unsavedAnalysis.pdfPreviewUrl);
+          _setLanguage(unsavedAnalysis.language);
+          _setSimplificationLevel(unsavedAnalysis.simplificationLevel);
+          setRoute("results");
+        } else {
+          setRoute("upload");
+        }
       } else {
         setUser(null);
         setRoute("login");
@@ -73,6 +124,8 @@ function App() {
     setIsAnalyzing(true);
     setSubmittedContent(content);
     setPdfPreviewUrl(fileMeta?.pdfUrl ?? null);
+    setSelectedAnalysisId(undefined); // Unset selected ID for new analysis
+
     try {
       const result = await analyzeDocumentWithGemini({
         content,
@@ -80,6 +133,7 @@ function App() {
         simplificationLevel,
       });
       setAnalysis(result);
+      setRoute("results");
 
       // Generate visualization bundle in the background
       setIsVisualsLoading(true);
@@ -90,31 +144,87 @@ function App() {
         partyBLabel: "Party B",
       });
       setVisuals(visualsResult);
+      setIsVisualsLoading(false);
 
+<<<<<<< HEAD
       // Save to history in Firestore
       const newAnalysis: Omit<AnalysisHistoryItem, 'id'> = {
         timestamp: Date.now(), // This will be replaced by server timestamp in the backend function
         title: (result as any).plainSummary?.slice(0, 100) || "Document Analysis",
+=======
+      // Save to local storage
+      const unsavedAnalysis = {
+>>>>>>> 9498b25567a2a51c38b10550e171b5be37e05b5b
         analysis: result,
         visuals: visualsResult,
-        metadata: {
-          language,
-          simplificationLevel,
-          documentType: fileMeta?.mime,
-        },
+        submittedContent: content,
+        pdfPreviewUrl: fileMeta?.pdfUrl ?? null,
+        language,
+        simplificationLevel,
       };
-      
-      const newId = await saveAnalysisToHistory(newAnalysis);
-      const newAnalysisWithId = { ...newAnalysis, id: newId };
+      localStorage.setItem('unsavedAnalysis', JSON.stringify(unsavedAnalysis));
 
-      setAnalysisHistory((prev) => [newAnalysisWithId, ...prev].slice(0, 50));
-      setSelectedAnalysisId(newAnalysisWithId.id);
-      setIsVisualsLoading(false);
+      // Also persist to local browser history (separate from Firebase)
+      const localItem: AnalysisHistoryItem = {
+        id: `local-${Date.now()}`,
+        title: result.documentType?.slice(0, 100) || 'Document Analysis',
+        analysis: result,
+        originalContent: content,
+        analysisResults: JSON.stringify(result),
+        visuals: visualsResult,
+        metadata: { language, simplificationLevel },
+        // Store a simple ISO string; sidebar handles both Firestore and JS dates
+        // Cast to any to satisfy the AnalysisHistoryItem Timestamp type at compile time
+        timestamp: new Date() as any,
+      };
+      appendLocalAnalysis(localItem);
+
     } catch (err) {
       console.error(err);
       alert("Analysis failed. Please set VITE_GEMINI_API_KEY and try again.");
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleSaveAnalysis = async () => {
+    if (!analysis || !submittedContent || !visuals) return;
+
+    const newAnalysis: Omit<AnalysisHistoryItem, 'id'> = {
+      title: analysis.documentType?.slice(0, 100) || "Document Analysis",
+      analysis: analysis,
+      originalContent: submittedContent,
+      analysisResults: JSON.stringify(analysis), // Store the full analysis as a string
+      visuals: visuals,
+      metadata: {
+        language,
+        simplificationLevel,
+      },
+      timestamp: serverTimestamp() as Timestamp,
+    };
+    
+    try {
+      const newId = await saveAnalysisToHistory(newAnalysis);
+      const newAnalysisWithId = { ...newAnalysis, id: newId };
+  
+      setAnalysisHistory((prev) => [newAnalysisWithId, ...prev].slice(0, 50));
+      setSelectedAnalysisId(newAnalysisWithId.id);
+  
+      // Clear from local storage after successful save
+      localStorage.removeItem('unsavedAnalysis');
+    } catch (error) {
+      console.error("Failed to save analysis:", error);
+      alert("There was an error saving your analysis. Please try again.");
+    }
+  };
+
+  const handleFetchHistory = async () => {
+    try {
+      const items = await getAnalysisHistoryForUser();
+      setAnalysisHistory(items);
+    } catch (e) {
+      console.error('Failed to fetch analysis history:', e);
+      alert('Failed to fetch analysis history.');
     }
   };
 
@@ -131,6 +241,17 @@ function App() {
       );
     }
     setRoute("results");
+    // Clear any unsaved analysis from local storage when loading a saved one
+    localStorage.removeItem('unsavedAnalysis');
+  };
+
+  const handleNewAnalysis = () => {
+    setAnalysis(null);
+    setVisuals(null);
+    setSubmittedContent("");
+    setSelectedAnalysisId(undefined);
+    setRoute("upload");
+    localStorage.removeItem('unsavedAnalysis');
   };
   
   if (!user) {
@@ -167,10 +288,11 @@ function App() {
   return (
     <AppShell
       current={route}
-      onNavigate={(r) => setRoute(r as any)}
+      onNavigate={(r) => setRoute(r as Route)}
       analysisHistory={analysisHistory}
       selectedAnalysisId={selectedAnalysisId}
       onSelectAnalysis={handleSelectAnalysis}
+      onFetchHistory={handleFetchHistory}
     >
       <AnimatePresence mode="wait">
         {route === "upload" && (
@@ -185,7 +307,6 @@ function App() {
               <DocumentInput
                 onSubmit={(c, meta) => {
                   handleDocumentSubmit(c, meta);
-                  setRoute("results");
                 }}
                 isAnalyzing={isAnalyzing}
                 language={language}
@@ -223,10 +344,9 @@ function App() {
                       analysis={analysis}
                       language={language}
                       simplificationLevel={simplificationLevel}
-                      onNewAnalysis={() => {
-                        setAnalysis(null);
-                        setRoute("upload");
-                      }}
+                      onNewAnalysis={handleNewAnalysis}
+                      onSave={handleSaveAnalysis}
+                      isSaved={analysisHistory.some(item => item.id === selectedAnalysisId)}
                     />
                   </div>
                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
@@ -299,8 +419,15 @@ function App() {
             transition={{ duration: 0.2 }}
             className="h-full"
           >
+<<<<<<< HEAD
             <div className="h-full max-w-4xl mx-auto">
               <CenteredDesktopChatBot />
+=======
+            <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
+              <ChatPanel
+                language={language}
+              />
+>>>>>>> 9498b25567a2a51c38b10550e171b5be37e05b5b
             </div>
           </motion.div>
         )}
@@ -333,9 +460,7 @@ function App() {
       <ChatFloating
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((v) => !v)}
-        document={submittedContent}
-        language={language}
-      />
+        language={language} document={""}      />
 
       {fs && (
         <FullscreenModal
@@ -351,14 +476,12 @@ function App() {
           {fs.key === "analysis" && (
             <div className="p-4 md:p-6">
               <AnalysisResults
-                analysis={analysis as any}
+                analysis={analysis!}
                 language={language}
                 simplificationLevel={simplificationLevel}
-                onNewAnalysis={() => {
-                  setAnalysis(null);
-                  setRoute("upload");
-                  setFs(null);
-                }}
+                onNewAnalysis={handleNewAnalysis}
+                onSave={handleSaveAnalysis}
+                isSaved={analysisHistory.some(item => item.id === selectedAnalysisId)}
               />
             </div>
           )}

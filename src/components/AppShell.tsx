@@ -20,6 +20,7 @@ interface AppShellProps {
   analysisHistory?: AnalysisHistoryItem[];
   selectedAnalysisId?: string;
   onSelectAnalysis?: (item: AnalysisHistoryItem) => void;
+  onFetchHistory?: () => void;
 }
 
 const navItems: NavItem[] = [
@@ -36,6 +37,7 @@ const AppShell: React.FC<AppShellProps> = ({
   analysisHistory = [],
   selectedAnalysisId,
   onSelectAnalysis,
+  onFetchHistory,
 }) => {
   const [theme, setTheme] = useState<"light" | "dark">(
     () =>
@@ -50,7 +52,9 @@ const AppShell: React.FC<AppShellProps> = ({
       if (theme === "dark") root.classList.add("dark");
       else root.classList.remove("dark");
       localStorage.setItem("theme", theme);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to set theme:", error);
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
@@ -235,6 +239,7 @@ const AppShell: React.FC<AppShellProps> = ({
         <div className="max-w-7xl mx-auto pb-24 md:pb-0 text-[15px] md:text-base leading-[1.45] md:leading-6">{children}</div>
       </main>
 
+<<<<<<< HEAD
       {/* Bottom navigation - Uiverse tabs (JSX version) */}
       <div className="md:hidden fixed bottom-2 left-0 right-0 z-40 flex justify-center">
         <div className="container bottom-nav">
@@ -369,6 +374,15 @@ const AppShell: React.FC<AppShellProps> = ({
               ))}
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
                 <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">History</div>
+=======
+      {/* Analysis History Sidebar */}
+      <aside
+        className={`row-span-2 border-l border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-300 ${
+          isHistoryOpen ? "w-80" : "w-0"
+        } overflow-hidden`}
+      >
+        {isHistoryOpen && (
+>>>>>>> 9498b25567a2a51c38b10550e171b5be37e05b5b
           <AnalysisHistorySidebar
             items={analysisHistory}
                   onSelect={(item) => {
@@ -376,6 +390,7 @@ const AppShell: React.FC<AppShellProps> = ({
                     setIsMobileNavOpen(false);
                   }}
             selectedId={selectedAnalysisId}
+            onFetch={onFetchHistory}
           />
               </div>
             </nav>
