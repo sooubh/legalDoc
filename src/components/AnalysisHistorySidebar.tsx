@@ -29,8 +29,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
 
   // ✅ Convert Firestore Timestamp or JS Date → JS Date
   const toJsDate = (ts: any): Date => {
-    // Firestore Timestamp has toDate(); local items may be Date
-    if (ts && typeof ts.toDate === 'function') return ts.toDate();
+    if (ts && typeof ts.toDate === "function") return ts.toDate();
     if (ts instanceof Date) return ts;
     const parsed = new Date(ts);
     return isNaN(parsed.getTime()) ? new Date() : parsed;
@@ -53,11 +52,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
     });
   };
 
-<<<<<<< HEAD
   // Group items by analysis name (title)
-=======
-  // ✅ Group items by formatted date
->>>>>>> 9498b25567a2a51c38b10550e171b5be37e05b5b
   const groupedItems = items.reduce((acc, item) => {
     const name = item.title || "Untitled Analysis";
     if (!acc[name]) acc[name] = [];
@@ -67,28 +62,10 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-<<<<<<< HEAD
       <div className="px-3 py-2 border-b border-gray-200 dark:border-slate-700">
         <h3 className="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
           History
         </h3>
-=======
-      <div className="p-4 border-b border-gray-200 dark:border-slate-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-          Analysis History
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-slate-400">
-          Previous document analyses
-        </p>
-        <div className="mt-2">
-          <button
-            onClick={onFetch}
-            className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-          >
-            Fetch from cloud
-          </button>
-        </div>
->>>>>>> 9498b25567a2a51c38b10550e171b5be37e05b5b
       </div>
 
       <div className="flex-1 overflow-auto">
@@ -138,12 +115,11 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
                         {formatTime(item.timestamp)}
                       </span>
                       {item.analysis.overallRiskLevel === "high" && (
-  <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-    <AlertTriangle className="h-3 w-3" />
-    High Risk
-  </span>
-)}
-
+                        <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                          <AlertTriangle className="h-3 w-3" />
+                          High Risk
+                        </span>
+                      )}
                     </div>
                   </button>
                 ))}

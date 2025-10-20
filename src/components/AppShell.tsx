@@ -81,7 +81,10 @@ const AppShell: React.FC<AppShellProps> = ({
 
   const selectedTab = routeToTab(current);
 
-  const handleTabKey = (e: React.KeyboardEvent<HTMLLabelElement>, routeId: keyof typeof tabToRoute) => {
+  const handleTabKey = (
+    e: React.KeyboardEvent<HTMLLabelElement>,
+    routeId: keyof typeof tabToRoute
+  ) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       onNavigate(tabToRoute[routeId]);
@@ -91,12 +94,11 @@ const AppShell: React.FC<AppShellProps> = ({
   const handleChatTabClick = () => {
     if (current === "chat") {
       // On mobile, open the full-screen chatbot
-      // On desktop, the chat route shows the centered chatbot in main content
-      if (window.innerWidth < 768) {
+      if (typeof window !== "undefined" && window.innerWidth < 768) {
         setIsChatBotOpen(true);
         setIsChatBotMinimized(false);
       }
-      // On desktop, do nothing as the chat route shows the centered chatbot
+      // On desktop, do nothing; the chat route will show the centered chatbot
     } else {
       onNavigate("chat");
     }
@@ -115,7 +117,6 @@ const AppShell: React.FC<AppShellProps> = ({
   const handleToggleMinimize = () => {
     setIsChatBotMinimized(!isChatBotMinimized);
   };
-
 
   return (
     <div className="w-screen h-screen grid grid-rows-[56px_1fr_72px] md:grid-rows-[64px_1fr] md:grid-cols-[300px_1fr] bg-slate-50 dark:bg-slate-900">
@@ -144,15 +145,15 @@ const AppShell: React.FC<AppShellProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-2 text-[11px] md:text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-          <span>This is not legal advice. Consult a lawyer for decisions.</span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+            <span>This is not legal advice. Consult a lawyer for decisions.</span>
           </div>
           {/* Header icon actions */}
           <button
             onClick={toggleTheme}
             className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
             aria-label="Toggle theme"
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
@@ -178,6 +179,7 @@ const AppShell: React.FC<AppShellProps> = ({
               + New Analysis
             </button>
           </div>
+
           <nav className="px-3 space-y-1">
             {navItems.map((item) => (
               <button
@@ -197,18 +199,16 @@ const AppShell: React.FC<AppShellProps> = ({
 
           {/* Desktop Chat Trigger */}
           <div className="px-3 mt-2">
-            <DesktopChatTrigger 
-              onOpenChat={() => onNavigate("chat")}
-              isActive={current === "chat"}
-            />
+            <DesktopChatTrigger onOpenChat={() => onNavigate("chat")} isActive={current === "chat"} />
           </div>
 
           {/* Integrated History content */}
           <div className="mt-4 border-t border-gray-200 dark:border-slate-700 flex-1 min-h-0">
             <AnalysisHistorySidebar
               items={analysisHistory}
-              onSelect={onSelectAnalysis!}
+              onSelect={(item) => onSelectAnalysis?.(item)}
               selectedId={selectedAnalysisId}
+              onFetch={onFetchHistory}
             />
           </div>
 
@@ -236,10 +236,11 @@ const AppShell: React.FC<AppShellProps> = ({
 
       {/* Content */}
       <main className="row-start-2 overflow-auto p-3 md:p-6">
-        <div className="max-w-7xl mx-auto pb-24 md:pb-0 text-[15px] md:text-base leading-[1.45] md:leading-6">{children}</div>
+        <div className="max-w-7xl mx-auto pb-24 md:pb-0 text-[15px] md:text-base leading-[1.45] md:leading-6">
+          {children}
+        </div>
       </main>
 
-<<<<<<< HEAD
       {/* Bottom navigation - Uiverse tabs (JSX version) */}
       <div className="md:hidden fixed bottom-2 left-0 right-0 z-40 flex justify-center">
         <div className="container bottom-nav">
@@ -248,16 +249,16 @@ const AppShell: React.FC<AppShellProps> = ({
               type="radio"
               id="radio-1"
               name="tabs"
-              checked={selectedTab === 'upload'}
+              checked={selectedTab === "upload"}
               onChange={() => onNavigate(tabToRoute.upload)}
             />
             <label
               className="tab"
               htmlFor="radio-1"
               role="tab"
-              aria-selected={selectedTab === 'upload'}
-              tabIndex={selectedTab === 'upload' ? 0 : -1}
-              onKeyDown={(e) => handleTabKey(e, 'upload')}
+              aria-selected={selectedTab === "upload"}
+              tabIndex={selectedTab === "upload" ? 0 : -1}
+              onKeyDown={(e) => handleTabKey(e, "upload")}
             >
               Upload
             </label>
@@ -266,16 +267,16 @@ const AppShell: React.FC<AppShellProps> = ({
               type="radio"
               id="radio-2"
               name="tabs"
-              checked={selectedTab === 'results'}
+              checked={selectedTab === "results"}
               onChange={() => onNavigate(tabToRoute.results)}
             />
             <label
               className="tab"
               htmlFor="radio-2"
               role="tab"
-              aria-selected={selectedTab === 'results'}
-              tabIndex={selectedTab === 'results' ? 0 : -1}
-              onKeyDown={(e) => handleTabKey(e, 'results')}
+              aria-selected={selectedTab === "results"}
+              tabIndex={selectedTab === "results" ? 0 : -1}
+              onKeyDown={(e) => handleTabKey(e, "results")}
             >
               Results
             </label>
@@ -284,16 +285,16 @@ const AppShell: React.FC<AppShellProps> = ({
               type="radio"
               id="radio-3"
               name="tabs"
-              checked={selectedTab === 'visuals'}
+              checked={selectedTab === "visuals"}
               onChange={() => onNavigate(tabToRoute.visuals)}
             />
             <label
               className="tab"
               htmlFor="radio-3"
               role="tab"
-              aria-selected={selectedTab === 'visuals'}
-              tabIndex={selectedTab === 'visuals' ? 0 : -1}
-              onKeyDown={(e) => handleTabKey(e, 'visuals')}
+              aria-selected={selectedTab === "visuals"}
+              tabIndex={selectedTab === "visuals" ? 0 : -1}
+              onKeyDown={(e) => handleTabKey(e, "visuals")}
             >
               Visuals
             </label>
@@ -302,15 +303,15 @@ const AppShell: React.FC<AppShellProps> = ({
               type="radio"
               id="radio-4"
               name="tabs"
-              checked={selectedTab === 'chat'}
+              checked={selectedTab === "chat"}
               onChange={handleChatTabClick}
             />
             <label
               className="tab"
               htmlFor="radio-4"
               role="tab"
-              aria-selected={selectedTab === 'chat'}
-              tabIndex={selectedTab === 'chat' ? 0 : -1}
+              aria-selected={selectedTab === "chat"}
+              tabIndex={selectedTab === "chat" ? 0 : -1}
               onClick={handleChatTabClick}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -322,7 +323,7 @@ const AppShell: React.FC<AppShellProps> = ({
               Chat
             </label>
 
-            <span className="glider"></span>
+            <span className="glider" />
           </div>
         </div>
       </div>
@@ -330,10 +331,7 @@ const AppShell: React.FC<AppShellProps> = ({
       {/* Mobile slide-over sidebar */}
       {isMobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setIsMobileNavOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsMobileNavOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 shadow-xl flex flex-col">
             <div className="h-14 px-3 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
               <div className="font-semibold">Menu</div>
@@ -355,6 +353,7 @@ const AppShell: React.FC<AppShellProps> = ({
               >
                 + New Analysis
               </button>
+
               {navItems.map((item) => (
                 <button
                   key={item.id}
@@ -372,28 +371,21 @@ const AppShell: React.FC<AppShellProps> = ({
                   {item.label}
                 </button>
               ))}
+
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
                 <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">History</div>
-=======
-      {/* Analysis History Sidebar */}
-      <aside
-        className={`row-span-2 border-l border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-300 ${
-          isHistoryOpen ? "w-80" : "w-0"
-        } overflow-hidden`}
-      >
-        {isHistoryOpen && (
->>>>>>> 9498b25567a2a51c38b10550e171b5be37e05b5b
-          <AnalysisHistorySidebar
-            items={analysisHistory}
+                <AnalysisHistorySidebar
+                  items={analysisHistory}
                   onSelect={(item) => {
-                    onSelectAnalysis!(item);
+                    onSelectAnalysis?.(item);
                     setIsMobileNavOpen(false);
                   }}
-            selectedId={selectedAnalysisId}
-            onFetch={onFetchHistory}
-          />
+                  selectedId={selectedAnalysisId}
+                  onFetch={onFetchHistory}
+                />
               </div>
             </nav>
+
             <div className="p-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
               <button
                 onClick={toggleTheme}
