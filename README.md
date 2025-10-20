@@ -274,3 +274,4 @@ npm run preview
 ### License
 
 This project is provided as-is for demonstration and educational purposes. Review and adapt before using in production. AI-generated content is not legal advice.
+hey there made by sourabh singh
