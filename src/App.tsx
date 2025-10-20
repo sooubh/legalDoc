@@ -180,7 +180,7 @@ function App() {
       analysisResults: JSON.stringify(analysis),
       visuals: visuals,
       metadata: { language, simplificationLevel },
-      timestamp: serverTimestamp() as Timestamp,
+      timestamp: Date.now(),
     };
 
     try {
