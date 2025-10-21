@@ -62,21 +62,23 @@ export interface ClauseEnforceabilityResult {
   alternatives?: string[]; // suggested alternative interpretations or language
 }
 
-// Visualization types
-export interface TimelineMilestone {
-  id: string;
+// Enhanced timeline types for POV-based timelines
+export interface POVTimelineEvent {
   title: string;
+  subtitle: string;
+  date: string;
   description: string;
-  // ISO date string if absolute, or relative description like "T+30 days after invoice" if relative
-  when: string;
-  relatedClause?: string; // optional clause title or id
+  color: string;
+  icon: 'file' | 'clock' | 'warning' | 'check';
 }
 
-export interface ObligationTimeline {
-  id: string;
-  label: string; // e.g., Payment Schedule, Notice Periods
-  milestones: TimelineMilestone[];
+export interface POVTimelineData {
+  court: POVTimelineEvent[];
+  receiver: POVTimelineEvent[];
+  overall: POVTimelineEvent[];
 }
+
+// Legacy timeline types (deprecated - use POVTimelineData instead)
 
 export interface FlowNode {
   id: string;
@@ -114,7 +116,7 @@ export interface ResponsibilityMatrix {
 
 export interface VisualizationBundle {
   textSummary: string; // human-readable summary of the visuals
-  timelines: ObligationTimeline[];
   flows: ProcessFlow[];
   responsibilities: ResponsibilityMatrix | null;
+  povTimeline?: POVTimelineData; // New POV-based timeline data
 }

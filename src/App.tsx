@@ -4,7 +4,6 @@ import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
 import AnalysisResults from "./components/AnalysisResults";
 import type { AnalysisHistoryItem } from "./types/history";
-import { serverTimestamp, Timestamp } from "firebase/firestore";
 import LoadingScreen from "./components/LoadingScreen";
 import OriginalContent from "./components/OriginalContent";
 import { AnimatePresence, motion } from "framer-motion";
@@ -19,7 +18,6 @@ import {
 } from "./services/gemini";
 import { saveAnalysisToHistory, getAnalysisHistoryForUser } from "./services/analysis";
 import ChatFloating from "./components/ChatFloating";
-import CenteredDesktopChatBot from "./components/CenteredDesktopChatBot";
 import Visualizations from "./components/Visualizations";
 import ProfilePage from "./components/ProfilePage";
 import MorePage from "./components/MorePage";
@@ -28,7 +26,7 @@ import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignupPage";
 
 // Define a type for the route
-export type Route = "login" | "signup" | "upload" | "results" | "visuals" | "chat" | "profile" | "more";
+export type Route = "login" | "signup" | "upload" | "results" | "visuals" | "profile" | "more";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -45,6 +43,7 @@ function App() {
   const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
   const [isVisualsLoading, setIsVisualsLoading] = useState(false);
   const [fs, setFs] = useState<null | { key: "analysis" | "visuals" | "document" }>(null);
+  const [isDocumentMinimized, setIsDocumentMinimized] = useState(false);
 
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
@@ -297,7 +296,7 @@ function App() {
             {isAnalyzing ? (
               <LoadingScreen />
             ) : analysis ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+              <div className={`grid grid-cols-1 gap-4 md:gap-6 transition-all duration-300 ease-in-out ${isDocumentMinimized ? 'lg:grid-cols-1' : 'lg:grid-cols-2'}`}>
                 {/* Analysis Section */}
                 <div className="space-y-4 md:space-y-6">
                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
@@ -336,24 +335,63 @@ function App() {
                 </div>
 
                 {/* Original Document */}
-                <div className="space-y-4 md:space-y-6">
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6 lg:sticky lg:top-0">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="font-semibold text-gray-900">Original Document</div>
-                      <button
-                        onClick={() => setFs({ key: "document" })}
-                        className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-                      >
-                        Fullscreen
-                      </button>
+                {!isDocumentMinimized && (
+                  <div className="space-y-4 md:space-y-6">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6 lg:sticky lg:top-0">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="font-semibold text-gray-900">Original Document</div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setIsDocumentMinimized(!isDocumentMinimized)}
+                            className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center space-x-1"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            <span>Minimize</span>
+                          </button>
+                          <button
+                            onClick={() => setFs({ key: "document" })}
+                            className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                          >
+                            Fullscreen
+                          </button>
+                        </div>
+                      </div>
+                      <OriginalContent
+                        content={submittedContent}
+                        pdfUrl={pdfPreviewUrl ?? undefined}
+                        height={"calc(100vh - 96px)"}
+                      />
                     </div>
-                    <OriginalContent
-                      content={submittedContent}
-                      pdfUrl={pdfPreviewUrl ?? undefined}
-                      height={"calc(100vh - 96px)"}
-                    />
                   </div>
-                </div>
+                )}
+                
+                {/* Minimized Document Bar */}
+                {isDocumentMinimized && (
+                  <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-2 duration-300">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-sm font-medium text-gray-900">Original Document</div>
+                        <button
+                          onClick={() => setIsDocumentMinimized(false)}
+                          className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center space-x-1 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <span>Expand</span>
+                        </button>
+                        <button
+                          onClick={() => setFs({ key: "document" })}
+                          className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 transition-colors"
+                        >
+                          Fullscreen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-gray-600">No analysis yet. Upload a document first.</div>
@@ -371,21 +409,6 @@ function App() {
           >
             <div className="bg-white rounded-2xl shadow border border-gray-100 p-4 md:p-6">
               <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
-            </div>
-          </motion.div>
-        )}
-
-        {route === "chat" && (
-          <motion.div
-            key="chat"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
-          >
-            <div className="h-full max-w-4xl mx-auto">
-              <CenteredDesktopChatBot />
             </div>
           </motion.div>
         )}
@@ -434,7 +457,7 @@ function App() {
           onClose={() => setFs(null)}
         >
           {fs.key === "analysis" && (
-            <div className="p-4 md:p-6">
+            <div className="p-4 md:p-6 h-full overflow-auto">
               <AnalysisResults
                 analysis={analysis!}
                 language={language}
@@ -446,16 +469,16 @@ function App() {
             </div>
           )}
           {fs.key === "visuals" && (
-            <div className="p-4 md:p-6">
+            <div className="p-4 md:p-6 h-full overflow-auto">
               <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
             </div>
           )}
           {fs.key === "document" && (
-            <div className="p-4 md:p-6">
+            <div className="p-4 md:p-6 h-full overflow-auto">
               <OriginalContent
                 content={submittedContent}
                 pdfUrl={pdfPreviewUrl ?? undefined}
-                height={"calc(94vh - 56px)"}
+                height={"calc(100vh - 120px)"}
               />
             </div>
           )}

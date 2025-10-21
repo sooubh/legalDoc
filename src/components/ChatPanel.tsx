@@ -7,12 +7,32 @@ import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 
 interface ChatPanelProps {
   isBusy?: boolean;
   language: 'en' | 'hi';
+  document?: string;
+  initialMessage?: string;
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ isBusy = false, language }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ isBusy = false, language, document, initialMessage }) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Handle initial message when component mounts
+  useEffect(() => {
+    if (initialMessage && messages.length === 0) {
+      const handleInitialMessage = async () => {
+        try {
+          await addDoc(collection(db, "messages"), {
+            role: 'user', 
+            content: initialMessage, 
+            timestamp: serverTimestamp(),
+          });
+        } catch (err) {
+          console.error('[ChatPanel] Failed to send initial message', { initialMessage, error: err });
+        }
+      };
+      handleInitialMessage();
+    }
+  }, [initialMessage, messages.length]);
 
   useEffect(() => {
     const q = query(collection(db, "messages"), orderBy("timestamp"));

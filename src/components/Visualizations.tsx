@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import type { VisualizationBundle, ProcessFlow } from "../types/legal";
 import MermaidDiagram from "./MermaidDiagram";
+import LegalNoticeTimelinePOV from "./LegalNoticeTimelinePOV";
 interface VisualizationsProps {
   visuals: VisualizationBundle | null;
   isLoading?: boolean;
@@ -11,11 +12,13 @@ const Visualizations: React.FC<VisualizationsProps> = ({
   isLoading = false,
 }) => {
   const [isFlowFullscreen, setIsFlowFullscreen] = useState(false);
-  const [isTimelineFullscreen, setIsTimelineFullscreen] = useState(false);
   const [isRespFullscreen, setIsRespFullscreen] = useState(false);
+  const [isPOVTimelineFullscreen, setIsPOVTimelineFullscreen] = useState(false);
 
   // Selectable flow index
   const [flowIndex, setFlowIndex] = useState(0);
+  // POV selection for timeline
+  const [selectedPOV, setSelectedPOV] = useState<'court' | 'receiver' | 'overall'>('overall');
   const mermaidFlow = useMemo(() => {
     try {
       if (!visuals || !visuals.flows || visuals.flows.length === 0) return "";
@@ -74,26 +77,6 @@ const Visualizations: React.FC<VisualizationsProps> = ({
     }
   }, [visuals, flowIndex]);
 
-  const mermaidTimeline = useMemo(() => {
-    try {
-      const firstTimeline = visuals?.timelines?.[0];
-      if (!firstTimeline) return "";
-      const lines: string[] = [
-        "timeline",
-        `  title: ${firstTimeline.label || "Timeline"}`,
-        `  section Events`,
-      ];
-      for (const m of firstTimeline.milestones) {
-        lines.push(`  ${m.title}: ${m.when}`);
-      }
-      return lines.join("\n");
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error("[Visualizations] Failed to build mermaid timeline", e);
-      return "";
-    }
-  }, [visuals]);
-
   if (isLoading) {
     return (
       <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200">
@@ -133,7 +116,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
           <div className="border border-gray-200 rounded-lg p-4 flex flex-col min-h-[400px] h-full bg-white">
             <div className="flex items-center justify-between mb-2">
               <div className="text-base font-semibold text-gray-900">
@@ -162,37 +145,12 @@ const Visualizations: React.FC<VisualizationsProps> = ({
                 </select>
               </div>
             )}
-            <div className="flex-1 min-h-[320px] max-h-[480px] overflow-auto rounded">
+            <div className="flex-1 min-h-[320px] max-h-[480px] overflow-auto rounded border border-gray-100">
               {mermaidFlow ? (
-                <MermaidDiagram code={mermaidFlow} className="h-full w-full" />
+                <MermaidDiagram code={mermaidFlow} className="h-full w-full max-w-full" />
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-500 text-sm">
                   No flow data
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="border border-gray-200 rounded-lg p-4 flex flex-col min-h-[400px] h-full bg-white">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-base font-semibold text-gray-900">
-                Timeline
-              </div>
-              <button
-                onClick={() => setIsTimelineFullscreen(true)}
-                className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-              >
-                Fullscreen
-              </button>
-            </div>
-            <div className="flex-1 min-h-[320px] max-h-[480px] overflow-auto rounded">
-              {mermaidTimeline ? (
-                <MermaidDiagram
-                  code={mermaidTimeline}
-                  className="h-full w-full"
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                  No timeline data
                 </div>
               )}
             </div>
@@ -238,13 +196,46 @@ const Visualizations: React.FC<VisualizationsProps> = ({
             </table>
           </div>
         )}
+
+        {/* Timeline Section */}
+        <div className="border border-gray-200 rounded-lg p-4 bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-base font-semibold text-gray-900">
+              Legal Process Timeline
+            </div>
+            <div className="flex items-center space-x-2">
+              <select
+                value={selectedPOV}
+                onChange={(e) => setSelectedPOV(e.target.value as 'court' | 'receiver' | 'overall')}
+                className="text-xs px-3 py-1 rounded border border-gray-300"
+              >
+                <option value="overall">Overall Process</option>
+                <option value="court">Court Perspective</option>
+                <option value="receiver">Receiver Perspective</option>
+              </select>
+              <button
+                onClick={() => setIsPOVTimelineFullscreen(true)}
+                className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+              >
+                Fullscreen
+              </button>
+            </div>
+          </div>
+          <div className="max-h-[600px] overflow-auto">
+            <LegalNoticeTimelinePOV
+              pov={selectedPOV}
+              timelineData={visuals?.povTimeline}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Flow Fullscreen Modal */}
       {isFlowFullscreen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl w-[95vw] h-[90vh] p-3 flex flex-col">
-            <div className="flex items-center justify-between mb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2">
+          <div className="bg-white rounded-xl shadow-xl w-full h-full max-w-none max-h-none flex flex-col">
+            <div className="flex items-center justify-between mb-2 p-4 border-b">
               <div className="font-semibold text-gray-900">
                 Flowchart (Fullscreen)
               </div>
@@ -255,9 +246,9 @@ const Visualizations: React.FC<VisualizationsProps> = ({
                 Close
               </button>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 p-4">
               {mermaidFlow ? (
-                <MermaidDiagram code={mermaidFlow} className="h-full" />
+                <MermaidDiagram code={mermaidFlow} className="h-full w-full" />
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-500 text-sm">
                   No flow data
@@ -268,39 +259,11 @@ const Visualizations: React.FC<VisualizationsProps> = ({
         </div>
       )}
 
-      {/* Timeline Fullscreen Modal */}
-      {isTimelineFullscreen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl w-[95vw] h-[90vh] p-3 flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-semibold text-gray-900">
-                Timeline (Fullscreen)
-              </div>
-              <button
-                onClick={() => setIsTimelineFullscreen(false)}
-                className="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-              >
-                Close
-              </button>
-            </div>
-            <div className="flex-1">
-              {mermaidTimeline ? (
-                <MermaidDiagram code={mermaidTimeline} className="h-full" />
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                  No timeline data
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Responsibilities Fullscreen Modal */}
       {isRespFullscreen && visuals.responsibilities && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl w-[95vw] h-[90vh] p-3 flex flex-col">
-            <div className="flex items-center justify-between mb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2">
+          <div className="bg-white rounded-xl shadow-xl w-full h-full max-w-none max-h-none flex flex-col">
+            <div className="flex items-center justify-between mb-2 p-4 border-b">
               <div className="font-semibold text-gray-900">
                 {visuals.responsibilities.label} (Fullscreen)
               </div>
@@ -311,7 +274,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
                 Close
               </button>
             </div>
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto p-4">
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-700">
@@ -330,6 +293,43 @@ const Visualizations: React.FC<VisualizationsProps> = ({
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POV Timeline Fullscreen Modal */}
+      {isPOVTimelineFullscreen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2">
+          <div className="bg-white rounded-xl shadow-xl w-full h-full max-w-none max-h-none flex flex-col">
+            <div className="flex items-center justify-between mb-4 p-4 border-b">
+              <div className="font-semibold text-gray-900">
+                Legal Process Timeline (Fullscreen)
+              </div>
+              <div className="flex items-center space-x-2">
+                <select
+                  value={selectedPOV}
+                  onChange={(e) => setSelectedPOV(e.target.value as 'court' | 'receiver' | 'overall')}
+                  className="text-sm px-3 py-1 rounded border border-gray-300"
+                >
+                  <option value="overall">Overall Process</option>
+                  <option value="court">Court Perspective</option>
+                  <option value="receiver">Receiver Perspective</option>
+                </select>
+                <button
+                  onClick={() => setIsPOVTimelineFullscreen(false)}
+                  className="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <LegalNoticeTimelinePOV
+                pov={selectedPOV}
+                timelineData={visuals.povTimeline}
+                isLoading={isLoading}
+              />
             </div>
           </div>
         </div>

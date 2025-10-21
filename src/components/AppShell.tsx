@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { User, Sun, Moon, Menu, X, Settings, MoreHorizontal } from "lucide-react";
 import AnalysisHistorySidebar from "./AnalysisHistorySidebar";
-import ChatBot from "./ChatBot";
-import ChatBotInput from "./ChatBotInput";
-import DesktopChatTrigger from "./DesktopChatTrigger";
+import type { AnalysisHistoryItem } from "../types/history.ts";
 
 interface NavItem {
   id: string;
   label: string;
   icon?: React.ReactNode;
 }
-
-import type { AnalysisHistoryItem } from "../types/history.ts";
 
 interface AppShellProps {
   current: string;
@@ -27,7 +23,6 @@ const navItems: NavItem[] = [
   { id: "upload", label: "Upload" },
   { id: "results", label: "Results" },
   { id: "visuals", label: "Visuals" },
-  { id: "chat", label: "Chat" },
 ];
 
 const AppShell: React.FC<AppShellProps> = ({
@@ -60,22 +55,18 @@ const AppShell: React.FC<AppShellProps> = ({
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [isChatBotOpen, setIsChatBotOpen] = useState(false);
-  const [isChatBotMinimized, setIsChatBotMinimized] = useState(false);
 
-  // Bottom nav tab selection mapping (four tabs)
+  // Bottom nav tab selection mapping (three tabs)
   const tabToRoute = {
     upload: "upload",
     results: "results",
     visuals: "visuals",
-    chat: "chat",
   } as const;
 
   const routeToTab = (route: string) => {
     if (route === "upload") return "upload" as const;
     if (route === "results") return "results" as const;
     if (route === "visuals") return "visuals" as const;
-    if (route === "chat") return "chat" as const;
     return "upload" as const;
   };
 
@@ -89,33 +80,6 @@ const AppShell: React.FC<AppShellProps> = ({
       e.preventDefault();
       onNavigate(tabToRoute[routeId]);
     }
-  };
-
-  const handleChatTabClick = () => {
-    if (current === "chat") {
-      // On mobile, open the full-screen chatbot
-      if (typeof window !== "undefined" && window.innerWidth < 768) {
-        setIsChatBotOpen(true);
-        setIsChatBotMinimized(false);
-      }
-      // On desktop, do nothing; the chat route will show the centered chatbot
-    } else {
-      onNavigate("chat");
-    }
-  };
-
-  const handleOpenChat = () => {
-    setIsChatBotOpen(true);
-    setIsChatBotMinimized(false);
-  };
-
-  const handleCloseChat = () => {
-    setIsChatBotOpen(false);
-    setIsChatBotMinimized(false);
-  };
-
-  const handleToggleMinimize = () => {
-    setIsChatBotMinimized(!isChatBotMinimized);
   };
 
   return (
@@ -196,11 +160,6 @@ const AppShell: React.FC<AppShellProps> = ({
               </button>
             ))}
           </nav>
-
-          {/* Desktop Chat Trigger */}
-          <div className="px-3 mt-2">
-            <DesktopChatTrigger onOpenChat={() => onNavigate("chat")} isActive={current === "chat"} />
-          </div>
 
           {/* Integrated History content */}
           <div className="mt-4 border-t border-gray-200 dark:border-slate-700 flex-1 min-h-0">
@@ -299,30 +258,6 @@ const AppShell: React.FC<AppShellProps> = ({
               Visuals
             </label>
 
-            <input
-              type="radio"
-              id="radio-4"
-              name="tabs"
-              checked={selectedTab === "chat"}
-              onChange={handleChatTabClick}
-            />
-            <label
-              className="tab"
-              htmlFor="radio-4"
-              role="tab"
-              aria-selected={selectedTab === "chat"}
-              tabIndex={selectedTab === "chat" ? 0 : -1}
-              onClick={handleChatTabClick}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleChatTabClick();
-                }
-              }}
-            >
-              Chat
-            </label>
-
             <span className="glider" />
           </div>
         </div>
@@ -408,33 +343,6 @@ const AppShell: React.FC<AppShellProps> = ({
           </div>
         </div>
       )}
-
-      {/* Mobile ChatBot Input - shows when chat tab is selected but chatbot is not open */}
-      {current === "chat" && !isChatBotOpen && (
-        <div className="md:hidden">
-          <ChatBotInput onOpenChat={handleOpenChat} />
-        </div>
-      )}
-
-      {/* Mobile ChatBot - full screen chatbot (mobile only) */}
-      <div className="md:hidden">
-        <ChatBot
-          isOpen={isChatBotOpen}
-          onClose={handleCloseChat}
-          isMinimized={isChatBotMinimized}
-          onToggleMinimize={handleToggleMinimize}
-        />
-      </div>
-
-      {/* Desktop ChatBot - sidebar chatbot (desktop only) - Hidden as we use centered chatbot in main content */}
-      {/* <div className="hidden md:block">
-        <DesktopChatBot
-          isOpen={isDesktopChatBotOpen}
-          onClose={handleCloseDesktopChat}
-          isMinimized={isDesktopChatBotMinimized}
-          onToggleMinimize={handleToggleDesktopMinimize}
-        />
-      </div> */}
     </div>
   );
 };
