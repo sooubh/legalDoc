@@ -16,7 +16,10 @@ import {
   analyzeDocumentWithGemini,
   generateVisualizationsWithGemini,
 } from "./services/gemini";
-import { saveAnalysisToHistory, getAnalysisHistoryForUser } from "./services/analysis";
+import {
+  saveAnalysisToHistory,
+  getAnalysisHistoryForUser,
+} from "./services/analysis";
 import ChatFloating from "./components/ChatFloating";
 import Visualizations from "./components/Visualizations";
 import ProfilePage from "./components/ProfilePage";
@@ -26,7 +29,14 @@ import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignupPage";
 
 // Define a type for the route
-export type Route = "login" | "signup" | "upload" | "results" | "visuals" | "profile" | "more";
+export type Route =
+  | "login"
+  | "signup"
+  | "upload"
+  | "results"
+  | "visuals"
+  | "profile"
+  | "more";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,10 +52,14 @@ function App() {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
   const [isVisualsLoading, setIsVisualsLoading] = useState(false);
-  const [fs, setFs] = useState<null | { key: "analysis" | "visuals" | "document" }>(null);
+  const [fs, setFs] = useState<null | {
+    key: "analysis" | "visuals" | "document";
+  }>(null);
   const [isDocumentMinimized, setIsDocumentMinimized] = useState(false);
 
-  const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>([]);
+  const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>(
+    []
+  );
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
 
   // Load local analyses from localStorage
@@ -82,7 +96,10 @@ function App() {
         getAnalysisHistoryForUser()
           .then(setAnalysisHistory)
           .catch((error) => {
-            console.warn("Failed to load Firestore history, using local only:", error);
+            console.warn(
+              "Failed to load Firestore history, using local only:",
+              error
+            );
           });
 
         const unsavedAnalysisJson = localStorage.getItem("unsavedAnalysis");
@@ -214,7 +231,9 @@ function App() {
       if (item.metadata.language === "en" || item.metadata.language === "hi") {
         _setLanguage(item.metadata.language);
       }
-      _setSimplificationLevel(item.metadata.simplificationLevel as SimplificationLevel);
+      _setSimplificationLevel(
+        item.metadata.simplificationLevel as SimplificationLevel
+      );
     }
     setRoute("results");
     localStorage.removeItem("unsavedAnalysis");
@@ -239,7 +258,10 @@ function App() {
               <LoginPage />
               <p className="text-center mt-4">
                 Don't have an account{" "}
-                <button onClick={() => setRoute("signup")} className="text-blue-600 hover:underline">
+                <button
+                  onClick={() => setRoute("signup")}
+                  className="text-blue-600 hover:underline"
+                >
                   Sign up
                 </button>
               </p>
@@ -250,7 +272,10 @@ function App() {
               <SignupPage />
               <p className="text-center mt-4">
                 Already have an account{" "}
-                <button onClick={() => setRoute("login")} className="text-blue-600 hover:underline">
+                <button
+                  onClick={() => setRoute("login")}
+                  className="text-blue-600 hover:underline"
+                >
                   Login
                 </button>
               </p>
@@ -280,7 +305,11 @@ function App() {
             transition={{ duration: 0.2 }}
           >
             <div className="bg-white rounded-2xl shadow p-4 md:p-6 border border-gray-100">
-              <DocumentInput onSubmit={handleDocumentSubmit} isAnalyzing={isAnalyzing} language={language} />
+              <DocumentInput
+                onSubmit={handleDocumentSubmit}
+                isAnalyzing={isAnalyzing}
+                language={language}
+              />
             </div>
           </motion.div>
         )}
@@ -296,12 +325,18 @@ function App() {
             {isAnalyzing ? (
               <LoadingScreen />
             ) : analysis ? (
-              <div className={`grid grid-cols-1 gap-4 md:gap-6 transition-all duration-300 ease-in-out ${isDocumentMinimized ? 'lg:grid-cols-1' : 'lg:grid-cols-2'}`}>
+              <div
+                className={`grid grid-cols-1 gap-4 md:gap-6 transition-all duration-300 ease-in-out ${
+                  isDocumentMinimized ? "lg:grid-cols-1" : "lg:grid-cols-2"
+                }`}
+              >
                 {/* Analysis Section */}
                 <div className="space-y-4 md:space-y-6">
                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="font-semibold text-gray-900">Analysis</div>
+                      <div className="font-semibold text-gray-900">
+                        Analysis
+                      </div>
                       <button
                         onClick={() => setFs({ key: "analysis" })}
                         className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
@@ -315,14 +350,18 @@ function App() {
                       simplificationLevel={simplificationLevel}
                       onNewAnalysis={handleNewAnalysis}
                       onSave={handleSaveAnalysis}
-                      isSaved={analysisHistory.some((item) => item.id === selectedAnalysisId)}
+                      isSaved={analysisHistory.some(
+                        (item) => item.id === selectedAnalysisId
+                      )}
                     />
                   </div>
 
                   {/* Visualizations */}
                   <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="font-semibold text-gray-900">Visualizations</div>
+                      <div className="font-semibold text-gray-900">
+                        Visualizations
+                      </div>
                       <button
                         onClick={() => setFs({ key: "visuals" })}
                         className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
@@ -330,7 +369,10 @@ function App() {
                         Fullscreen
                       </button>
                     </div>
-                    <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+                    <Visualizations
+                      visuals={visuals}
+                      isLoading={isVisualsLoading}
+                    />
                   </div>
                 </div>
 
@@ -339,14 +381,28 @@ function App() {
                   <div className="space-y-4 md:space-y-6">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6 lg:sticky lg:top-0">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="font-semibold text-gray-900">Original Document</div>
+                        <div className="font-semibold text-gray-900">
+                          Original Document
+                        </div>
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => setIsDocumentMinimized(!isDocumentMinimized)}
+                            onClick={() =>
+                              setIsDocumentMinimized(!isDocumentMinimized)
+                            }
                             className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center space-x-1"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 15l7-7 7 7"
+                              />
                             </svg>
                             <span>Minimize</span>
                           </button>
@@ -366,19 +422,31 @@ function App() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Minimized Document Bar */}
                 {isDocumentMinimized && (
                   <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-2 duration-300">
                     <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-3">
                       <div className="flex items-center space-x-3">
-                        <div className="text-sm font-medium text-gray-900">Original Document</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          Original Document
+                        </div>
                         <button
                           onClick={() => setIsDocumentMinimized(false)}
                           className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center space-x-1 transition-colors"
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                           <span>Expand</span>
                         </button>
@@ -394,7 +462,9 @@ function App() {
                 )}
               </div>
             ) : (
-              <div className="text-gray-600">No analysis yet. Upload a document first.</div>
+              <div className="text-gray-600">
+                No analysis yet. Upload a document first.
+              </div>
             )}
           </motion.div>
         )}
@@ -442,7 +512,7 @@ function App() {
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen((v) => !v)}
         language={language}
-        document={""}
+        document={submittedContent}
       />
 
       {fs && (
@@ -464,7 +534,9 @@ function App() {
                 simplificationLevel={simplificationLevel}
                 onNewAnalysis={handleNewAnalysis}
                 onSave={handleSaveAnalysis}
-                isSaved={analysisHistory.some((item) => item.id === selectedAnalysisId)}
+                isSaved={analysisHistory.some(
+                  (item) => item.id === selectedAnalysisId
+                )}
               />
             </div>
           )}

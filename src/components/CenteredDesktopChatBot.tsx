@@ -1,5 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Send, Bot, User, Sparkles } from "lucide-react";
+import { db } from "../services/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { chatWithGemini } from "../services/gemini";
 
 interface Message {
   id: string;
@@ -11,19 +14,19 @@ interface Message {
 const CenteredDesktopChatBot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      text: 'Hello! I\'m your legal document assistant. I can help you understand complex legal documents, explain terms, and answer questions about your analysis. How can I assist you today?',
+      id: "1",
+      text: "Hello! I'm your legal document assistant. I can help you understand complex legal documents, explain terms, and answer questions about your analysis. How can I assist you today?",
       isUser: false,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    },
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -41,42 +44,71 @@ const CenteredDesktopChatBot: React.FC = () => {
       id: Date.now().toString(),
       text: inputValue.trim(),
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
     setIsTyping(true);
+    try {
+      await addDoc(collection(db, "messages"), {
+        role: "user",
+        content: userMessage.text,
+        timestamp: serverTimestamp(),
+      });
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: `I understand you're asking about "${userMessage.text}". This is a simulated response. In a real implementation, this would connect to your AI service to provide legal document analysis and assistance. I can help you understand legal terms, explain document sections, and provide insights about your uploaded documents.`,
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, botMessage]);
-      setIsTyping(false);
-    }, 1500);
+      try {
+        const reply = await chatWithGemini({
+          document: "",
+          language: "en",
+          history: [],
+          message: userMessage.text,
+        });
+        await addDoc(collection(db, "messages"), {
+          role: reply.role,
+          content: reply.content,
+          timestamp: serverTimestamp(),
+        });
+      } catch (aiErr) {
+        await addDoc(collection(db, "messages"), {
+          role: "model",
+          content: `I understand you're asking about "${userMessage.text}". This is a simulated response.`,
+          timestamp: serverTimestamp(),
+        });
+      }
+    } catch (err) {
+      setTimeout(() => {
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: `I understand you're asking about "${userMessage.text}". This is a simulated response. In a real implementation, this would connect to your AI service to provide legal document analysis and assistance. I can help you understand legal terms, explain document sections, and provide insights about your uploaded documents.`,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, botMessage]);
+        setIsTyping(false);
+      }, 1500);
+      return;
+    }
+
+    setIsTyping(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const quickQuestions = [
     "What does this document mean?",
     "Explain the key terms",
     "What are the risks?",
-    "Summarize the main points"
+    "Summarize the main points",
   ];
 
   const handleQuickQuestion = (question: string) => {
@@ -93,7 +125,9 @@ const CenteredDesktopChatBot: React.FC = () => {
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">Legal Assistant</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100">
+              Legal Assistant
+            </h1>
             <p className="text-sm text-gray-600 dark:text-slate-400 flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               Online • Ready to help with your legal documents
@@ -111,7 +145,9 @@ const CenteredDesktopChatBot: React.FC = () => {
       {/* Quick Questions */}
       {messages.length === 1 && (
         <div className="p-6 border-b border-gray-200 dark:border-slate-700">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-3">Quick Questions:</h3>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-3">
+            Quick Questions:
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {quickQuestions.map((question, index) => (
               <button
@@ -131,36 +167,50 @@ const CenteredDesktopChatBot: React.FC = () => {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'} chat-message-enter`}
+            className={`flex ${
+              message.isUser ? "justify-end" : "justify-start"
+            } chat-message-enter`}
           >
-            <div className={`flex gap-3 max-w-[80%] ${message.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                message.isUser 
-                  ? 'bg-blue-500' 
-                  : 'bg-gradient-to-br from-blue-500 to-purple-600'
-              }`}>
+            <div
+              className={`flex gap-3 max-w-[80%] ${
+                message.isUser ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  message.isUser
+                    ? "bg-blue-500"
+                    : "bg-gradient-to-br from-blue-500 to-purple-600"
+                }`}
+              >
                 {message.isUser ? (
                   <User className="w-4 h-4 text-white" />
                 ) : (
                   <Bot className="w-4 h-4 text-white" />
                 )}
               </div>
-              <div className={`rounded-2xl px-4 py-3 shadow-sm ${
-                message.isUser
-                  ? 'bg-blue-500 text-white'
-                  : 'chat-message-bubble text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700'
-              }`}>
+              <div
+                className={`rounded-2xl px-4 py-3 shadow-sm ${
+                  message.isUser
+                    ? "bg-blue-500 text-white"
+                    : "chat-message-bubble text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700"
+                }`}
+              >
                 <p className="text-sm leading-relaxed">{message.text}</p>
-                <p className={`text-xs mt-2 ${
-                  message.isUser ? 'text-blue-100' : 'text-gray-500 dark:text-slate-400'
-                }`}>
+                <p
+                  className={`text-xs mt-2 ${
+                    message.isUser
+                      ? "text-blue-100"
+                      : "text-gray-500 dark:text-slate-400"
+                  }`}
+                >
                   {formatTime(message.timestamp)}
                 </p>
               </div>
             </div>
           </div>
         ))}
-        
+
         {isTyping && (
           <div className="flex justify-start">
             <div className="flex gap-3">
