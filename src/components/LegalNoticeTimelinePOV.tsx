@@ -123,17 +123,17 @@ export default function LegalNoticeTimelinePOV({
                 </div>
               </div>
 
-              {/* Text content */}
+              {/* Text content with date at top */}
               <div className="flex-1 w-full">
+                {ev.date && (
+                  <time className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full font-medium whitespace-nowrap mb-2 inline-block">
+                    {ev.date}
+                  </time>
+                )}
                 <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <h3 className="font-bold text-lg sm:text-2xl text-gray-900 tracking-wide break-words">
                     {ev.title}
                   </h3>
-                  {ev.date && (
-                    <time className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full font-medium whitespace-nowrap">
-                      {ev.date}
-                    </time>
-                  )}
                 </header>
                 {ev.subtitle && (
                   <p className="text-blue-700 mt-2 font-semibold text-sm sm:text-lg">
