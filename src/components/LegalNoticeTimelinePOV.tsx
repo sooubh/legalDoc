@@ -1,8 +1,13 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { AiOutlineFileText, AiOutlineWarning, AiOutlineClockCircle, AiOutlineCheckCircle } from 'react-icons/ai'
+import {
+  AiOutlineFileText,
+  AiOutlineWarning,
+  AiOutlineClockCircle,
+  AiOutlineCheckCircle
+} from 'react-icons/ai'
 
-// Timeline event interface for AI-generated data
+// Timeline event interface
 export interface TimelineEvent {
   title: string
   subtitle: string
@@ -12,7 +17,7 @@ export interface TimelineEvent {
   icon: 'file' | 'clock' | 'warning' | 'check'
 }
 
-// Timeline data structure for different POVs
+// Timeline data structure
 export interface TimelineData {
   court: TimelineEvent[]
   receiver: TimelineEvent[]
@@ -27,9 +32,9 @@ interface LegalNoticeTimelinePOVProps {
 }
 
 const iconMap = {
-  file: <AiOutlineFileText />, 
-  clock: <AiOutlineClockCircle />, 
-  warning: <AiOutlineWarning />, 
+  file: <AiOutlineFileText />,
+  clock: <AiOutlineClockCircle />,
+  warning: <AiOutlineWarning />,
   check: <AiOutlineCheckCircle />
 }
 
@@ -58,8 +63,8 @@ const defaultTimelineData: TimelineData = {
   ]
 }
 
-export default function LegalNoticeTimelinePOV({ 
-  pov = 'overall', 
+export default function LegalNoticeTimelinePOV({
+  pov = 'overall',
   lineColor = 'bg-gray-300',
   timelineData,
   isLoading = false
@@ -89,11 +94,14 @@ export default function LegalNoticeTimelinePOV({
   }
 
   return (
-    <div className="relative py-10 max-w-5xl mx-auto bg-gray-50 p-6 rounded-2xl">
-      {/* Responsive vertical line */}
-      <div className={`absolute left-6 sm:left-12 top-4 bottom-4 w-1 ${lineColor} rounded-full`} aria-hidden />
+    <div className="relative py-8 px-4 sm:px-6 max-w-5xl mx-auto bg-gray-50 rounded-2xl overflow-hidden">
+      {/* Timeline line */}
+      <div
+        className={`absolute left-5 sm:left-12 top-4 bottom-4 w-1 ${lineColor} rounded-full`}
+        aria-hidden
+      />
 
-      <ol className="space-y-12 pl-16 sm:pl-24">
+      <ol className="space-y-10 sm:space-y-12 pl-12 sm:pl-24">
         {events.map((ev, idx) => (
           <li key={idx} className="relative">
             <motion.div
@@ -101,33 +109,42 @@ export default function LegalNoticeTimelinePOV({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.4 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="flex flex-col sm:flex-row items-start gap-6 sm:gap-8 bg-white shadow-2xl rounded-2xl p-6 sm:p-8 border border-gray-200 hover:shadow-3xl transition-all duration-500"
+              className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 bg-white rounded-2xl shadow border border-gray-100 p-4 sm:p-6 hover:shadow-lg transition-all duration-500 w-full"
             >
-              <div className="absolute -left-10 sm:-left-16 top-4">
-                <div className={`flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-full ring-4 ring-white shadow-xl ${ev.color ?? 'bg-indigo-500'}`} aria-hidden>
-                  {iconMap[ev.icon] ? (
-                    <span className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-white text-2xl sm:text-3xl">
-                      {iconMap[ev.icon]}
-                    </span>
-                  ) : (
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="6" fill="currentColor" />
-                    </svg>
-                  )}
+              {/* Icon bubble */}
+              <div className="absolute -left-9 sm:-left-16 top-4">
+                <div
+                  className={`flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full ring-4 ring-white shadow-md ${ev.color ?? 'bg-indigo-500'}`}
+                  aria-hidden
+                >
+                  <span className="text-white text-lg sm:text-2xl">
+                    {iconMap[ev.icon]}
+                  </span>
                 </div>
               </div>
 
-              <div className="flex-1">
-                <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-                  <h3 className="font-extrabold text-2xl sm:text-3xl text-gray-900 tracking-wide">{ev.title}</h3>
+              {/* Text content */}
+              <div className="flex-1 w-full">
+                <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <h3 className="font-bold text-lg sm:text-2xl text-gray-900 tracking-wide break-words">
+                    {ev.title}
+                  </h3>
                   {ev.date && (
-                    <time className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-2 sm:px-3 py-1 rounded-full font-medium">
+                    <time className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full font-medium whitespace-nowrap">
                       {ev.date}
                     </time>
                   )}
                 </header>
-                {ev.subtitle && <p className="text-red-700 mt-2 font-semibold text-lg sm:text-xl">{ev.subtitle}</p>}
-                {ev.description && <p className="mt-3 text-gray-700 leading-relaxed text-base sm:text-lg">{ev.description}</p>}
+                {ev.subtitle && (
+                  <p className="text-blue-700 mt-2 font-semibold text-sm sm:text-lg">
+                    {ev.subtitle}
+                  </p>
+                )}
+                {ev.description && (
+                  <p className="mt-2 text-gray-700 leading-relaxed text-sm sm:text-base break-words">
+                    {ev.description}
+                  </p>
+                )}
               </div>
             </motion.div>
           </li>
