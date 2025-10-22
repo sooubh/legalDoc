@@ -147,12 +147,12 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({
       {/* Floating Button */}
       <button
         onClick={onToggle}
-        className={`fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-300 ${
+        className={`fixed bottom-[70px] md:bottom-6 right-6 z-40 md:w-16 md:h-16 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-300 ${
           isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"
         }`}
         aria-label={language === "hi" ? "चैट खोलें" : "Open chat"}
       >
-        <MessageCircle className="h-7 w-7" />
+        <MessageCircle className="h-10 w-10 md:m-3 m-2" />
       </button>
     </>
   );
