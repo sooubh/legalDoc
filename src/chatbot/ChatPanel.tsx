@@ -17,75 +17,56 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   document: doc,
   initialMessage,
 }) => {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialMessage || "");
   const [messages, setMessages] = useState<CM[]>([]);
   const [isSending, setIsSending] = useState(false);
-  const initialSentRef = React.useRef(false);
+  const initialSentRef = useRef(false);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Handle initial message when component mounts
-  // Send initial message once when provided (e.g., from ChatFloating). Avoid duplicates with a ref.
+  // Handle initial message once
   useEffect(() => {
-    if (!initialMessage) return;
-    if (initialSentRef.current) return;
-    if (messages.length > 0) return; // only send when chat is empty
-
+    if (!initialMessage || initialSentRef.current) return;
     initialSentRef.current = true;
 
     (async () => {
       setIsSending(true);
       try {
-        let historyForReq: { role: string; content: string }[] = [];
-        const userEntry = { role: "user", content: initialMessage } as CM;
-        // use functional updater to synchronously get previous messages and set new state
-        setMessages((prev) => {
-          historyForReq = [...prev, userEntry].map((h) => ({
-            role: h.role as any,
-            content: h.content,
-          }));
-          return [...prev, userEntry];
-        });
+        const userEntry: CM = { role: "user", content: initialMessage };
+        setMessages([userEntry]);
 
         const req: ChatRequest = {
           document: doc || "",
           language,
-          history: historyForReq as unknown as any,
+          history: [{ role: "user", content: initialMessage }],
           message: initialMessage,
         };
         const reply = await chatWithGemini(req);
-        setMessages((m) => [
-          ...m,
+        setMessages((prev) => [
+          ...prev,
           { role: reply.role as any, content: reply.content },
         ]);
       } catch (e) {
         console.error("[ChatPanel] initial chatWithGemini failed", e);
-        setMessages((m) => [
-          ...m,
-          { role: "model", content: "(AI failed to respond)" },
-        ]);
+        setMessages([{ role: "model", content: "(AI failed to respond)" }]);
       } finally {
         setIsSending(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialMessage]);
+  }, [initialMessage, doc, language]);
 
+  // Auto-scroll messages
   useEffect(() => {
-    try {
-      listRef.current?.scrollTo({
-        top: listRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    } catch (e) {
-      console.error("[ChatPanel] Failed to auto-scroll messages", { error: e });
-    }
+    listRef.current?.scrollTo({
+      top: listRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages.length, isBusy]);
 
   const placeholder = useMemo(
     () =>
       language === "hi"
-        ? "दस्तावेज़ के बारे में अपना प्रश्न लिखें..."
-        : "Ask a question about the document...",
+        ? "अपना प्रश्न यहाँ टाइप करें..."
+        : "Type your question here...",
     [language]
   );
 
@@ -97,32 +78,29 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     setIsSending(true);
 
     try {
-      let historyForReq: { role: string; content: string }[] = [];
-      const userEntry = { role: "user", content: trimmed } as CM;
-      setMessages((prev) => {
-        historyForReq = [...prev, userEntry].map((h) => ({
-          role: h.role as any,
-          content: h.content,
-        }));
-        return [...prev, userEntry];
-      });
+      const userEntry: CM = { role: "user", content: trimmed };
+      setMessages((prev) => [...prev, userEntry]);
 
       const req: ChatRequest = {
         document: doc || "",
         language,
-        history: historyForReq as unknown as any,
+        history: [...messages, userEntry].map((m) => ({
+          role: m.role as any,
+          content: m.content,
+        })) as any,
         message: trimmed,
       };
+
       try {
         const reply = await chatWithGemini(req);
-        setMessages((m) => [
-          ...m,
+        setMessages((prev) => [
+          ...prev,
           { role: reply.role as any, content: reply.content },
         ]);
       } catch (aiErr) {
         console.error("[ChatPanel] chatWithGemini failed", { error: aiErr });
-        setMessages((m) => [
-          ...m,
+        setMessages((prev) => [
+          ...prev,
           { role: "model", content: "(AI failed to respond)" },
         ]);
       }
@@ -150,7 +128,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   );
 
   return (
-    <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-gray-200 overflow-hidden h-full">
+    <div className="flex flex-col h-full bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+      {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <div className="font-semibold text-gray-900">
           {language === "hi" ? "AI चैटबॉट" : "AI Chatbot"}
@@ -162,33 +141,37 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      <div ref={listRef} className="p-4 space-y-4 max-h-[55vh] overflow-auto">
-        {messages.length === 0
-          ? emptyState
-          : messages.map((m, idx) => (
+      {/* Messages */}
+      <div
+        ref={listRef}
+        className="flex-1 p-4 space-y-4 overflow-auto transition-all duration-300"
+      >
+        {messages.length === 0 ? (
+          emptyState
+        ) : (
+          messages.map((m, idx) => (
+            <div
+              key={idx}
+              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+            >
               <div
-                key={idx}
-                className={`flex ${
-                  m.role === "user" ? "justify-end" : "justify-start"
+                className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm leading-6 border ${
+                  m.role === "user"
+                    ? "bg-blue-600 text-white border-blue-700 rounded-br-sm"
+                    : "bg-gray-50 text-gray-900 border-gray-200 rounded-bl-sm"
                 }`}
               >
-                <div
-                  className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm leading-6 border ${
-                    m.role === "user"
-                      ? "bg-blue-600 text-white border-blue-700 rounded-br-sm"
-                      : "bg-gray-50 text-gray-900 border-gray-200 rounded-bl-sm"
-                  }`}
-                >
-                  {m.role === "user" ? (
-                    <span>{m.content}</span>
-                  ) : (
-                    <div className="prose prose-sm max-w-none prose-headings:mt-2 prose-p:my-2 prose-li:my-0 whitespace-pre-wrap">
-                      {m.content}
-                    </div>
-                  )}
-                </div>
+                {m.role === "user" ? (
+                  <span>{m.content}</span>
+                ) : (
+                  <div className="prose prose-sm max-w-none prose-headings:mt-2 prose-p:my-2 prose-li:my-0 whitespace-pre-wrap">
+                    {m.content}
+                  </div>
+                )}
               </div>
-            ))}
+            </div>
+          ))
+        )}
 
         {(isBusy || isSending) && (
           <div className="flex justify-start">
@@ -200,9 +183,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         )}
       </div>
 
+      {/* Bottom Input */}
       <form
         onSubmit={handleSubmit}
-        className="p-4 border-t border-gray-200 bg-white/70 bottom-0"
+        className="p-4 border-t border-gray-200 flex-shrink-0 bg-white/70"
       >
         <div className="flex items-end gap-2">
           <textarea
@@ -210,12 +194,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             onChange={(e) => setInput(e.target.value)}
             placeholder={placeholder}
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white"
+            className="flex-1 resize-none rounded-2xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white transition-all"
           />
           <button
             type="submit"
             disabled={!input.trim() || isBusy || isSending}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <Send className="h-4 w-4" />
             {language === "hi" ? "भेजें" : "Send"}

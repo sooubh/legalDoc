@@ -20,13 +20,13 @@ import {
   saveAnalysisToHistory,
   getAnalysisHistoryForUser,
 } from "./services/analysis";
-import ChatFloating from "./chatbot/ChatFloating";
 import Visualizations from "./components/Visualizations";
 import ProfilePage from "./pages/ProfilePage";
 import MorePage from "./pages/MorePage";
 import FullscreenModal from "./components/FullscreenModal";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import ChatFloating from "./chatbot/ChatFloating";
 
 // Define a type for the route
 export type Route =
