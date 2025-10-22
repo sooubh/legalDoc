@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { User, Sun, Moon, Menu, X, Settings, MoreHorizontal } from "lucide-react";
-import AnalysisHistorySidebar from "./AnalysisHistorySidebar";
+import AnalysisHistorySidebar from "../analysis/AnalysisHistorySidebar.tsx";
 import type { AnalysisHistoryItem } from "../types/history.ts";
 
 interface NavItem {

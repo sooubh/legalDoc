@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
-import AnalysisResults from "./components/AnalysisResults";
+import AnalysisResults from "./analysis/AnalysisResults";
 import type { AnalysisHistoryItem } from "./types/history";
 import LoadingScreen from "./components/LoadingScreen";
 import OriginalContent from "./components/OriginalContent";
@@ -20,13 +20,13 @@ import {
   saveAnalysisToHistory,
   getAnalysisHistoryForUser,
 } from "./services/analysis";
-import ChatFloating from "./components/ChatFloating";
+import ChatFloating from "./chatbot/ChatFloating";
 import Visualizations from "./components/Visualizations";
-import ProfilePage from "./components/ProfilePage";
-import MorePage from "./components/MorePage";
+import ProfilePage from "./pages/ProfilePage";
+import MorePage from "./pages/MorePage";
 import FullscreenModal from "./components/FullscreenModal";
-import LoginPage from "./components/LoginPage";
-import SignupPage from "./components/SignupPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 
 // Define a type for the route
 export type Route =

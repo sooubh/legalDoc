@@ -166,14 +166,15 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document,
 
       {/* Floating Button - Bottom Center */}
       <button
-        onClick={onToggle}
-        className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all duration-300 ${
-          isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
-        }`}
-        aria-label={language === 'hi' ? 'चैट खोलें' : 'Open chat'}
-      >
-        <MessageCircle className="h-7 w-7" />
-      </button>
+  onClick={onToggle}
+  className={`fixed bottom-6 right-6 z-40 inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all duration-300 ${
+    isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
+  }`}
+  aria-label={language === 'hi' ? 'चैट खोलें' : 'Open chat'}
+>
+  <MessageCircle className="h-7 w-7" />
+</button>
+
     </>
   );
 };

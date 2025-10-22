@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useToast } from '../hooks/useToast';
-import ToastContainer from './ToastContainer';
+import ToastContainer from '../components/ToastContainer';
 
-const SignupPage: React.FC = () => {
+const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -11,25 +11,30 @@ const SignupPage: React.FC = () => {
 
   const getErrorMessage = (errorCode: string): { title: string; message: string } => {
     switch (errorCode) {
-      case 'auth/email-already-in-use':
+      case 'auth/user-not-found':
         return {
-          title: 'Email Already Exists',
-          message: 'An account with this email already exists. Please try logging in instead.'
+          title: 'User Not Found',
+          message: 'No account found with this email address. Please check your email or sign up for a new account.'
         };
-      case 'auth/weak-password':
+      case 'auth/wrong-password':
         return {
-          title: 'Weak Password',
-          message: 'Password should be at least 6 characters long. Please choose a stronger password.'
+          title: 'Incorrect Password',
+          message: 'The password you entered is incorrect. Please try again.'
         };
       case 'auth/invalid-email':
         return {
           title: 'Invalid Email',
           message: 'Please enter a valid email address.'
         };
-      case 'auth/operation-not-allowed':
+      case 'auth/user-disabled':
         return {
-          title: 'Signup Disabled',
-          message: 'Email/password signup is currently disabled. Please contact support.'
+          title: 'Account Disabled',
+          message: 'This account has been disabled. Please contact support.'
+        };
+      case 'auth/too-many-requests':
+        return {
+          title: 'Too Many Attempts',
+          message: 'Too many failed login attempts. Please try again later.'
         };
       case 'auth/network-request-failed':
         return {
@@ -38,39 +43,34 @@ const SignupPage: React.FC = () => {
         };
       case 'auth/popup-closed-by-user':
         return {
-          title: 'Signup Cancelled',
-          message: 'Google signup was cancelled. Please try again if you want to continue.'
+          title: 'Login Cancelled',
+          message: 'Google login was cancelled. Please try again if you want to continue.'
         };
       case 'auth/popup-blocked':
         return {
           title: 'Popup Blocked',
-          message: 'Please allow popups for this site to use Google signup.'
+          message: 'Please allow popups for this site to use Google login.'
         };
       default:
         return {
-          title: 'Signup Failed',
+          title: 'Login Failed',
           message: 'An unexpected error occurred. Please try again.'
         };
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       showError('Missing Information', 'Please enter both email and password.');
       return;
     }
 
-    if (password.length < 6) {
-      showError('Weak Password', 'Password should be at least 6 characters long.');
-      return;
-    }
-
     setIsLoading(true);
     const auth = getAuth();
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      showSuccess('Account Created', 'Welcome! Your account has been created successfully.');
+      await signInWithEmailAndPassword(auth, email, password);
+      showSuccess('Login Successful', 'Welcome back! You have been logged in successfully.');
     } catch (err: any) {
       const { title, message } = getErrorMessage(err.code);
       showError(title, message);
@@ -79,13 +79,13 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  const handleGoogleSignup = async () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      showSuccess('Account Created', 'Welcome! Your account has been created with Google.');
+      showSuccess('Login Successful', 'Welcome! You have been logged in with Google.');
     } catch (err: any) {
       const { title, message } = getErrorMessage(err.code);
       showError(title, message);
@@ -95,7 +95,7 @@ const SignupPage: React.FC = () => {
   };
 
   return (
-    <form className="login-form" onSubmit={handleSignup}>
+    <form className="login-form" onSubmit={handleLogin}>
       <div className="flex-column">
         <label>Email</label>
       </div>
@@ -137,26 +137,27 @@ const SignupPage: React.FC = () => {
       <div className="flex-row">
         <div>
           <input type="checkbox" />
-          <label>I agree to the terms and conditions</label>
+          <label>Remember me</label>
         </div>
+        <span className="span">Forgot password?</span>
       </div>
       
       <button type="submit" className="button-submit" disabled={isLoading}>
-        {isLoading ? 'Creating Account...' : 'Sign Up'}
+        {isLoading ? 'Signing In...' : 'Sign In'}
       </button>
       
-      <p className="p">Already have an account? <span className="span">Sign In</span></p>
+      <p className="p">Don't have an account? <span className="span">Sign Up</span></p>
       <p className="p line">Or With</p>
 
       <div className="flex-row">
-        <button type="button" className="btn google" onClick={handleGoogleSignup} disabled={isLoading}>
+        <button type="button" className="btn google" onClick={handleGoogleLogin} disabled={isLoading}>
           <svg version="1.1" width="20" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512 512" xmlSpace="preserve">
             <path style={{fill: '#FBBB00'}} d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z"></path>
             <path style={{fill: '#518EF8'}} d="M507.527,208.176C510.467,223.662,512,239.655,512,256c0,18.328-1.927,36.206-5.598,53.451c-12.462,58.683-45.025,109.925-90.134,146.187l-0.014-0.014l-73.044-3.727l-10.338-64.535c29.932-17.554,53.324-45.025,65.646-77.911h-136.89V208.176h138.887L507.527,208.176L507.527,208.176z"></path>
             <path style={{fill: '#28B446'}} d="M416.253,455.624l0.014,0.014C372.396,490.901,316.666,512,256,512c-97.491,0-182.252-54.491-225.491-134.681l82.961-67.91c21.619,57.698,77.278,98.771,142.53,98.771c28.047,0,54.323-7.582,76.87-20.818L416.253,455.624z"></path>
             <path style={{fill: '#F14336'}} d="M419.404,58.936l-82.933,67.896c-23.335-14.586-50.919-23.012-80.471-23.012c-66.729,0-123.429,42.957-143.965,102.724l-83.397-68.276h-0.014C71.23,56.123,157.06,0,256,0C318.115,0,375.068,22.126,419.404,58.936z"></path>
           </svg>
-          {isLoading ? 'Creating Account...' : 'Google'}
+          {isLoading ? 'Signing In...' : 'Google'}
         </button>
         
         <button type="button" className="btn apple" disabled={isLoading}>
@@ -177,4 +178,4 @@ const SignupPage: React.FC = () => {
   );
 };
 
-export default SignupPage;
+export default LoginPage;
