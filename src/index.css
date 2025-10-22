@@ -49,7 +49,7 @@
   align-items: center;
   justify-content: center;
   height: 30px;
-  width: 25%; /* Equal width for 4 tabs */
+  width: 33.33%; /* Equal width for 4 tabs */
   font-size: 0.8rem;
   color: black;
   font-weight: 500;
@@ -64,10 +64,13 @@
 }
 
 .container.bottom-nav .glider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: absolute;
   display: flex;
   height: 30px;
-  width: 25%; /* Equal width for 4 tabs */
+  width: 30%; /* Equal width for 4 tabs */
   background-color: #e6eef9;
   z-index: 1;
   border-radius: 99px;

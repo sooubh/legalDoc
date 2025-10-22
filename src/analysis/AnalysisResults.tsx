@@ -132,12 +132,12 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-col md:flex-row gap-5">
         <div className="flex items-center space-x-3">
           <FileText className="h-6 w-6 text-blue-600" />
           <div>
             <div className="flex items-center space-x-3">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">
                 {analysis.documentType}
               </h2>
               <span className="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200">
@@ -170,7 +170,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
       {/* Modern Segmented Tab Navigation */}
       <div className="flex justify-center my-4">
-        <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg w-fit shadow-inner">
+        <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg md:w-fit w-full shadow-inner overlay">
           {sections.map((section) => (
             <button
               key={section.id}
@@ -186,7 +186,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             >
               {section.label}
             </button>
-          ))}'''
+          ))}
         </div>
       </div>
 

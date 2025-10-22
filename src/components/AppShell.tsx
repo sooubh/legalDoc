@@ -322,14 +322,7 @@ const AppShell: React.FC<AppShellProps> = ({
             </nav>
 
             <div className="p-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
-              <button
-                onClick={toggleTheme}
-                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
-                aria-label="Toggle theme"
-              >
-                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-              <button
+            <button
                 onClick={() => {
                   onNavigate("profile");
                   setIsMobileNavOpen(false);
@@ -338,6 +331,31 @@ const AppShell: React.FC<AppShellProps> = ({
                 aria-label="Profile"
               >
                 <User className="h-4 w-4" />
+              </button>
+              <button
+                onClick={toggleTheme}
+                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+             
+              <button
+                onClick={() => {onNavigate("settings");
+                  setIsMobileNavOpen(false);
+                }}
+                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {onNavigate("more");
+                  setIsMobileNavOpen(false);
+                }}
+                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+               
               </button>
             </div>
           </div>

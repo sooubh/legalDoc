@@ -90,8 +90,10 @@ export default function LegalNoticeTimelinePOV({
 
   return (
     <div className="relative py-10 max-w-5xl mx-auto bg-gray-50 p-6 rounded-2xl">
-      <div className={`absolute left-12 top-4 bottom-4 w-1 ${lineColor} rounded-full`} aria-hidden />
-      <ol className="space-y-12 pl-24">
+      {/* Responsive vertical line */}
+      <div className={`absolute left-6 sm:left-12 top-4 bottom-4 w-1 ${lineColor} rounded-full`} aria-hidden />
+
+      <ol className="space-y-12 pl-16 sm:pl-24">
         {events.map((ev, idx) => (
           <li key={idx} className="relative">
             <motion.div
@@ -99,21 +101,33 @@ export default function LegalNoticeTimelinePOV({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.4 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="flex items-start gap-8 bg-white shadow-2xl rounded-2xl p-8 border border-gray-200 hover:shadow-3xl transition-all duration-500"
+              className="flex flex-col sm:flex-row items-start gap-6 sm:gap-8 bg-white shadow-2xl rounded-2xl p-6 sm:p-8 border border-gray-200 hover:shadow-3xl transition-all duration-500"
             >
-              <div className="absolute -left-16 top-4">
-                <div className={`flex h-20 w-20 items-center justify-center rounded-full ring-4 ring-white shadow-xl ${ev.color ?? 'bg-indigo-500'}`} aria-hidden>
-                  {iconMap[ev.icon] ? <span className="w-10 h-10 flex items-center justify-center text-white text-3xl">{iconMap[ev.icon]}</span> : <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6" fill="currentColor" /></svg>}
+              <div className="absolute -left-10 sm:-left-16 top-4">
+                <div className={`flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-full ring-4 ring-white shadow-xl ${ev.color ?? 'bg-indigo-500'}`} aria-hidden>
+                  {iconMap[ev.icon] ? (
+                    <span className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-white text-2xl sm:text-3xl">
+                      {iconMap[ev.icon]}
+                    </span>
+                  ) : (
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="6" fill="currentColor" />
+                    </svg>
+                  )}
                 </div>
               </div>
 
               <div className="flex-1">
-                <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <h3 className="font-extrabold text-3xl text-gray-900 tracking-wide">{ev.title}</h3>
-                  {ev.date && <time className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full font-medium">{ev.date}</time>}
+                <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                  <h3 className="font-extrabold text-2xl sm:text-3xl text-gray-900 tracking-wide">{ev.title}</h3>
+                  {ev.date && (
+                    <time className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-2 sm:px-3 py-1 rounded-full font-medium">
+                      {ev.date}
+                    </time>
+                  )}
                 </header>
-                {ev.subtitle && <p className="text-red-700 mt-2 font-semibold text-xl">{ev.subtitle}</p>}
-                {ev.description && <p className="mt-3 text-gray-700 leading-relaxed text-lg">{ev.description}</p>}
+                {ev.subtitle && <p className="text-red-700 mt-2 font-semibold text-lg sm:text-xl">{ev.subtitle}</p>}
+                {ev.description && <p className="mt-3 text-gray-700 leading-relaxed text-base sm:text-lg">{ev.description}</p>}
               </div>
             </motion.div>
           </li>

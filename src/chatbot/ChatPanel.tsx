@@ -202,7 +202,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
       <form
         onSubmit={handleSubmit}
-        className="p-4 border-t border-gray-200 bg-white/70"
+        className="p-4 border-t border-gray-200 bg-white/70 bottom-0"
       >
         <div className="flex items-end gap-2">
           <textarea

@@ -133,7 +133,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
               <div className="pb-2 flex items-center gap-2 text-xs text-gray-700">
                 <span>Process:</span>
                 <select
-                  className="border border-gray-300 rounded px-2 py-1"
+                  className="border border-gray-300 rounded px-2 py-1 w-20"
                   value={flowIndex}
                   onChange={(e) => setFlowIndex(Number(e.target.value))}
                 >
@@ -207,7 +207,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
               <select
                 value={selectedPOV}
                 onChange={(e) => setSelectedPOV(e.target.value as 'court' | 'receiver' | 'overall')}
-                className="text-xs px-3 py-1 rounded border border-gray-300"
+                className="text-xs px-3 py-1 rounded border border-gray-300 w-20"
               >
                 <option value="overall">Overall Process</option>
                 <option value="court">Court Perspective</option>

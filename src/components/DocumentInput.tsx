@@ -436,11 +436,11 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
             className="w-full h-64 p-4 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm shadow-inner bg-white/70 dark:bg-slate-900/70 dark:text-slate-100"
           />
           
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
+          <div className="flex justify-between items-center flex-col gap-5">
+            <div className="flex items-center gap-5 md:gap-2">
               <label className="text-sm text-gray-600 dark:text-slate-300">Sample:</label>
               <select
-                className="border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 rounded px-2 py-1 text-sm"
+                className="border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 rounded px-2 py-1 text-sm w-20 "
                 value={selectedSampleId}
                 onChange={(e) => setSelectedSampleId(e.target.value)}
               >
@@ -450,7 +450,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({ onSubmit, isAnalyzing, la
               </select>
               <button
                 onClick={loadSample}
-                className="text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200 font-medium transition-colors hover:underline"
+                className=" md:ml-5 text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200 font-medium transition-colors hover:underline"
               >
                 {translations[language].sampleText}
               </button>
