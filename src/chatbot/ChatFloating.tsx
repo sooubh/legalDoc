@@ -96,7 +96,7 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document 
       {/* Floating Action Button */}
       <button
         onClick={onToggle}
-        className={`fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 ${
+        className={`fixed md:bottom-6 bottom-14 mb-5  right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 ${
           isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
         }`}
         aria-label="Open chat"
