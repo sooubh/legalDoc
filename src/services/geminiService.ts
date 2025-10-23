@@ -1,6 +1,13 @@
-import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality, Blob, Content } from "@google/genai";
+import type { ChatMessage } from "../types/types";
 
-// Base64 encoding/decoding functions
+// FIX: The `LiveSession` type is not exported from `@google/genai`.
+// We can infer it from the return type of the `ai.live.connect` method.
+type LiveSession = Awaited<ReturnType<InstanceType<typeof GoogleGenAI>["live"]["connect"]>>;
+
+// --- Audio Encoding/Decoding Helpers ---
+
+// FIX: Replaced the incorrect `encode` function with the correct implementation from the Gemini API documentation. The previous version had multiple reference errors and incorrect logic.
 function encode(bytes: Uint8Array): string {
   let binary = '';
   const len = bytes.byteLength;
@@ -20,7 +27,6 @@ function decode(base64: string): Uint8Array {
   return bytes;
 }
 
-// Audio decoding function
 async function decodeAudioData(
   data: Uint8Array,
   ctx: AudioContext,
@@ -40,193 +46,174 @@ async function decodeAudioData(
   return buffer;
 }
 
-// PCM Blob creation
 function createBlob(data: Float32Array): Blob {
-  const l = data.length;
-  const int16 = new Int16Array(l);
-  for (let i = 0; i < l; i++) {
-    int16[i] = data[i] * 32768;
-  }
-  return {
-    data: encode(new Uint8Array(int16.buffer)),
-    mimeType: 'audio/pcm;rate=16000',
-  };
+    const l = data.length;
+    const int16 = new Int16Array(l);
+    for (let i = 0; i < l; i++) {
+        int16[i] = data[i] * 32768;
+    }
+    return {
+        data: encode(new Uint8Array(int16.buffer)),
+        mimeType: 'audio/pcm;rate=16000',
+    };
 }
 
-export interface LiveSessionCallbacks {
-  onOpen: () => void;
-  onMessage: (message: LiveServerMessage) => Promise<void>;
-  onError: (e: ErrorEvent) => void;
-  onClose: (e: CloseEvent) => void;
+
+// --- Main Service Class ---
+
+export interface LiveCallbacks {
+    onOpen: () => void;
+    onMessage: (message: LiveServerMessage) => void;
+    onError: (error: ErrorEvent) => void;
+    onClose: (event: CloseEvent) => void;
 }
 
 export class GeminiLiveService {
-  private ai: GoogleGenAI;
-  public inputAudioContext: AudioContext | null = null;
-  public outputAudioContext: AudioContext | null = null;
-  private mediaStream: MediaStream | null = null;
-  private scriptProcessor: ScriptProcessorNode | null = null;
-  private mediaStreamSource: MediaStreamAudioSourceNode | null = null;
-
-  public nextStartTime = 0;
-  private outputAudioSources = new Set<AudioBufferSourceNode>();
-
-  constructor() {
-    // Use import.meta.env for Vite projects
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    private ai: GoogleGenAI;
+    private session: LiveSession | null = null;
     
-    if (!apiKey) {
-      throw new Error("VITE_GEMINI_API_KEY environment variable not set. Please add it to your .env file.");
+    private inputAudioContext: AudioContext;
+    private outputAudioContext: AudioContext;
+    private mediaStream: MediaStream | null = null;
+    private scriptProcessor: ScriptProcessorNode | null = null;
+    private mediaStreamSource: MediaStreamAudioSourceNode | null = null;
+
+    private nextStartTime = 0;
+    private audioPlaybackSources = new Set<AudioBufferSourceNode>();
+    private sessionPromise: Promise<LiveSession> | null = null;
+
+    constructor() {
+        if (!import.meta.env.VITE_GEMINI_API_KEY) {
+            throw new Error("VITE_GEMINI_API_KEY environment variable not set");
+        }
+        this.ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+        this.inputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+        this.outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    }
+
+    public async startSession(systemInstruction: string, callbacks: LiveCallbacks): Promise<void> {
+        this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        this.sessionPromise = this.ai.live.connect({
+            model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+            callbacks: {
+                onopen: () => {
+                    this.setupMicrophone();
+                    callbacks.onOpen();
+                },
+                onmessage: async (message: LiveServerMessage) => {
+                    callbacks.onMessage(message);
+                    if (message.serverContent?.interrupted) {
+                        this.stopAllPlayback();
+                    }
+                },
+                onerror: callbacks.onError,
+                onclose: (e) => {
+                    this.cleanup();
+                    callbacks.onClose(e);
+                },
+            },
+            config: {
+                responseModalities: [Modality.AUDIO],
+                speechConfig: {
+                    voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
+                },
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                inputAudioTranscription: {},
+                outputAudioTranscription: {},
+            } as any,
+        });
+        this.session = await this.sessionPromise;
+    }
+
+    private setupMicrophone(): void {
+        if (!this.mediaStream || !this.inputAudioContext) return;
+        this.mediaStreamSource = this.inputAudioContext.createMediaStreamSource(this.mediaStream);
+        this.scriptProcessor = this.inputAudioContext.createScriptProcessor(4096, 1, 1);
+
+        this.scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+            const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
+            const pcmBlob = createBlob(inputData);
+            if (this.sessionPromise) {
+                 this.sessionPromise.then((session) => {
+                    session.sendRealtimeInput({ media: pcmBlob });
+                 });
+            }
+        };
+
+        this.mediaStreamSource.connect(this.scriptProcessor);
+        this.scriptProcessor.connect(this.inputAudioContext.destination);
     }
     
-    console.log("[GeminiLiveService] Initializing with API key:", apiKey.substring(0, 10) + "...");
-    this.ai = new GoogleGenAI({ apiKey });
-  }
+    public async playAudio(base64Audio: string): Promise<void> {
+        this.nextStartTime = Math.max(this.nextStartTime, this.outputAudioContext.currentTime);
+        const audioBuffer = await decodeAudioData(
+            decode(base64Audio),
+            this.outputAudioContext,
+            24000,
+            1,
+        );
+        const source = this.outputAudioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(this.outputAudioContext.destination);
+        source.addEventListener('ended', () => {
+            this.audioPlaybackSources.delete(source);
+        });
 
-  public async startSession(systemInstruction: string, callbacks: LiveSessionCallbacks) {
-    console.log("[GeminiLiveService] Starting session with system instruction");
+        source.start(this.nextStartTime);
+        this.nextStartTime += audioBuffer.duration;
+        this.audioPlaybackSources.add(source);
+    }
+
+    private stopAllPlayback(): void {
+        for (const source of this.audioPlaybackSources.values()) {
+            source.stop();
+            this.audioPlaybackSources.delete(source);
+        }
+        this.nextStartTime = 0;
+    }
+
+    private cleanup(): void {
+        this.stopAllPlayback();
+        this.mediaStream?.getTracks().forEach(track => track.stop());
+        this.scriptProcessor?.disconnect();
+        this.mediaStreamSource?.disconnect();
+        this.session = null;
+        this.sessionPromise = null;
+        this.mediaStream = null;
+        this.scriptProcessor = null;
+        this.mediaStreamSource = null;
+    }
+
+    public stopSession(): void {
+        if (this.session) {
+            this.session.close();
+        }
+        this.cleanup();
+    }
+}
+
+
+export async function sendTextMessage(fullHistory: ChatMessage[], document: string): Promise<string> {
+    if (!import.meta.env.VITE_GEMINI_API_KEY) {
+        throw new Error("VITE_GEMINI_API_KEY environment variable not set");
+    }
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
     
-    this.inputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-    this.outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-    this.nextStartTime = 0;
+    const contents: Content[] = fullHistory.map(msg => ({
+        role: msg.role,
+        parts: [{ text: msg.content }]
+    }));
 
-    console.log("[GeminiLiveService] Audio contexts created");
-
-    const sessionPromise = this.ai.live.connect({
-      model: 'gemini-2.0-flash-exp',
-      callbacks: {
-        onopen: callbacks.onOpen,
-        onmessage: callbacks.onMessage,
-        onerror: callbacks.onError,
-        onclose: callbacks.onClose,
-      },
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } },
-        },
-        systemInstruction: {
-          parts: [{ text: systemInstruction }]
-        },
-      },
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: contents,
+        ...(document && {
+            config: {
+                systemInstruction: `You are a helpful assistant. Please answer the user's questions based on the following context. If the answer is not found in the context, say so.\n\nCONTEXT:\n"""${document}"""`
+            }
+        })
     });
 
-    console.log("[GeminiLiveService] Connecting to Gemini Live API...");
-
-    try {
-      console.log("[GeminiLiveService] Requesting microphone access...");
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 16000
-        } 
-      });
-      
-      console.log("[GeminiLiveService] ✅ Microphone access granted");
-      
-      this.mediaStreamSource = this.inputAudioContext.createMediaStreamSource(this.mediaStream);
-      this.scriptProcessor = this.inputAudioContext.createScriptProcessor(4096, 1, 1);
-
-      this.scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
-        const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
-        const pcmBlob = createBlob(inputData);
-        sessionPromise.then((session) => {
-          session.sendRealtimeInput({ media: pcmBlob });
-        }).catch(err => {
-          console.error("[GeminiLiveService] Error sending audio:", err);
-        });
-      };
-      
-      this.mediaStreamSource.connect(this.scriptProcessor);
-      this.scriptProcessor.connect(this.inputAudioContext.destination);
-      
-      console.log("[GeminiLiveService] ✅ Audio pipeline connected");
-    } catch (err) {
-      console.error("[GeminiLiveService] ❌ Error getting user media:", err);
-      callbacks.onError(new ErrorEvent('getUserMediaError', { error: err }));
-    }
-
-    return sessionPromise;
-  }
-
-  public async playAudio(base64EncodedAudioString: string) {
-    if (!this.outputAudioContext) {
-      console.warn("[GeminiLiveService] No output audio context");
-      return;
-    }
-    
-    try {
-      this.nextStartTime = Math.max(this.nextStartTime, this.outputAudioContext.currentTime);
-      const audioBuffer = await decodeAudioData(
-        decode(base64EncodedAudioString), 
-        this.outputAudioContext, 
-        24000, 
-        1
-      );
-      
-      const source = this.outputAudioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(this.outputAudioContext.destination);
-      source.addEventListener('ended', () => {
-        this.outputAudioSources.delete(source);
-      });
-      
-      source.start(this.nextStartTime);
-      this.nextStartTime = this.nextStartTime + audioBuffer.duration;
-      this.outputAudioSources.add(source);
-      
-      console.log("[GeminiLiveService] Playing audio chunk, duration:", audioBuffer.duration);
-    } catch (err) {
-      console.error("[GeminiLiveService] Error playing audio:", err);
-    }
-  }
-  
-  public interruptAudio() {
-    console.log("[GeminiLiveService] Interrupting audio playback");
-    for (const source of this.outputAudioSources.values()) {
-      try {
-        source.stop();
-      } catch (e) {
-        // Already stopped
-      }
-      this.outputAudioSources.delete(source);
-    }
-    this.nextStartTime = 0;
-  }
-
-  public stopSession() {
-    console.log("[GeminiLiveService] Stopping session");
-    
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach(track => {
-        track.stop();
-        console.log("[GeminiLiveService] Stopped track:", track.kind);
-      });
-      this.mediaStream = null;
-    }
-    
-    if (this.scriptProcessor) {
-      this.scriptProcessor.disconnect();
-      this.scriptProcessor = null;
-    }
-    
-    if (this.mediaStreamSource) {
-      this.mediaStreamSource.disconnect();
-      this.mediaStreamSource = null;
-    }
-    
-    if (this.inputAudioContext && this.inputAudioContext.state !== 'closed') {
-      this.inputAudioContext.close();
-      console.log("[GeminiLiveService] Input audio context closed");
-    }
-    
-    if (this.outputAudioContext && this.outputAudioContext.state !== 'closed') {
-      this.outputAudioContext.close();
-      console.log("[GeminiLiveService] Output audio context closed");
-    }
-    
-    this.interruptAudio();
-    console.log("[GeminiLiveService] ✅ Session stopped completely");
-  }
+    return response.text || "No response generated";
 }

@@ -248,6 +248,12 @@ function App() {
     localStorage.removeItem("unsavedAnalysis");
   };
 
+  const handleToggleChat = () => {
+    setIsChatOpen(!isChatOpen);
+  };
+
+  const documentContext = submittedContent || "";
+
   // Login/signup screens
   if (!user) {
     return (
@@ -508,11 +514,10 @@ function App() {
         )}
       </AnimatePresence>
 
-      <ChatFloating
+        <ChatFloating
         isOpen={isChatOpen}
-        onToggle={() => setIsChatOpen((v) => !v)}
-        language={language}
-        document={submittedContent}
+        onToggle={handleToggleChat}
+        document={documentContext}
       />
 
       {fs && (

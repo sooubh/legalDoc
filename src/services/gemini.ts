@@ -613,17 +613,32 @@ export async function generateVisualizationsWithGemini(params: VisualizationPara
 
   const bundle: VisualizationBundle = {
     textSummary: safeString((data as any)?.textSummary),
-    timelines: safeArray((data as any)?.timelines).map((t: any, idx: number) => ({
-      id: safeString(t?.id, String(idx + 1)),
-      label: safeString(t?.label),
-      milestones: safeArray(t?.milestones).map((m: any, midx: number) => ({
-        id: safeString(m?.id, `${idx + 1}.${midx + 1}`),
-        title: safeString(m?.title),
-        description: safeString(m?.description),
-        when: safeString(m?.when),
-        relatedClause: safeString(m?.relatedClause),
+    povTimeline: (data as any)?.povTimeline ? {
+      court: safeArray((data as any).povTimeline.court).map((e: any) => ({
+        title: safeString(e.title),
+        subtitle: safeString(e.subtitle),
+        date: safeString(e.date),
+        description: safeString(e.description),
+        color: safeString(e.color),
+        icon: ["file", "clock", "warning", "check"].includes(e.icon) ? e.icon : "file",
       })),
-    })),
+      receiver: safeArray((data as any).povTimeline.receiver).map((e: any) => ({
+        title: safeString(e.title),
+        subtitle: safeString(e.subtitle),
+        date: safeString(e.date),
+        description: safeString(e.description),
+        color: safeString(e.color),
+        icon: ["file", "clock", "warning", "check"].includes(e.icon) ? e.icon : "file",
+      })),
+      overall: safeArray((data as any).povTimeline.overall).map((e: any) => ({
+        title: safeString(e.title),
+        subtitle: safeString(e.subtitle),
+        date: safeString(e.date),
+        description: safeString(e.description),
+        color: safeString(e.color),
+        icon: ["file", "clock", "warning", "check"].includes(e.icon) ? e.icon : "file",
+      })),
+    } : undefined,
     flows: safeArray((data as any)?.flows).map((f: any, fidx: number) => ({
       id: safeString(f?.id, String(fidx + 1)),
       label: safeString(f?.label),

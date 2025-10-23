@@ -1,78 +1,73 @@
-import React, { useEffect, useState } from "react";
-import { MessageCircle, X, ChevronUp, ChevronDown } from "lucide-react";
-import ChatPanel from "./ChatPanel";
+import React, { useState, useEffect } from 'react';
+import ChatPanel from './ChatPanel';
 
 interface ChatFloatingProps {
   isOpen: boolean;
   onToggle: () => void;
   document: string;
-  language: "en" | "hi";
 }
 
-const ChatFloating: React.FC<ChatFloatingProps> = ({
-  isOpen,
-  onToggle,
-  document,
-  language,
-}) => {
+const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [hasStartedChat, setHasStartedChat] = useState(false);
-  const [initialInput, setInitialInput] = useState("");
 
+  // Close and reset expansion when toggling the main visibility
   const handleClose = () => {
     onToggle();
     setIsExpanded(false);
-    setHasStartedChat(false);
-    setInitialInput("");
   };
 
-  const handleToggleExpanded = () => setIsExpanded((prev) => !prev);
-
-  const handleStartChat = () => {
-    if (initialInput.trim() === "") return;
-    setHasStartedChat(true);
+  const handleToggleExpanded = () => {
+    setIsExpanded((prev) => !prev);
   };
 
-  // Escape key closes chat
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) handleClose();
+      if (e.key === 'Escape' && isOpen) handleClose();
     };
-    window.addEventListener("keydown", onEsc);
-    return () => window.removeEventListener("keydown", onEsc);
-  }, [isOpen]);
+    window.addEventListener('keydown', onEsc);
+    return () => window.removeEventListener('keydown', onEsc);
+  }, [isOpen, handleClose]);
 
   return (
     <>
+      {/* Modal and Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
+        <div className="fixed inset-0 z-50 flex items-end justify-end p-2 sm:p-4">
+          <div
+            className="absolute inset-0 bg-black/20"
+            onClick={handleClose}
+            aria-hidden="true"
+          />
 
           <div
-            className={`relative bg-white rounded-t-3xl shadow-2xl transition-all duration-500 ease-out flex flex-col overflow-hidden ${
-              isExpanded ? "h-[85vh]" : "h-[60vh]"
-            }`}
+            className={`relative flex flex-col overflow-hidden bg-white shadow-2xl transition-all duration-300 ease-out rounded-t-2xl
+              w-full max-w-md
+              ${isExpanded ? 'h-[95vh] sm:h-[90vh]' : 'h-[75vh] sm:h-[70vh]'}`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex flex-shrink-0 items-center justify-between bg-white border-b border-gray-200 p-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <MessageCircle className="w-4 h-4 text-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 shadow-md">
+                  <MessageCircle className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">
-                    {language === "hi" ? "कानूनी सहायक" : "Legal Assistant"}
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    AI Assistant
                   </h3>
-                  <p className="text-xs text-gray-500">
-                    {language === "hi" ? "ऑनलाइन" : "Online"}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                     <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                     </span>
+                     <p className="text-xs text-gray-500">Online</p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleToggleExpanded}
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-2 text-gray-400 transition-colors hover:text-gray-600"
+                  aria-label={isExpanded ? "Collapse chat" : "Expand chat"}
                 >
                   {isExpanded ? (
                     <ChevronDown className="h-5 w-5" />
@@ -82,7 +77,8 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({
                 </button>
                 <button
                   onClick={handleClose}
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-2 text-gray-400 transition-colors hover:text-gray-600"
+                  aria-label="Close chat"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -90,72 +86,99 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({
             </div>
 
             {/* Chat Content */}
-            <div className="flex-1 relative p-6 overflow-hidden">
-              {!hasStartedChat ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-4 transition-all duration-500">
-                  <h2 className="text-gray-900 font-semibold text-xl">
-                    {language === "hi"
-                      ? "नमस्ते! मैं आपका कानूनी सहायक हूं।"
-                      : "Hello! I'm your Legal Assistant."}
-                  </h2>
-                  <p className="text-gray-600 max-w-xs">
-                    {language === "hi"
-                      ? "आप अपने दस्तावेज़ के बारे में कोई भी प्रश्न पूछ सकते हैं। यहाँ टाइप करें और चैट शुरू करें।"
-                      : "You can ask me anything about your document. Type your question below to start the chat."}
-                  </p>
-                  <input
-                    type="text"
-                    value={initialInput}
-                    onChange={(e) => setInitialInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleStartChat();
-                    }}
-                    placeholder={
-                      language === "hi"
-                        ? "अपना प्रश्न टाइप करें..."
-                        : "Type your question..."
-                    }
-                    className="px-4 py-2 border rounded-2xl w-3/4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  />
-                  <button
-                    onClick={handleStartChat}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all"
-                  >
-                    {language === "hi" ? "चैट शुरू करें" : "Start Chat"}
-                  </button>
-                  <p className="text-gray-400 text-xs max-w-xs">
-                    {language === "hi"
-                      ? "सभी प्रश्न गोपनीय और सुरक्षित हैं।"
-                      : "All questions are private and secure."}
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col h-full transition-all duration-500">
-                  <ChatPanel
-                    document={document}
-                    language={language}
-                    isBusy={false}
-                    initialMessage={initialInput}
-                  />
-                </div>
-              )}
+            <div className="relative flex-1 overflow-hidden">
+              <ChatPanel document={document} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Floating Button */}
+      {/* Floating Action Button */}
       <button
         onClick={onToggle}
-        className={`fixed bottom-[70px] md:bottom-6 right-6 z-40 md:w-16 md:h-16 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-300 ${
-          isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"
+        className={`fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 ${
+          isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
         }`}
-        aria-label={language === "hi" ? "चैट खोलें" : "Open chat"}
+        aria-label="Open chat"
       >
-        <MessageCircle className="h-10 w-10 md:m-3 m-2" />
+        <div className="relative">
+          <MessageCircle className="h-6 w-6" />
+          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+        </div>
       </button>
     </>
   );
 };
 
 export default ChatFloating;
+
+// --- INLINED ICON COMPONENTS ---
+
+const MessageCircle: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
+    </svg>
+);
+  
+const X: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+);
+  
+const ChevronUp: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+);
+  
+const ChevronDown: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+);
