@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User, signOut } from "firebase/auth";
 import AppShell from "./components/AppShell";
 import DocumentInput from "./components/DocumentInput";
 import AnalysisResults from "./analysis/AnalysisResults";
@@ -46,7 +46,7 @@ function App() {
   const [simplificationLevel, _setSimplificationLevel] =
     useState<SimplificationLevel>("simple");
 
-  const [route, setRoute] = useState<Route>("login");
+  const [route, setRoute] = useState<Route>("upload");
   const [submittedContent, setSubmittedContent] = useState<string>("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -61,6 +61,8 @@ function App() {
     []
   );
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Load local analyses from localStorage
   const loadLocalAnalyses = (): AnalysisHistoryItem[] => {
@@ -189,6 +191,12 @@ function App() {
   const handleSaveAnalysis = async () => {
     if (!analysis || !submittedContent || !visuals) return;
 
+    // Check if user is authenticated
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
     const newAnalysis: Omit<AnalysisHistoryItem, "id"> = {
       title: analysis.documentType?.slice(0, 100) || "Document Analysis",
       analysis: analysis,
@@ -210,6 +218,30 @@ function App() {
     } catch (error) {
       console.error("Failed to save analysis:", error);
       alert("There was an error saving your analysis. Please try again.");
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!analysis || !visuals) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      const { generatePdfHtmlFromAnalysis } = await import("./pdfDownlode/generatePdfFromAnalysis.ts");
+      await generatePdfHtmlFromAnalysis(analysis);
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(getAuth());
+      setRoute("upload");
+    } catch (error) {
+      console.error("Failed to sign out:", error);
     }
   };
 
@@ -254,53 +286,101 @@ function App() {
 
   const documentContext = submittedContent || "";
 
-  // Login/signup screens
-  if (!user) {
-    return (
-      <div className="w-screen h-screen bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
-        <div className="w-full max-w-md">
-          {route === "login" && (
-            <>
-              <LoginPage />
-              <p className="text-center mt-4">
-                Don't have an account{" "}
-                <button
-                  onClick={() => setRoute("signup")}
-                  className="text-blue-600 hover:underline"
-                >
-                  Sign up
-                </button>
-              </p>
-            </>
-          )}
-          {route === "signup" && (
-            <>
-              <SignupPage />
-              <p className="text-center mt-4">
-                Already have an account{" "}
-                <button
-                  onClick={() => setRoute("login")}
-                  className="text-blue-600 hover:underline"
-                >
-                  Login
-                </button>
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <AppShell
-      current={route}
-      onNavigate={(r) => setRoute(r as Route)}
-      analysisHistory={analysisHistory}
-      selectedAnalysisId={selectedAnalysisId}
-      onSelectAnalysis={handleSelectAnalysis}
-      onFetchHistory={handleFetchHistory}
-    >
+    <div className="min-h-screen bg-gray-100 dark:bg-slate-800">
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-slate-100">
+              Sign In Required
+            </h2>
+            <p className="text-gray-600 dark:text-slate-300 mb-6">
+              Please sign in to save your analysis to your account.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowLoginModal(false);
+                  setRoute("login");
+                }}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => {
+                  setShowLoginModal(false);
+                  setRoute("signup");
+                }}
+                className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
+              >
+                Sign Up
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login/Signup Pages */}
+      {route === "login" || route === "signup" ? (
+        <div className="w-screen h-screen bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
+          <div className="w-full max-w-md">
+            {route === "login" && (
+              <>
+                <LoginPage />
+                <p className="text-center mt-4">
+                  Don't have an account{" "}
+                  <button
+                    onClick={() => setRoute("signup")}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Sign up
+                  </button>
+                </p>
+              </>
+            )}
+            {route === "signup" && (
+              <>
+                <SignupPage />
+                <p className="text-center mt-4">
+                  Already have an account{" "}
+                  <button
+                    onClick={() => setRoute("login")}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Login
+                  </button>
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      ) : (
+        <AppShell
+          current={route}
+          onNavigate={(r) => setRoute(r as Route)}
+          analysisHistory={analysisHistory}
+          selectedAnalysisId={selectedAnalysisId}
+          onSelectAnalysis={handleSelectAnalysis}
+          onFetchHistory={handleFetchHistory}
+          onSave={handleSaveAnalysis}
+          onDownload={handleDownloadPdf}
+          isSaved={analysisHistory.some(
+            (item) => item.id === selectedAnalysisId
+          )}
+          isGeneratingPdf={isGeneratingPdf}
+          user={user}
+          onLogout={handleLogout}
+          onLogin={() => setRoute("login")}
+          onSignup={() => setRoute("signup")}
+        >
       <AnimatePresence mode="wait">
         {route === "upload" && (
           <motion.div
@@ -561,7 +641,9 @@ function App() {
           )}
         </FullscreenModal>
       )}
-    </AppShell>
+        </AppShell>
+      )}
+    </div>
   );
 }
 

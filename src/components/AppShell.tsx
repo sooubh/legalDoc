@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { User, Sun, Moon, Menu, X, Settings, MoreHorizontal } from "lucide-react";
+import { User, Sun, Moon, Menu, X, Settings, MoreHorizontal, LogIn, UserPlus, LogOut } from "lucide-react";
 import AnalysisHistorySidebar from "../analysis/AnalysisHistorySidebar.tsx";
 import type { AnalysisHistoryItem } from "../types/history.ts";
 
@@ -17,6 +17,14 @@ interface AppShellProps {
   selectedAnalysisId?: string;
   onSelectAnalysis?: (item: AnalysisHistoryItem) => void;
   onFetchHistory?: () => void;
+  onSave?: () => void;
+  onDownload?: () => void;
+  isSaved?: boolean;
+  isGeneratingPdf?: boolean;
+  user?: any;
+  onLogout?: () => void;
+  onLogin?: () => void;
+  onSignup?: () => void;
 }
 
 const navItems: NavItem[] = [
@@ -33,6 +41,14 @@ const AppShell: React.FC<AppShellProps> = ({
   selectedAnalysisId,
   onSelectAnalysis,
   onFetchHistory,
+  onSave,
+  onDownload,
+  isSaved,
+  isGeneratingPdf,
+  user,
+  onLogout,
+  onLogin,
+  onSignup,
 }) => {
   const [theme, setTheme] = useState<"light" | "dark">(
     () =>
@@ -171,9 +187,94 @@ const AppShell: React.FC<AppShellProps> = ({
             />
           </div>
 
-          {/* Settings and More buttons at bottom */}
+          {/* Authentication and Action buttons at bottom */}
           <div className="p-3 border-t border-gray-200 dark:border-slate-700">
             <div className="space-y-2">
+              {/* Authentication Buttons */}
+              {!user ? (
+                <>
+                  <button
+                    onClick={onLogin}
+                    className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
+                      bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md hover:shadow-lg hover:from-blue-700 hover:to-blue-800 
+                      dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span>Sign In</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+                  </button>
+                  <button
+                    onClick={onSignup}
+                    className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
+                      bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md hover:shadow-lg hover:from-emerald-700 hover:to-emerald-800 
+                      dark:from-emerald-500 dark:to-emerald-600 dark:hover:from-emerald-600 dark:hover:to-emerald-700"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Sign Up</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={onLogout}
+                  className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
+                    bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md hover:shadow-lg hover:from-red-700 hover:to-red-800 
+                    dark:from-red-500 dark:to-red-600 dark:hover:from-red-600 dark:hover:to-red-700"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+                </button>
+              )}
+
+              {/* Save and Download Buttons */}
+              {onSave && (
+                <button
+                  onClick={onSave}
+                  disabled={isSaved}
+                  className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed
+                    bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md hover:shadow-lg hover:from-purple-700 hover:to-purple-800 
+                    disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-none
+                    dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700"
+                >
+                  <div className="flex items-center gap-2">
+                    {isSaved ? (
+                      <User className="h-4 w-4" />
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
+                    <span className="transition-all duration-200">
+                      {isSaved ? "Saved" : user ? "Save Analysis" : "Sign In to Save"}
+                    </span>
+                  </div>
+                  {!isSaved && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+                  )}
+                </button>
+              )}
+
+              {onDownload && (
+                <button
+                  onClick={onDownload}
+                  disabled={isGeneratingPdf}
+                  className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed
+                    bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-md hover:shadow-lg hover:from-orange-700 hover:to-orange-800 
+                    disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-none
+                    dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-600 dark:hover:to-orange-700"
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="transition-all duration-200">
+                      {isGeneratingPdf ? "Generating..." : "Download PDF"}
+                    </span>
+                  </div>
+                  {!isGeneratingPdf && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+                  )}
+                </button>
+              )}
+
+              {/* Settings and More buttons */}
               <button
                 onClick={() => onNavigate("settings")}
                 className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"

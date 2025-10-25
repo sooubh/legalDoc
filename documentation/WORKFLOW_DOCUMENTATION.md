@@ -11,14 +11,20 @@
 7. [Error Handling Workflows](#error-handling-workflows)
 8. [Development Workflows](#development-workflows)
 
+---
+
 ## Project Workflow Overview
 
 LegalEase AI follows a structured workflow from document input to comprehensive legal analysis with visualizations and interactive chat capabilities.
 
 ### High-Level Process Flow
 
-```
-Document Input → Analysis → Results Display → Visualizations → Chat (Optional)
+```mermaid
+graph LR
+    A[Document Input] --> B[Analysis]
+    B --> C[Results Display]
+    C --> D[Visualizations]
+    D --> E[Chat Optional]
 ```
 
 ## User Journey Workflows
@@ -27,69 +33,79 @@ Document Input → Analysis → Results Display → Visualizations → Chat (Opt
 
 #### 1.1 Document Input Phase
 
-```
-User Action → Input Method Selection → Content Processing → Validation
+```mermaid
+graph TD
+    A[User Action] --> B[Input Method Selection]
+    B --> C[Content Processing]
+    C --> D[Validation]
+    D --> E[Submit Analysis]
 ```
 
 **Steps:**
 
 1. **Landing Page**: User sees `DocumentInput` component with three options:
 
-   - Paste text directly into a textarea.
-   - Upload a file (PDF, DOC, TXT) via drag-and-drop or a file browser.
-   - Select a sample contract from a dropdown menu (available in English and Hindi).
+   - Paste text directly into a textarea
+   - Upload a file (PDF, DOC, TXT) via drag-and-drop or a file browser
+   - Select a sample contract from a dropdown menu (available in English and Hindi)
 
 2. **Input Method Selection**:
 
-   - **Text Paste**: The user's pasted text is directly used for analysis.
-   - **File Upload**: The uploaded file is processed to extract its text content.
-   - **Sample Selection**: A pre-loaded legal document is used for the analysis.
+   - **Text Paste**: The user's pasted text is directly used for analysis
+   - **File Upload**: The uploaded file is processed to extract its text content
+   - **Sample Selection**: A pre-loaded legal document is used for the analysis
 
 3. **Content Processing**:
 
-   - **Text**: The text is used as-is.
-   - **PDF**: The text is extracted using `pdf.js`. If this fails, Tesseract OCR is used as a fallback.
-   - **Sample**: The pre-loaded contract text is used directly.
+   - **Text**: The text is used as-is
+   - **PDF**: The text is extracted using `pdf.js`. If this fails, Tesseract OCR is used as a fallback
+   - **Sample**: The pre-loaded contract text is used directly
 
 4. **Settings Configuration**:
 
-   - The user can select the language (English/Hindi) and the desired level of simplification (professional, simple, or ELI5).
+   - The user can select the language (English/Hindi) and the desired level of simplification (professional, simple, or ELI5)
 
 5. **Validation & Submission**:
-   - The system checks that the document content is not empty.
-   - The user clicks the "Submit" button to begin the analysis.
+   - The system checks that the document content is not empty
+   - The user clicks the "Submit" button to begin the analysis
 
 #### 1.2 Analysis Phase
 
-```
-Content Submission → API Call → Response Processing → State Updates
+```mermaid
+graph TD
+    A[Content Submission] --> B[API Call]
+    B --> C[Response Processing]
+    C --> D[State Updates]
 ```
 
 **Steps:**
 
-1. **API Call**: The `analyzeDocumentWithGemini()` function is called, sending the document content, language, and simplification level to the Gemini API.
+1. **API Call**: The `analyzeDocumentWithGemini()` function is called, sending the document content, language, and simplification level to the Gemini API
 
 2. **Response Processing**:
 
-   - The JSON response from the API is parsed and validated.
-   - The data is mapped to the `DocumentAnalysis` type.
-   - Any errors in the response are handled gracefully.
+   - The JSON response from the API is parsed and validated
+   - The data is mapped to the `DocumentAnalysis` type
+   - Any errors in the response are handled gracefully
 
 3. **State Updates**:
 
-   - The analysis results are stored in the application's state.
-   - Any previous chat messages are cleared.
-   - If a PDF was uploaded, the preview URL is updated.
+   - The analysis results are stored in the application's state
+   - Any previous chat messages are cleared
+   - If a PDF was uploaded, the preview URL is updated
 
 #### 1.3 Results Display Phase
 
-```
-Analysis Complete → UI Transition → Tabbed Results → Role-Specific Views
+```mermaid
+graph TD
+    A[Analysis Complete] --> B[UI Transition]
+    B --> C[Tabbed Results]
+    C --> D[Role-Specific Views]
 ```
 
 **Steps:**
 
-1. **UI Transition**: The application transitions from a loading screen to the results layout.
+1. **UI Transition**: The application transitions from a loading screen to the results layout
 2. **Results Display**: The `AnalysisResults` component displays the analysis in a series of tabs:
 
    - Plain Summary
@@ -98,7 +114,7 @@ Analysis Complete → UI Transition → Tabbed Results → Role-Specific Views
    - Action Points
    - Legal Citations
 
-3. **Role-Specific Views**: Each clause includes detailed interpretations, obligations, and risks for each role.
+3. **Role-Specific Views**: Each clause includes detailed interpretations, obligations, and risks for each role
 
 ### 2. Visualization Generation Workflow
 
