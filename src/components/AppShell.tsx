@@ -145,6 +145,48 @@ const AppShell: React.FC<AppShellProps> = ({
           >
             <User className="h-4 w-4" />
           </button>
+          <div className="flex items-center gap-4"> {/* gap added for spacing between buttons */}
+  {!user ? (
+    <>
+      {/* Sign In */}
+      <button
+        onClick={onLogin}
+        className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
+          bg-gradient-to-r from-blue-500 to-indigo-600 text-white
+          border border-white/10 shadow-sm shadow-blue-500/20
+          transition-all duration-300 hover:scale-105 hover:shadow-blue-500/40 active:scale-95"
+      >
+        <LogIn className="h-4 w-4" />
+        <span>Login</span>
+      </button>
+
+      {/* Sign Up */}
+      <button
+        onClick={onSignup}
+        className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
+          bg-gradient-to-r from-emerald-500 to-teal-600 text-white
+          border border-white/10 shadow-sm shadow-emerald-500/20
+          transition-all duration-300 hover:scale-105 hover:shadow-emerald-500/40 active:scale-95"
+      >
+        <UserPlus className="h-4 w-4" />
+        <span>Sign Up</span>
+      </button>
+    </>
+  ) : (
+    /* Logout Icon */
+    <button
+      onClick={onLogout}
+      className="relative flex items-center justify-center w-10 h-10 rounded-full
+        bg-gradient-to-r from-red-500 to-rose-600 text-white
+        border border-white/10 shadow-md shadow-red-500/20
+        transition-all duration-300 hover:scale-110 hover:shadow-red-500/40 active:scale-95"
+      title="Logout"
+    >
+      <LogOut className="h-5 w-5" />
+    </button>
+  )}
+</div>
+
         </div>
       </div>
 
@@ -166,11 +208,10 @@ const AppShell: React.FC<AppShellProps> = ({
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border
-                ${
-                  current === item.id
+                ${current === item.id
                     ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
                     : "bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                }`}
+                  }`}
               >
                 {item.label}
               </button>
@@ -190,42 +231,6 @@ const AppShell: React.FC<AppShellProps> = ({
           {/* Authentication and Action buttons at bottom */}
           <div className="p-3 border-t border-gray-200 dark:border-slate-700">
             <div className="space-y-2">
-              {/* Authentication Buttons */}
-              {!user ? (
-                <>
-                  <button
-                    onClick={onLogin}
-                    className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
-                      bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md hover:shadow-lg hover:from-blue-700 hover:to-blue-800 
-                      dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700"
-                  >
-                    <LogIn className="h-4 w-4" />
-                    <span>Sign In</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-                  </button>
-                  <button
-                    onClick={onSignup}
-                    className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
-                      bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md hover:shadow-lg hover:from-emerald-700 hover:to-emerald-800 
-                      dark:from-emerald-500 dark:to-emerald-600 dark:hover:from-emerald-600 dark:hover:to-emerald-700"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <span>Sign Up</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={onLogout}
-                  className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
-                    bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md hover:shadow-lg hover:from-red-700 hover:to-red-800 
-                    dark:from-red-500 dark:to-red-600 dark:hover:from-red-600 dark:hover:to-red-700"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-                </button>
-              )}
 
               {/* Save and Download Buttons */}
               {onSave && (
@@ -272,6 +277,7 @@ const AppShell: React.FC<AppShellProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
                   )}
                 </button>
+                
               )}
 
               {/* Settings and More buttons */}
@@ -398,11 +404,10 @@ const AppShell: React.FC<AppShellProps> = ({
                     setIsMobileNavOpen(false);
                   }}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border mt-1
-                  ${
-                    current === item.id
+                  ${current === item.id
                       ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
                       : "bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </button>
@@ -423,7 +428,7 @@ const AppShell: React.FC<AppShellProps> = ({
             </nav>
 
             <div className="p-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
-            <button
+              <button
                 onClick={() => {
                   onNavigate("profile");
                   setIsMobileNavOpen(false);
@@ -440,9 +445,10 @@ const AppShell: React.FC<AppShellProps> = ({
               >
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
-             
+
               <button
-                onClick={() => {onNavigate("settings");
+                onClick={() => {
+                  onNavigate("settings");
                   setIsMobileNavOpen(false);
                 }}
                 className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
@@ -450,13 +456,14 @@ const AppShell: React.FC<AppShellProps> = ({
                 <Settings className="h-4 w-4" />
               </button>
               <button
-                onClick={() => {onNavigate("more");
+                onClick={() => {
+                  onNavigate("more");
                   setIsMobileNavOpen(false);
                 }}
                 className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
               >
                 <MoreHorizontal className="h-4 w-4" />
-               
+
               </button>
             </div>
           </div>

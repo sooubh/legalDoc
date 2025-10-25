@@ -119,13 +119,12 @@ function App() {
         }
       } else {
         setUser(null);
-        setRoute("login");
+       
         setAnalysisHistory([]);
       }
     });
     return () => unsubscribe();
   }, []);
-
   // Handle new document upload
   const handleDocumentSubmit = async (
     content: string,
