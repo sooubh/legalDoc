@@ -34,6 +34,36 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   const [expandedClauses, setExpandedClauses] = useState<Set<string>>(
     new Set()
   );
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // PDF generation handler
+  const handleGeneratePdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      // Dynamically import utility and service
+      const { generatePdfHtmlFromAnalysis } = await import(
+        "../pdfDownlode/generatePdfFromAnalysis"
+      );
+      const { downloadPdf } = await import("../services/pdfService");
+
+      // Generate HTML from analysis
+      const htmlContent = await generatePdfHtmlFromAnalysis(analysis);
+
+      // Create a temporary container for rendering HTML
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = htmlContent;
+      document.body.appendChild(tempDiv);
+
+      // Download PDF
+      await downloadPdf(tempDiv);
+
+      document.body.removeChild(tempDiv);
+    } catch (err) {
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const translations = {
     en: {
@@ -128,9 +158,16 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     eli5: "ELI5",
   };
 
-
   return (
     <div className="space-y-6">
+      {/* PDF Generation Button */}
+      <button
+        onClick={handleGeneratePdf}
+        disabled={isGeneratingPdf}
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+      >
+        {isGeneratingPdf ? "Generating PDF..." : "Download PDF"}
+      </button>
       {/* Header */}
       <div className="flex items-center justify-between flex-col md:flex-row gap-5">
         <div className="flex items-center space-x-3">
@@ -150,21 +187,25 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           </div>
         </div>
         <div className="flex items-center space-x-2">
-        <button
-          onClick={onSave}
-          disabled={isSaved}
-          className="flex items-center space-x-2 px-4 py-2 text-white bg-blue-600 rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
-        >
-          <Save className="h-4 w-4" />
-          <span>{isSaved ? translations[language].saved : translations[language].save}</span>
-        </button>
-        <button
-          onClick={onNewAnalysis}
-          className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>{translations[language].newDocument}</span>
-        </button>
+          <button
+            onClick={onSave}
+            disabled={isSaved}
+            className="flex items-center space-x-2 px-4 py-2 text-white bg-blue-600 rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
+          >
+            <Save className="h-4 w-4" />
+            <span>
+              {isSaved
+                ? translations[language].saved
+                : translations[language].save}
+            </span>
+          </button>
+          <button
+            onClick={onNewAnalysis}
+            className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>{translations[language].newDocument}</span>
+          </button>
         </div>
       </div>
 
@@ -309,7 +350,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                                     <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
                                       {rp.risks.map((rk, i) => (
                                         <li key={i}>{rk}</li>
-                                      ))}'''
+                                      ))}
+                                      '''
                                     </ul>
                                   </div>
                                 )}
@@ -430,7 +472,6 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             </div>
           </div>
         )}
-        
       </div>
     </div>
   );
