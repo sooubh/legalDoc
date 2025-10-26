@@ -157,17 +157,123 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     simple: "Simple",
     eli5: "ELI5",
   };
+const DownloadButtonStyles = `
+  .download-label:has(.input:checked) {
+    width: 57px;
+    animation: installed 0.4s ease 3.5s forwards;
+  }
+  .download-label:has(.input:checked)::before {
+    animation: rotate 3s ease-in-out 0.4s forwards;
+  }
+  .download-label .input:checked + .circle {
+    animation: pulse 1s forwards, circleDelete 0.2s ease 3.5s forwards;
+    transform: rotate(180deg);
+  }
+  .download-label .input:checked + .circle::before {
+    animation: installing 3s ease-in-out forwards;
+  }
+  .download-label .input:checked ~ .title:last-child {
+    animation: showInstalledMessage 0.4s ease 3.5s forwards;
+  }
 
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(91, 91, 240, 0.7); }
+    70% { box-shadow: 0 0 0 16px rgba(91, 91, 240, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(91, 91, 240, 0); }
+  }
+  @keyframes installing {
+    from { height: 0; }
+    to { height: 100%; }
+  }
+  @keyframes rotate {
+    0% { transform: rotate(-90deg) translate(27px) rotate(0); opacity: 1; }
+    99% { transform: rotate(270deg) translate(27px) rotate(270deg); opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes installed {
+    100% { width: 180px; border-color: #22c55e; } /* green-500 */
+  }
+  @keyframes circleDelete {
+    100% { opacity: 0; visibility: hidden; }
+  }
+  @keyframes showInstalledMessage {
+    100% { opacity: 1; visibility: visible; right: 35px; color: #22c55e; } /* green-500 */
+  }
+`;
   return (
     <div className="space-y-6">
-      {/* PDF Generation Button */}
-      <button
-        onClick={handleGeneratePdf}
-        disabled={isGeneratingPdf}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {isGeneratingPdf ? "Generating PDF..." : "Download PDF"}
-      </button>
+      {/* Injecting the styles into the document head */}
+      <style>{DownloadButtonStyles}</style>
+
+      <div className="flex flex-row items-center space-x-4">
+        
+        {/* === Download PDF Button (Hybrid CSS + Tailwind) === */}
+        <div 
+          onClick={!isGeneratingPdf ? handleGeneratePdf : undefined} 
+          className="container"
+        >
+          <label 
+            className="download-label relative flex h-[55px] w-[180px] cursor-pointer items-center rounded-full border-2 border-blue-600 p-[5px] transition-all duration-400 ease-in-out"
+          >
+            {/* Hidden checkbox to drive the CSS animation */}
+            <input
+              type="checkbox"
+              className="input hidden"
+              checked={isGeneratingPdf}
+              readOnly
+            />
+            
+            {/* The animated circle */}
+            <span className="circle relative flex h-[45px] w-[45px] items-center justify-center overflow-hidden rounded-full bg-blue-600 shadow-none transition-all duration-400 ease-in-out">
+              {/* Blue progress fill */}
+              <div className="absolute left-0 top-0 h-0 w-full bg-blue-900 transition-all duration-400 ease-in-out before:content-['']"></div>
+              
+              {/* Download Icon */}
+              <svg
+                className={`icon absolute text-white transition-all duration-400 ease-in-out ${isGeneratingPdf ? 'opacity-0' : 'opacity-100'}`}
+                width="30"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 19V5m0 14-4-4m4 4-4" />
+              </svg>
+              
+              {/* Square that appears during animation */}
+              <div className={`square absolute aspect-square w-[15px] rounded-sm bg-white transition-all duration-400 ease-in-out ${isGeneratingPdf ? 'opacity-100' : 'opacity-0'}`}></div>
+            </span>
+            
+            {/* Text labels */}
+            <p className={`title absolute text-center font-medium text-gray-700 transition-all duration-400 ease-in-out ${isGeneratingPdf ? 'opacity-0' : 'opacity-100'}`} style={{ right: '22px' }}>
+              Download
+            </p>
+            <p className="title absolute text-center font-medium text-gray-700 opacity-0 transition-all duration-400 ease-in-out" style={{ right: '22px' }}>
+              Downloading...
+            </p>
+          </label>
+        </div>
+
+        {/* === Save Button (Pure Tailwind) === */}
+        <button
+          onClick={onSave}
+          disabled={isSaved}
+          className="group relative flex h-[55px] w-[180px] cursor-pointer items-center justify-start overflow-hidden rounded-full border-2 border-gray-600 bg-gray-50 p-[5px] transition-transform duration-300 active:scale-95 disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-200"
+        >
+          {/* Icon Container */}
+          <span className="z-10 flex h-[45px] w-[45px] items-center justify-center rounded-full bg-green-500 transition-all duration-300 group-hover:w-[168px] disabled:bg-gray-400">
+            <Save className="h-6 w-6 text-white" />
+          </span>
+
+          {/* Text */}
+          <span className="z-0 flex h-full w-[100px] items-center justify-center text-base font-medium text-gray-700 transition-all duration-300 group-hover:w-0 group-hover:translate-x-3 group-hover:text-[0px] disabled:text-gray-400">
+             {isSaved ? translations[language].saved : translations[language].save}
+          </span>
+        </button>
+
+      </div>
+
+      
       {/* Header */}
       <div className="flex items-center justify-between flex-col md:flex-row gap-5">
         <div className="flex items-center space-x-3">
@@ -187,18 +293,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={onSave}
-            disabled={isSaved}
-            className="flex items-center space-x-2 px-4 py-2 text-white bg-blue-600 rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
-          >
-            <Save className="h-4 w-4" />
-            <span>
-              {isSaved
-                ? translations[language].saved
-                : translations[language].save}
-            </span>
-          </button>
+         
           <button
             onClick={onNewAnalysis}
             className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

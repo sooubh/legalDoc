@@ -1,436 +1,653 @@
-import { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged, User, signOut } from "firebase/auth";
-import AppShell from "./components/AppShell";
-import DocumentInput from "./components/DocumentInput";
-import AnalysisResults from "./analysis/AnalysisResults";
-import type { AnalysisHistoryItem } from "./types/history";
-import LoadingScreen from "./components/LoadingScreen";
-import OriginalContent from "./components/OriginalContent";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  DocumentAnalysis,
-  SimplificationLevel,
-  VisualizationBundle,
-} from "./types/legal";
-import {
-  analyzeDocumentWithGemini,
-  generateVisualizationsWithGemini,
-} from "./services/gemini";
-import {
-  saveAnalysisToHistory,
-  getAnalysisHistoryForUser,
-} from "./services/analysis";
-import Visualizations from "./components/Visualizations";
-import ProfilePage from "./pages/ProfilePage";
-import MorePage from "./pages/MorePage";
-import FullscreenModal from "./components/FullscreenModal";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import ChatFloating from "./chatbot/ChatFloating";
+  import { useState, useEffect } from "react";
+  import { getAuth, onAuthStateChanged, User, signOut } from "firebase/auth";
+  import AppShell from "./components/AppShell";
+  import DocumentInput from "./components/DocumentInput";
+  import AnalysisResults from "./analysis/AnalysisResults";
+  import type { AnalysisHistoryItem } from "./types/history";
+  import LoadingScreen from "./components/LoadingScreen";
+  import OriginalContent from "./components/OriginalContent";
+  import { AnimatePresence, motion } from "framer-motion";
+  import {
+    DocumentAnalysis,
+    SimplificationLevel,
+    VisualizationBundle,
+  } from "./types/legal";
+  import {
+    analyzeDocumentWithGemini,
+    generateVisualizationsWithGemini,
+  } from "./services/gemini";
+  import {
+    saveAnalysisToHistory,
+    getAnalysisHistoryForUser,
+  } from "./services/analysis";
+  import Visualizations from "./components/Visualizations";
+  import ProfilePage from "./pages/ProfilePage";
+  import MorePage from "./pages/MorePage";
+  import FullscreenModal from "./components/FullscreenModal";
+  import LoginPage from "./pages/LoginPage";
+  import SignupPage from "./pages/SignupPage";
+  import ChatFloating from "./chatbot/ChatFloating";
 
-// Define a type for the route
-export type Route =
-  | "login"
-  | "signup"
-  | "upload"
-  | "results"
-  | "visuals"
-  | "profile"
-  | "more";
+  // Define a type for the route
+  export type Route =
+    | "login"
+    | "signup"
+    | "upload"
+    | "results"
+    | "visuals"
+    | "profile"
+    | "more";
 
-function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [language, _setLanguage] = useState<"en" | "hi">("en");
-  const [simplificationLevel, _setSimplificationLevel] =
-    useState<SimplificationLevel>("simple");
+  function App() {
+    const [user, setUser] = useState<User | null>(null);
+    const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [language, _setLanguage] = useState<"en" | "hi">("en");
+    const [simplificationLevel, _setSimplificationLevel] =
+      useState<SimplificationLevel>("simple");
 
-  const [route, setRoute] = useState<Route>("upload");
-  const [submittedContent, setSubmittedContent] = useState<string>("");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-  const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
-  const [isVisualsLoading, setIsVisualsLoading] = useState(false);
-  const [fs, setFs] = useState<null | {
-    key: "analysis" | "visuals" | "document";
-  }>(null);
-  const [isDocumentMinimized, setIsDocumentMinimized] = useState(false);
+    const [route, setRoute] = useState<Route>("upload");
+    const [submittedContent, setSubmittedContent] = useState<string>("");
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+    const [visuals, setVisuals] = useState<VisualizationBundle | null>(null);
+    const [isVisualsLoading, setIsVisualsLoading] = useState(false);
+    const [fs, setFs] = useState<null | {
+      key: "analysis" | "visuals" | "document";
+    }>(null);
+    // Default minimized
+    const [isDocumentMinimized, setIsDocumentMinimized] = useState(true);
 
-  const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>(
-    []
-  );
-  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>(
+      []
+    );
+    const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  // Load local analyses from localStorage
-  const loadLocalAnalyses = (): AnalysisHistoryItem[] => {
-    try {
-      const raw = localStorage.getItem("localAnalyses");
-      const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? (arr as AnalysisHistoryItem[]) : [];
-    } catch (e) {
-      console.error("Failed to load localAnalyses", e);
-      return [];
-    }
-  };
-
-  const appendLocalAnalysis = (entry: AnalysisHistoryItem) => {
-    try {
-      const current = loadLocalAnalyses();
-      const next = [entry, ...current].slice(0, 100);
-      localStorage.setItem("localAnalyses", JSON.stringify(next));
-      setAnalysisHistory(next);
-    } catch (e) {
-      console.error("Failed to append to localAnalyses", e);
-    }
-  };
-
-  // Firebase Auth state observer
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        setAnalysisHistory(loadLocalAnalyses());
-
-        getAnalysisHistoryForUser()
-          .then(setAnalysisHistory)
-          .catch((error) => {
-            console.warn(
-              "Failed to load Firestore history, using local only:",
-              error
-            );
-          });
-
-        const unsavedAnalysisJson = localStorage.getItem("unsavedAnalysis");
-        if (unsavedAnalysisJson) {
-          const unsavedAnalysis = JSON.parse(unsavedAnalysisJson);
-          setAnalysis(unsavedAnalysis.analysis);
-          setVisuals(unsavedAnalysis.visuals);
-          setSubmittedContent(unsavedAnalysis.submittedContent);
-          setPdfPreviewUrl(unsavedAnalysis.pdfPreviewUrl);
-          _setLanguage(unsavedAnalysis.language);
-          _setSimplificationLevel(unsavedAnalysis.simplificationLevel);
-          setRoute("results");
-        } else {
-          setRoute("upload");
-        }
-      } else {
-        setUser(null);
-       
-        setAnalysisHistory([]);
+    // Load local analyses from localStorage
+    const loadLocalAnalyses = (): AnalysisHistoryItem[] => {
+      try {
+        const raw = localStorage.getItem("localAnalyses");
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? (arr as AnalysisHistoryItem[]) : [];
+      } catch (e) {
+        console.error("Failed to load localAnalyses", e);
+        return [];
       }
-    });
-    return () => unsubscribe();
-  }, []);
-  // Handle new document upload
-  const handleDocumentSubmit = async (
-    content: string,
-    fileMeta?: { pdfUrl?: string; mime?: string }
-  ) => {
-    setIsAnalyzing(true);
-    setSubmittedContent(content);
-    setPdfPreviewUrl(fileMeta?.pdfUrl ?? null);
-    setSelectedAnalysisId(undefined);
-
-    try {
-      const result = await analyzeDocumentWithGemini({
-        content,
-        language,
-        simplificationLevel,
-      });
-      setAnalysis(result);
-      setRoute("results");
-
-      // Generate visualizations
-      setIsVisualsLoading(true);
-      const visualsResult = await generateVisualizationsWithGemini({
-        document: content,
-        language,
-        partyALabel: "Party A",
-        partyBLabel: "Party B",
-      });
-      setVisuals(visualsResult);
-      setIsVisualsLoading(false);
-
-      // Save unsaved analysis to localStorage
-      const unsavedAnalysis = {
-        analysis: result,
-        visuals: visualsResult,
-        submittedContent: content,
-        pdfPreviewUrl: fileMeta?.pdfUrl ?? null,
-        language,
-        simplificationLevel,
-      };
-      localStorage.setItem("unsavedAnalysis", JSON.stringify(unsavedAnalysis));
-
-      // Add to local history
-      const localItem: AnalysisHistoryItem = {
-        id: `local-${Date.now()}`,
-        title: result.documentType?.slice(0, 100) || "Document Analysis",
-        analysis: result,
-        originalContent: content,
-        analysisResults: JSON.stringify(result),
-        visuals: visualsResult,
-        metadata: { language, simplificationLevel },
-        timestamp: new Date() as any,
-      };
-      appendLocalAnalysis(localItem);
-    } catch (err) {
-      console.error(err);
-      alert("Analysis failed. Please set VITE_GEMINI_API_KEY and try again.");
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Save analysis to Firestore
-  const handleSaveAnalysis = async () => {
-    if (!analysis || !submittedContent || !visuals) return;
-
-    // Check if user is authenticated
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
-
-    const newAnalysis: Omit<AnalysisHistoryItem, "id"> = {
-      title: analysis.documentType?.slice(0, 100) || "Document Analysis",
-      analysis: analysis,
-      originalContent: submittedContent,
-      analysisResults: JSON.stringify(analysis),
-      visuals: visuals,
-      metadata: { language, simplificationLevel },
-      timestamp: Date.now(),
     };
 
-    try {
-      const newId = await saveAnalysisToHistory(newAnalysis);
-      const newAnalysisWithId = { ...newAnalysis, id: newId };
-
-      setAnalysisHistory((prev) => [newAnalysisWithId, ...prev].slice(0, 50));
-      setSelectedAnalysisId(newAnalysisWithId.id);
-
-      localStorage.removeItem("unsavedAnalysis");
-    } catch (error) {
-      console.error("Failed to save analysis:", error);
-      alert("There was an error saving your analysis. Please try again.");
-    }
-  };
-
-  const handleDownloadPdf = async () => {
-    if (!analysis || !visuals) return;
-    
-    setIsGeneratingPdf(true);
-    try {
-      const { generatePdfHtmlFromAnalysis } = await import("./pdfDownlode/generatePdfFromAnalysis.ts");
-      await generatePdfHtmlFromAnalysis(analysis);
-    } catch (error) {
-      console.error("Failed to generate PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(getAuth());
-      setRoute("upload");
-    } catch (error) {
-      console.error("Failed to sign out:", error);
-    }
-  };
-
-  const handleFetchHistory = async () => {
-    try {
-      const items = await getAnalysisHistoryForUser();
-      setAnalysisHistory(items);
-    } catch (e) {
-      console.error("Failed to fetch analysis history:", e);
-      alert("Failed to fetch analysis history.");
-    }
-  };
-
-  const handleSelectAnalysis = (item: AnalysisHistoryItem) => {
-    setAnalysis(item.analysis);
-    setVisuals(item.visuals);
-    setSelectedAnalysisId(item.id);
-    if (item.metadata) {
-      if (item.metadata.language === "en" || item.metadata.language === "hi") {
-        _setLanguage(item.metadata.language);
+    const appendLocalAnalysis = (entry: AnalysisHistoryItem) => {
+      try {
+        const current = loadLocalAnalyses();
+        const next = [entry, ...current].slice(0, 100);
+        localStorage.setItem("localAnalyses", JSON.stringify(next));
+        setAnalysisHistory(next);
+      } catch (e) {
+        console.error("Failed to append to localAnalyses", e);
       }
-      _setSimplificationLevel(
-        item.metadata.simplificationLevel as SimplificationLevel
-      );
-    }
-    setRoute("results");
-    localStorage.removeItem("unsavedAnalysis");
-  };
+    };
 
-  const handleNewAnalysis = () => {
-    setAnalysis(null);
-    setVisuals(null);
-    setSubmittedContent("");
-    setSelectedAnalysisId(undefined);
-    setRoute("upload");
-    localStorage.removeItem("unsavedAnalysis");
-  };
+    // Firebase Auth state observer
+    useEffect(() => {
+      const auth = getAuth();
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setUser(user);
+          setAnalysisHistory(loadLocalAnalyses());
 
-  const handleToggleChat = () => {
-    setIsChatOpen(!isChatOpen);
-  };
+          getAnalysisHistoryForUser()
+            .then(setAnalysisHistory)
+            .catch((error) => {
+              console.warn(
+                "Failed to load Firestore history, using local only:",
+                error
+              );
+            });
 
-  const documentContext = submittedContent || "";
+          const unsavedAnalysisJson = localStorage.getItem("unsavedAnalysis");
+          if (unsavedAnalysisJson) {
+            const unsavedAnalysis = JSON.parse(unsavedAnalysisJson);
+            setAnalysis(unsavedAnalysis.analysis);
+            setVisuals(unsavedAnalysis.visuals);
+            setSubmittedContent(unsavedAnalysis.submittedContent);
+            setPdfPreviewUrl(unsavedAnalysis.pdfPreviewUrl);
+            _setLanguage(unsavedAnalysis.language);
+            _setSimplificationLevel(unsavedAnalysis.simplificationLevel);
+            setRoute("results");
+          } else {
+            setRoute("upload");
+          }
+        } else {
+          setUser(null);
 
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-slate-800">
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-slate-100">
-              Sign In Required
-            </h2>
-            <p className="text-gray-600 dark:text-slate-300 mb-6">
-              Please sign in to save your analysis to your account.
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => {
-                  setShowLoginModal(false);
-                  setRoute("login");
-                }}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => {
-                  setShowLoginModal(false);
-                  setRoute("signup");
-                }}
-                className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
-              >
-                Sign Up
-              </button>
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
-              >
-                Cancel
-              </button>
+          setAnalysisHistory([]);
+        }
+      });
+      return () => unsubscribe();
+    }, []);
+    // Handle new document upload
+    const handleDocumentSubmit = async (
+      content: string,
+      fileMeta?: { pdfUrl?: string; mime?: string }
+    ) => {
+      setIsAnalyzing(true);
+      setSubmittedContent(content);
+      setPdfPreviewUrl(fileMeta?.pdfUrl ?? null);
+      setSelectedAnalysisId(undefined);
+
+      try {
+        const result = await analyzeDocumentWithGemini({
+          content,
+          language,
+          simplificationLevel,
+        });
+        setAnalysis(result);
+        setRoute("results");
+
+        // Generate visualizations
+        setIsVisualsLoading(true);
+        const visualsResult = await generateVisualizationsWithGemini({
+          document: content,
+          language,
+          partyALabel: "Party A",
+          partyBLabel: "Party B",
+        });
+        setVisuals(visualsResult);
+        setIsVisualsLoading(false);
+
+        // Save unsaved analysis to localStorage
+        const unsavedAnalysis = {
+          analysis: result,
+          visuals: visualsResult,
+          submittedContent: content,
+          pdfPreviewUrl: fileMeta?.pdfUrl ?? null,
+          language,
+          simplificationLevel,
+        };
+        localStorage.setItem("unsavedAnalysis", JSON.stringify(unsavedAnalysis));
+
+        // Add to local history
+        const localItem: AnalysisHistoryItem = {
+          id: `local-${Date.now()}`,
+          title: result.documentType?.slice(0, 100) || "Document Analysis",
+          analysis: result,
+          originalContent: content,
+          analysisResults: JSON.stringify(result),
+          visuals: visualsResult,
+          metadata: { language, simplificationLevel },
+          timestamp: new Date() as any,
+        };
+        appendLocalAnalysis(localItem);
+      } catch (err) {
+        console.error(err);
+        alert("Analysis failed. Please set VITE_GEMINI_API_KEY and try again.");
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
+
+    // Save analysis to Firestore
+    const handleSaveAnalysis = async () => {
+      if (!analysis || !submittedContent || !visuals) return;
+
+      // Check if user is authenticated
+      if (!user) {
+        setShowLoginModal(true);
+        return;
+      }
+
+      const newAnalysis: Omit<AnalysisHistoryItem, "id"> = {
+        title: analysis.documentType?.slice(0, 100) || "Document Analysis",
+        analysis: analysis,
+        originalContent: submittedContent,
+        analysisResults: JSON.stringify(analysis),
+        visuals: visuals,
+        metadata: { language, simplificationLevel },
+        timestamp: Date.now(),
+      };
+
+      try {
+        const newId = await saveAnalysisToHistory(newAnalysis);
+        const newAnalysisWithId = { ...newAnalysis, id: newId };
+
+        setAnalysisHistory((prev) => [newAnalysisWithId, ...prev].slice(0, 50));
+        setSelectedAnalysisId(newAnalysisWithId.id);
+
+        localStorage.removeItem("unsavedAnalysis");
+      } catch (error) {
+        console.error("Failed to save analysis:", error);
+        alert("There was an error saving your analysis. Please try again.");
+      }
+    };
+
+    const handleDownloadPdf = async () => {
+      if (!analysis || !visuals) return;
+
+      setIsGeneratingPdf(true);
+      try {
+        const { generatePdfHtmlFromAnalysis } = await import("./pdfDownlode/generatePdfFromAnalysis.ts");
+        await generatePdfHtmlFromAnalysis(analysis);
+      } catch (error) {
+        console.error("Failed to generate PDF:", error);
+        alert("Failed to generate PDF. Please try again.");
+      } finally {
+        setIsGeneratingPdf(false);
+      }
+    };
+
+    const handleLogout = async () => {
+      try {
+        await signOut(getAuth());
+        setRoute("upload");
+      } catch (error) {
+        console.error("Failed to sign out:", error);
+      }
+    };
+
+    const handleFetchHistory = async () => {
+      try {
+        const items = await getAnalysisHistoryForUser();
+        setAnalysisHistory(items);
+      } catch (e) {
+        console.error("Failed to fetch analysis history:", e);
+        alert("Failed to fetch analysis history.");
+      }
+    };
+
+    const handleSelectAnalysis = (item: AnalysisHistoryItem) => {
+      setAnalysis(item.analysis);
+      setVisuals(item.visuals);
+      setSelectedAnalysisId(item.id);
+      if (item.metadata) {
+        if (item.metadata.language === "en" || item.metadata.language === "hi") {
+          _setLanguage(item.metadata.language);
+        }
+        _setSimplificationLevel(
+          item.metadata.simplificationLevel as SimplificationLevel
+        );
+      }
+      setRoute("results");
+      localStorage.removeItem("unsavedAnalysis");
+    };
+
+    const handleNewAnalysis = () => {
+      setAnalysis(null);
+      setVisuals(null);
+      setSubmittedContent("");
+      setSelectedAnalysisId(undefined);
+      setRoute("upload");
+      localStorage.removeItem("unsavedAnalysis");
+    };
+
+    const handleToggleChat = () => {
+      setIsChatOpen(!isChatOpen);
+    };
+
+    const documentContext = submittedContent || "";
+
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-slate-800">
+        {/* Login Modal */}
+        {showLoginModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-slate-100">
+                Sign In Required
+              </h2>
+              <p className="text-gray-600 dark:text-slate-300 mb-6">
+                Please sign in to save your analysis to your account.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setRoute("login");
+                  }}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setRoute("signup");
+                  }}
+                  className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
+                >
+                  Sign Up
+                </button>
+                <button
+                  onClick={() => setShowLoginModal(false)}
+                  className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Login/Signup Pages */}
-      {route === "login" || route === "signup" ? (
-        <div className="w-screen h-screen bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
-          <div className="w-full max-w-md">
-            {route === "login" && (
-              <>
-                <LoginPage />
-                <p className="text-center mt-4">
-                  Don't have an account{" "}
-                  <button
-                    onClick={() => setRoute("signup")}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Sign up
-                  </button>
-                </p>
-              </>
-            )}
-            {route === "signup" && (
-              <>
-                <SignupPage />
-                <p className="text-center mt-4">
-                  Already have an account{" "}
-                  <button
-                    onClick={() => setRoute("login")}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Login
-                  </button>
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      ) : (
-        <AppShell
-          current={route}
-          onNavigate={(r) => setRoute(r as Route)}
-          analysisHistory={analysisHistory}
-          selectedAnalysisId={selectedAnalysisId}
-          onSelectAnalysis={handleSelectAnalysis}
-          onFetchHistory={handleFetchHistory}
-          onSave={handleSaveAnalysis}
-          onDownload={handleDownloadPdf}
-          isSaved={analysisHistory.some(
-            (item) => item.id === selectedAnalysisId
-          )}
-          isGeneratingPdf={isGeneratingPdf}
-          user={user}
-          onLogout={handleLogout}
-          onLogin={() => setRoute("login")}
-          onSignup={() => setRoute("signup")}
-        >
-      <AnimatePresence mode="wait">
-        {route === "upload" && (
-          <motion.div
-            key="upload"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="bg-white rounded-2xl shadow p-4 md:p-6 border border-gray-100">
-              <DocumentInput
-                onSubmit={handleDocumentSubmit}
-                isAnalyzing={isAnalyzing}
-                language={language}
-              />
-            </div>
-          </motion.div>
         )}
 
-        {route === "results" && (
-          <motion.div
-            key="results"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+        {/* Login/Signup Pages */}
+        {route === "login" || route === "signup" ? (
+          <div className="w-screen h-screen bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
+            <div className="w-full max-w-md">
+              {route === "login" && (
+                <>
+                  <LoginPage />
+                  <p className="text-center mt-4">
+                    Don't have an account{" "}
+                    <button
+                      onClick={() => setRoute("signup")}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Sign up
+                    </button>
+                  </p>
+                </>
+              )}
+              {route === "signup" && (
+                <>
+                  <SignupPage />
+                  <p className="text-center mt-4">
+                    Already have an account{" "}
+                    <button
+                      onClick={() => setRoute("login")}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Login
+                    </button>
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <AppShell
+            current={route}
+            onNavigate={(r) => setRoute(r as Route)}
+            analysisHistory={analysisHistory}
+            selectedAnalysisId={selectedAnalysisId}
+            onSelectAnalysis={handleSelectAnalysis}
+            onFetchHistory={handleFetchHistory}
+            onSave={handleSaveAnalysis}
+            onDownload={handleDownloadPdf}
+            isSaved={analysisHistory.some(
+              (item) => item.id === selectedAnalysisId
+            )}
+            isGeneratingPdf={isGeneratingPdf}
+            user={user}
+            onLogout={handleLogout}
+            onLogin={() => setRoute("login")}
+            onSignup={() => setRoute("signup")}
+            language={language}              // ✅ pass current language
+  onLanguageChange={_setLanguage}
           >
-            {isAnalyzing ? (
-              <LoadingScreen />
-            ) : analysis ? (
-              <div
-                className={`grid grid-cols-1 gap-4 md:gap-6 transition-all duration-300 ease-in-out ${
-                  isDocumentMinimized ? "lg:grid-cols-1" : "lg:grid-cols-2"
-                }`}
-              >
-                {/* Analysis Section */}
-                <div className="space-y-4 md:space-y-6">
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
+          
+          <AnimatePresence mode="wait">
+    {route === "upload" && (
+      <motion.div
+        key="upload"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="bg-white rounded-2xl shadow p-4 md:p-6 border border-gray-100">
+          <DocumentInput
+            onSubmit={handleDocumentSubmit}
+            isAnalyzing={isAnalyzing}
+            language={language}
+          />
+        </div>
+      </motion.div>
+    )}
+
+    {route === "results" && (
+      <motion.div
+        key="results"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+        className="relative"
+      >
+        {isAnalyzing ? (
+          <LoadingScreen />
+        ) : analysis ? (
+          <div
+            className={`grid grid-cols-1 gap-4 md:gap-6 transition-all duration-300 ease-in-out ${
+              isDocumentMinimized ? "lg:grid-cols-1" : "lg:grid-cols-2"
+            }`}
+          >
+            {/* Analysis Section */}
+            <div className="space-y-4 md:space-y-6">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-semibold text-gray-900">Analysis</div>
+                  <button
+                    onClick={() => setFs({ key: "analysis" })}
+                    className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                  >
+                    Fullscreen
+                  </button>
+                </div>
+                <AnalysisResults
+                  analysis={analysis}
+                  language={language}
+                  simplificationLevel={simplificationLevel}
+                  onNewAnalysis={handleNewAnalysis}
+                  onSave={handleSaveAnalysis}
+                  isSaved={analysisHistory.some(
+                    (item) => item.id === selectedAnalysisId
+                  )}
+                />
+              </div>
+
+              {/* Visualizations */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-semibold text-gray-900">Visualizations</div>
+                  <button
+                    onClick={() => setFs({ key: "visuals" })}
+                    className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                  >
+                    Fullscreen
+                  </button>
+                </div>
+                <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+              </div>
+            </div>
+
+            {/* Original Document */}
+            <AnimatePresence mode="popLayout">
+              {!isDocumentMinimized && (
+                <motion.div
+                  key="document-expanded"
+                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.98 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="space-y-4 md:space-y-6"
+                >
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6 lg:sticky lg:top-0">
                     <div className="flex items-center justify-between mb-3">
                       <div className="font-semibold text-gray-900">
-                        Analysis
+                        Original Document
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() =>
+                            setIsDocumentMinimized(!isDocumentMinimized)
+                          }
+                          className="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium
+                            text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-800
+                            border border-gray-200 dark:border-slate-700
+                            hover:bg-gray-200 dark:hover:bg-slate-700
+                            active:scale-95 transition-all duration-200"
+                        >
+                          <svg
+                            className="w-4 h-4 text-gray-700 dark:text-gray-200"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 15l7-7 7 7"
+                            />
+                          </svg>
+                          <span>Minimize</span>
+                        </button>
+
+                        <button
+                          onClick={() => setFs({ key: "document" })}
+                          className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                        >
+                          Fullscreen
+                        </button>
+                      </div>
+                    </div>
+                    <OriginalContent
+                      content={submittedContent}
+                      pdfUrl={pdfPreviewUrl ?? undefined}
+                      height={"calc(100vh - 96px)"}
+                    />
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Minimized Document Bar */}
+              {isDocumentMinimized && (
+                <motion.div
+                  key="document-minimized"
+                  initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="fixed bottom-4 right-4 z-50"
+                >
+                  <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-sm font-medium text-gray-900">
+                        Original Document
                       </div>
                       <button
-                        onClick={() => setFs({ key: "analysis" })}
-                        className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                        onClick={() => setIsDocumentMinimized(false)}
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium
+                          text-white bg-gradient-to-r from-blue-600 to-indigo-600
+                          hover:from-blue-700 hover:to-indigo-700
+                          shadow-sm active:scale-95 transition-all duration-200
+                          dark:from-blue-500 dark:to-indigo-500"
+                      >
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                        <span>Expand</span>
+                      </button>
+
+                      <button
+                        onClick={() => setFs({ key: "document" })}
+                        className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 transition-colors"
                       >
                         Fullscreen
                       </button>
                     </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            
+          </div>
+        ) : (
+          <div className="text-gray-600">
+            No analysis yet. Upload a document first.
+          </div>
+        )}
+      </motion.div>
+    )}
+
+    {route === "visuals" && (
+      <motion.div
+        key="visuals"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="bg-white rounded-2xl shadow border border-gray-100 p-4 md:p-6">
+          <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+        </div>
+      </motion.div>
+    )}
+
+    {route === "profile" && (
+      <motion.div
+        key="profile"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <ProfilePage />
+      </motion.div>
+    )}
+
+    {route === "more" && (
+      <motion.div
+        key="more"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <MorePage />
+      </motion.div>
+    )}
+  </AnimatePresence>
+  {/* ChatFloating with smooth shift */}
+            <motion.div
+              animate={{
+                bottom: isDocumentMinimized ? 4 + 72 : 4, // 72px ≈ minimized bar height + margin
+              }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="fixed right-4 z-50"
+            >
+            
+  <ChatFloating
+                isOpen={isChatOpen}
+                onToggle={handleToggleChat}
+                document={documentContext}
+              />
+              </motion.div>
+            {fs && (
+              <FullscreenModal
+                title={
+                  fs.key === "analysis"
+                    ? "Analysis"
+                    : fs.key === "visuals"
+                      ? "Visualizations"
+                      : "Original Document"
+                }
+                onClose={() => setFs(null)}
+              >
+                {fs.key === "analysis" && (
+                  <div className="p-4 md:p-6 h-full overflow-auto">
                     <AnalysisResults
-                      analysis={analysis}
+                      analysis={analysis!}
                       language={language}
                       simplificationLevel={simplificationLevel}
                       onNewAnalysis={handleNewAnalysis}
@@ -440,210 +657,27 @@ function App() {
                       )}
                     />
                   </div>
-
-                  {/* Visualizations */}
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="font-semibold text-gray-900">
-                        Visualizations
-                      </div>
-                      <button
-                        onClick={() => setFs({ key: "visuals" })}
-                        className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-                      >
-                        Fullscreen
-                      </button>
-                    </div>
-                    <Visualizations
-                      visuals={visuals}
-                      isLoading={isVisualsLoading}
+                )}
+                {fs.key === "visuals" && (
+                  <div className="p-4 md:p-6 h-full overflow-auto">
+                    <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
+                  </div>
+                )}
+                {fs.key === "document" && (
+                  <div className="p-4 md:p-6 h-full overflow-auto">
+                    <OriginalContent
+                      content={submittedContent}
+                      pdfUrl={pdfPreviewUrl ?? undefined}
+                      height={"calc(100vh - 120px)"}
                     />
                   </div>
-                </div>
-
-                {/* Original Document */}
-                {!isDocumentMinimized && (
-                  <div className="space-y-4 md:space-y-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6 lg:sticky lg:top-0">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="font-semibold text-gray-900">
-                          Original Document
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() =>
-                              setIsDocumentMinimized(!isDocumentMinimized)
-                            }
-                            className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center space-x-1"
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 15l7-7 7 7"
-                              />
-                            </svg>
-                            <span>Minimize</span>
-                          </button>
-                          <button
-                            onClick={() => setFs({ key: "document" })}
-                            className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-                          >
-                            Fullscreen
-                          </button>
-                        </div>
-                      </div>
-                      <OriginalContent
-                        content={submittedContent}
-                        pdfUrl={pdfPreviewUrl ?? undefined}
-                        height={"calc(100vh - 96px)"}
-                      />
-                    </div>
-                  </div>
                 )}
-
-                {/* Minimized Document Bar */}
-                {isDocumentMinimized && (
-                  <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-2 duration-300">
-                    <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="text-sm font-medium text-gray-900">
-                          Original Document
-                        </div>
-                        <button
-                          onClick={() => setIsDocumentMinimized(false)}
-                          className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center space-x-1 transition-colors"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                          <span>Expand</span>
-                        </button>
-                        <button
-                          onClick={() => setFs({ key: "document" })}
-                          className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 transition-colors"
-                        >
-                          Fullscreen
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-gray-600">
-                No analysis yet. Upload a document first.
-              </div>
+              </FullscreenModal>
             )}
-          </motion.div>
+          </AppShell>
         )}
+      </div>
+    );
+  }
 
-        {route === "visuals" && (
-          <motion.div
-            key="visuals"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="bg-white rounded-2xl shadow border border-gray-100 p-4 md:p-6">
-              <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
-            </div>
-          </motion.div>
-        )}
-
-        {route === "profile" && (
-          <motion.div
-            key="profile"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ProfilePage />
-          </motion.div>
-        )}
-
-        {route === "more" && (
-          <motion.div
-            key="more"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <MorePage />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-        <ChatFloating
-        isOpen={isChatOpen}
-        onToggle={handleToggleChat}
-        document={documentContext}
-      />
-
-      {fs && (
-        <FullscreenModal
-          title={
-            fs.key === "analysis"
-              ? "Analysis"
-              : fs.key === "visuals"
-              ? "Visualizations"
-              : "Original Document"
-          }
-          onClose={() => setFs(null)}
-        >
-          {fs.key === "analysis" && (
-            <div className="p-4 md:p-6 h-full overflow-auto">
-              <AnalysisResults
-                analysis={analysis!}
-                language={language}
-                simplificationLevel={simplificationLevel}
-                onNewAnalysis={handleNewAnalysis}
-                onSave={handleSaveAnalysis}
-                isSaved={analysisHistory.some(
-                  (item) => item.id === selectedAnalysisId
-                )}
-              />
-            </div>
-          )}
-          {fs.key === "visuals" && (
-            <div className="p-4 md:p-6 h-full overflow-auto">
-              <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
-            </div>
-          )}
-          {fs.key === "document" && (
-            <div className="p-4 md:p-6 h-full overflow-auto">
-              <OriginalContent
-                content={submittedContent}
-                pdfUrl={pdfPreviewUrl ?? undefined}
-                height={"calc(100vh - 120px)"}
-              />
-            </div>
-          )}
-        </FullscreenModal>
-      )}
-        </AppShell>
-      )}
-    </div>
-  );
-}
-
-export default App;
+  export default App;

@@ -25,6 +25,8 @@ interface AppShellProps {
   onLogout?: () => void;
   onLogin?: () => void;
   onSignup?: () => void;
+   language: "en" | "hi";                        // ✅ new
+  onLanguageChange: (lang: "en" | "hi") => void;
 }
 
 const navItems: NavItem[] = [
@@ -129,6 +131,7 @@ const AppShell: React.FC<AppShellProps> = ({
             <span>This is not legal advice. Consult a lawyer for decisions.</span>
           </div>
           {/* Header icon actions */}
+          
           <button
             onClick={toggleTheme}
             className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
@@ -148,6 +151,7 @@ const AppShell: React.FC<AppShellProps> = ({
           <div className="flex items-center gap-4"> {/* gap added for spacing between buttons */}
   {!user ? (
     <>
+    
       {/* Sign In */}
       <button
         onClick={onLogin}
@@ -231,54 +235,6 @@ const AppShell: React.FC<AppShellProps> = ({
           {/* Authentication and Action buttons at bottom */}
           <div className="p-3 border-t border-gray-200 dark:border-slate-700">
             <div className="space-y-2">
-
-              {/* Save and Download Buttons */}
-              {onSave && (
-                <button
-                  onClick={onSave}
-                  disabled={isSaved}
-                  className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed
-                    bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md hover:shadow-lg hover:from-purple-700 hover:to-purple-800 
-                    disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-none
-                    dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700"
-                >
-                  <div className="flex items-center gap-2">
-                    {isSaved ? (
-                      <User className="h-4 w-4" />
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
-                    <span className="transition-all duration-200">
-                      {isSaved ? "Saved" : user ? "Save Analysis" : "Sign In to Save"}
-                    </span>
-                  </div>
-                  {!isSaved && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-                  )}
-                </button>
-              )}
-
-              {onDownload && (
-                <button
-                  onClick={onDownload}
-                  disabled={isGeneratingPdf}
-                  className="w-full group relative overflow-hidden flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed
-                    bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-md hover:shadow-lg hover:from-orange-700 hover:to-orange-800 
-                    disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-none
-                    dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-600 dark:hover:to-orange-700"
-                >
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="transition-all duration-200">
-                      {isGeneratingPdf ? "Generating..." : "Download PDF"}
-                    </span>
-                  </div>
-                  {!isGeneratingPdf && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-                  )}
-                </button>
-                
-              )}
 
               {/* Settings and More buttons */}
               <button
