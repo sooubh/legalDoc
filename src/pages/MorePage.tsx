@@ -1,186 +1,217 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import { PdfPreview } from "../pdfDownlode/PdfPreview";
-import { Loader } from "../pdfDownlode/Loader";
-import { generateExplanation } from "../services/geminiPdfService";
-import { downloadPdf } from "../services/pdfService";
+"use client";
+import React, { useState, useCallback, useEffect } from "react";
+import { Lawyer, GeolocationCoordinates } from "../types/mapsTypes";
 import {
-  DownloadIcon,
-  RefreshIcon,
-  SparklesIcon,
-} from "../pdfDownlode/icons";
+  findLawyersNearMe,
+  analyzeLegalText,
+  getRelatedSpecialties,
+} from "../services/geminiMapService";
+import Header from "../mapsComponents/Header";
+import LawyerSearch from "../mapsComponents/LawyerSearch";
+import LawyerList from "../mapsComponents/LawyerList";
+import LawyerDetailModal from "../mapsComponents/LawyerDetailModal";
+import LegalAnalyzer from "../mapsComponents/LegalAnalyzer";
+import Spinner from "../mapsComponents/Spinner";
 
-const SESSION_STORAGE_KEY = "latestLegalData";
+type AppView = "search" | "analyze";
 
-const mockLegalData = {
-  documentId: "DOC-2024-Q3-XYZ",
-  documentType: "Non-Disclosure Agreement",
-  parties: [
-    { name: "Innovate Corp.", role: "Disclosing Party" },
-    { name: "Venture Partners LLC", role: "Receiving Party" },
-  ],
-  analysis: {
-    summary:
-      "A standard mutual non-disclosure agreement. Key clauses include a 5-year confidentiality term and jurisdiction set to the State of Delaware.",
-    riskAssessment: "Low",
-    clauses: [
-      { name: "Confidentiality Term", duration: "5 years", risk: "Low" },
-      { name: "Jurisdiction", location: "State of Delaware", risk: "Low" },
-      { name: "Non-Compete", present: false, risk: "N/A" },
-    ],
-  },
-};
-
-const MorePage: React.FC = () => {
-  const [jsonData, setJsonData] = useState<any | null>(null);
-  const [explanation, setExplanation] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+export default function MorePage() {
+  const [view, setView] = useState<AppView>("search");
+  const [userLocation, setUserLocation] =
+    useState<GeolocationCoordinates | null>(null);
+  const [lawyers, setLawyers] = useState<Lawyer[]>([]);
+  const [selectedLawyer, setSelectedLawyer] = useState<Lawyer | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const pdfContentRef = useRef<HTMLDivElement>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!sessionStorage.getItem(SESSION_STORAGE_KEY)) {
-      sessionStorage.setItem(
-        SESSION_STORAGE_KEY,
-        JSON.stringify(mockLegalData, null, 2)
-      );
-    }
+  const getLocation = useCallback(() => {
+    setIsLoading(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setIsLoading(false);
+      },
+      (err) => {
+        setLocationError(
+          `Error getting location: ${err.message}. Please enable location services or search manually.`
+        );
+        setError(
+          `Error getting location: ${err.message}. Please enable location services or search manually.`
+        );
+        setIsLoading(false);
+      },
+      { timeout: 10000 }
+    );
   }, []);
 
-  const handleStartAnalysis = async () => {
+  useEffect(() => {
+    getLocation();
+  }, [getLocation]);
+
+  const handleSearch = async (specialty: string) => {
+    if (!specialty) return;
+    if (!userLocation) {
+      setError(
+        "Could not determine your location. Please ensure location services are enabled."
+      );
+      getLocation();
+      return;
+    }
     setIsLoading(true);
     setError(null);
-    setExplanation(null);
-    setJsonData(null);
-
+    setLawyers([]);
+    setSuggestions([]);
     try {
-      const storedData = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (!storedData) {
-        throw new Error(
-          "No legal data found in session. Please refresh the page."
-        );
+      const results = await findLawyersNearMe(specialty, userLocation);
+      setLawyers(results);
+      if (results.length === 0) {
+        const newSuggestions = await getRelatedSpecialties(specialty);
+        setSuggestions(newSuggestions);
       }
-      const data = JSON.parse(storedData);
-      setJsonData(data);
-      const htmlExplanation = await generateExplanation(data);
-      setExplanation(htmlExplanation);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(
-          `Failed to process data: ${err.message}. Please ensure session data is valid JSON.`
-        );
-      } else {
-        setError("An unknown error occurred.");
-      }
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An unknown error occurred during search."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDownloadPdf = useCallback(async () => {
-    if (!pdfContentRef.current) return;
+  const handleAnalyze = async (
+    text: string
+  ): Promise<{ analysis: string; specialty: string }> => {
     setIsLoading(true);
     setError(null);
     try {
-      await downloadPdf(pdfContentRef.current);
+      const result = await analyzeLegalText(text);
+      return result;
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred while generating the PDF.");
-      }
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An unknown error occurred during analysis.";
+      setError(errorMessage);
+      return {
+        analysis: `Error: ${errorMessage}`,
+        specialty: "",
+      };
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
-  const handleReset = () => {
-    setJsonData(null);
-    setExplanation(null);
-    setError(null);
-    setIsLoading(false);
+  const handleSearchFromAnalyzer = (specialty: string) => {
+    setSearchQuery(specialty);
+    setView("search");
+    handleSearch(specialty);
+  };
+
+  const handleSuggestionClick = (specialty: string) => {
+    setSearchQuery(specialty);
+    handleSearch(specialty);
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
-      <div className="max-w-5xl mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white">
-            AI Legal Document Analyzer
-          </h1>
-          <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">
-            Generate a summarized, professional PDF from your legal data.
-          </p>
-        </header>
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans">
+      <Header currentView={view} setView={setView} />
 
-        <main className="bg-white dark:bg-slate-800/50 rounded-xl shadow-2xl ring-1 ring-slate-900/5 p-4 sm:p-8 transition-all duration-300">
-          {isLoading && <Loader />}
+      <main className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+        {view === "search" && (
+          <>
+            <LawyerSearch
+              query={searchQuery}
+              onQueryChange={setSearchQuery}
+              onSearch={() => handleSearch(searchQuery)}
+              loading={isLoading}
+              locationError={locationError}
+            />
 
-          {error && (
-            <div className="text-center p-4 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg">
-              <p className="font-semibold">An Error Occurred</p>
-              <p className="text-sm">{error}</p>
-            </div>
-          )}
-
-          {!isLoading && !explanation && (
-            <div className="text-center p-12">
-              <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-200 mb-4">
-                Ready to Analyze Your Document?
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto">
-                Click below to fetch legal data from session and generate an
-                AI-powered summary.
-              </p>
-              <button
-                onClick={handleStartAnalysis}
-                disabled={isLoading}
-                className="inline-flex items-center gap-3 px-6 py-3 text-base font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <SparklesIcon />
-                Start Analysis
-              </button>
-            </div>
-          )}
-
-          {explanation && (
-            <div>
-              <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Analysis Preview
-                </h2>
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleReset}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition disabled:opacity-50"
-                  >
-                    <RefreshIcon />
-                    Analyze Another
-                  </button>
-                  <button
-                    onClick={handleDownloadPdf}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <DownloadIcon />
-                    {isLoading ? "Generating..." : "Download PDF"}
-                  </button>
-                </div>
+            {isLoading && lawyers.length === 0 && !error && (
+              <div className="text-center p-12">
+                <Spinner />
+                <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
+                  {userLocation
+                    ? `Finding ${searchQuery} lawyers...`
+                    : "Accessing your location..."}
+                </p>
               </div>
-              <PdfPreview ref={pdfContentRef} content={explanation} />
-            </div>
-          )}
-        </main>
+            )}
 
-        <footer className="text-center mt-8 text-sm text-slate-500 dark:text-slate-400">
-          <p>
-            &copy; {new Date().getFullYear()} LegalDoc Analyzer Pro. All rights
-            reserved.
-          </p>
-        </footer>
-      </div>
+            {error && (
+              <p className="text-center text-red-600 bg-red-100 p-4 rounded-lg mt-6">
+                {error}
+              </p>
+            )}
+
+            {!isLoading && lawyers.length === 0 && !locationError && !searchQuery && (
+              <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm mt-6">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                  Welcome to Lawyer Locator AI
+                </h2>
+                <p className="mt-2 text-slate-600 dark:text-slate-300">
+                  Enter a legal specialty (e.g., "family law," "personal injury") to
+                  find lawyers near you.
+                </p>
+              </div>
+            )}
+
+            {!isLoading && lawyers.length === 0 && searchQuery && !error && (
+              <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm mt-6">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                  No Results Found
+                </h2>
+                <p className="mt-2 text-slate-600 dark:text-slate-300">
+                  We couldn't find any lawyers for "{searchQuery}".
+                </p>
+                {suggestions.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-slate-700 dark:text-slate-300 font-semibold">
+                      Try searching for:
+                    </h3>
+                    <div className="flex flex-wrap justify-center gap-2 mt-3">
+                      {suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <LawyerList lawyers={lawyers} onSelectLawyer={setSelectedLawyer} />
+          </>
+        )}
+
+        {view === "analyze" && (
+          <LegalAnalyzer
+            onAnalyze={handleAnalyze}
+            loading={isLoading}
+            onSearchSpecialty={handleSearchFromAnalyzer}
+          />
+        )}
+      </main>
+
+      {selectedLawyer && (
+        <LawyerDetailModal
+          lawyer={selectedLawyer}
+          onClose={() => setSelectedLawyer(null)}
+        />
+      )}
     </div>
   );
-};
-
-export default MorePage;
+}
