@@ -15,7 +15,7 @@ import Spinner from "../mapsComponents/Spinner";
 
 type AppView = "search" | "analyze";
 
-export default function MorePage() {
+export default function LawyerLocatorPage() {
   const [view, setView] = useState<AppView>("search");
   const [userLocation, setUserLocation] =
     useState<GeolocationCoordinates | null>(null);

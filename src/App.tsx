@@ -7,6 +7,7 @@
   import LoadingScreen from "./components/LoadingScreen";
   import OriginalContent from "./components/OriginalContent";
   import { AnimatePresence, motion } from "framer-motion";
+  import LawyerLocatorPage from "./pages/LawyerLocatorPage";
   import {
     DocumentAnalysis,
     SimplificationLevel,
@@ -36,7 +37,8 @@
     | "results"
     | "visuals"
     | "profile"
-    | "more";
+    | "more"
+    | "lawyer";
 
   function App() {
     const [user, setUser] = useState<User | null>(null);
@@ -615,6 +617,17 @@
         transition={{ duration: 0.2 }}
       >
         <MorePage />
+      </motion.div>
+    )}
+     {route === "lawyer" && (
+      <motion.div
+        key="lawyer"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+     <LawyerLocatorPage />
       </motion.div>
     )}
   </AnimatePresence>

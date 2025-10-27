@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { User, Sun, Moon, Menu, X, Settings, MoreHorizontal, LogIn, UserPlus, LogOut } from "lucide-react";
+import {
+  User,
+  Sun,
+  Moon,
+  Menu,
+  X,
+  Settings,
+  MoreHorizontal,
+  LogIn,
+  UserPlus,
+  LogOut,
+  Scale,
+} from "lucide-react";
 import AnalysisHistorySidebar from "../analysis/AnalysisHistorySidebar.tsx";
 import type { AnalysisHistoryItem } from "../types/history.ts";
 
@@ -25,14 +37,14 @@ interface AppShellProps {
   onLogout?: () => void;
   onLogin?: () => void;
   onSignup?: () => void;
-   language: "en" | "hi";                        // ✅ new
+  language: "en" | "hi"; // ✅ new
   onLanguageChange: (lang: "en" | "hi") => void;
 }
 
 const navItems: NavItem[] = [
-  { id: "upload", label: "Upload" },
-  { id: "results", label: "Results" },
-  { id: "visuals", label: "Visuals" },
+  { id: "upload", label: "Upload", icon: null },
+  { id: "results", label: "Results", icon: null },
+  { id: "visuals", label: "Visuals", icon: null },
 ];
 
 const AppShell: React.FC<AppShellProps> = ({
@@ -128,17 +140,23 @@ const AppShell: React.FC<AppShellProps> = ({
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-2 text-[11px] md:text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-            <span>This is not legal advice. Consult a lawyer for decisions.</span>
+            <span>
+              This is not legal advice. Consult a lawyer for decisions.
+            </span>
           </div>
           {/* Header icon actions */}
-          
+
           <button
             onClick={toggleTheme}
             className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
             aria-label="Toggle theme"
             title={theme === "dark" ? "Light mode" : "Dark mode"}
           >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </button>
           <button
             onClick={() => onNavigate("profile")}
@@ -148,49 +166,49 @@ const AppShell: React.FC<AppShellProps> = ({
           >
             <User className="h-4 w-4" />
           </button>
-          <div className="flex items-center gap-4"> {/* gap added for spacing between buttons */}
-  {!user ? (
-    <>
-    
-      {/* Sign In */}
-      <button
-        onClick={onLogin}
-        className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
+          <div className="flex items-center gap-4">
+            {" "}
+            {/* gap added for spacing between buttons */}
+            {!user ? (
+              <>
+                {/* Sign In */}
+                <button
+                  onClick={onLogin}
+                  className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
           bg-gradient-to-r from-blue-500 to-indigo-600 text-white
           border border-white/10 shadow-sm shadow-blue-500/20
           transition-all duration-300 hover:scale-105 hover:shadow-blue-500/40 active:scale-95"
-      >
-        <LogIn className="h-4 w-4" />
-        <span>Login</span>
-      </button>
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span>Login</span>
+                </button>
 
-      {/* Sign Up */}
-      <button
-        onClick={onSignup}
-        className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
+                {/* Sign Up */}
+                <button
+                  onClick={onSignup}
+                  className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
           bg-gradient-to-r from-emerald-500 to-teal-600 text-white
           border border-white/10 shadow-sm shadow-emerald-500/20
           transition-all duration-300 hover:scale-105 hover:shadow-emerald-500/40 active:scale-95"
-      >
-        <UserPlus className="h-4 w-4" />
-        <span>Sign Up</span>
-      </button>
-    </>
-  ) : (
-    /* Logout Icon */
-    <button
-      onClick={onLogout}
-      className="relative flex items-center justify-center w-10 h-10 rounded-full
+                >
+                  <UserPlus className="h-4 w-4" />
+                  <span>Sign Up</span>
+                </button>
+              </>
+            ) : (
+              /* Logout Icon */
+              <button
+                onClick={onLogout}
+                className="relative flex items-center justify-center w-10 h-10 rounded-full
         bg-gradient-to-r from-red-500 to-rose-600 text-white
         border border-white/10 shadow-md shadow-red-500/20
         transition-all duration-300 hover:scale-110 hover:shadow-red-500/40 active:scale-95"
-      title="Logout"
-    >
-      <LogOut className="h-5 w-5" />
-    </button>
-  )}
-</div>
-
+                title="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -212,16 +230,28 @@ const AppShell: React.FC<AppShellProps> = ({
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border
-                ${current === item.id
+                flex items-center gap-2
+                ${
+                  current === item.id
                     ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
                     : "bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                  }`}
+                }`}
               >
-                {item.label}
+                {item.icon}
+                <span>{item.label}</span>
               </button>
             ))}
           </nav>
 
+          <button
+            onClick={() => onNavigate("lawyer")}
+            className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+          >
+            <Scale className="h-4 w-4" />
+            <span>
+              <strong>Lawyer Locator AI</strong>
+            </span>
+          </button>
           {/* Integrated History content */}
           <div className="mt-4 border-t border-gray-200 dark:border-slate-700 flex-1 min-h-0">
             <AnalysisHistorySidebar
@@ -235,7 +265,6 @@ const AppShell: React.FC<AppShellProps> = ({
           {/* Authentication and Action buttons at bottom */}
           <div className="p-3 border-t border-gray-200 dark:border-slate-700">
             <div className="space-y-2">
-
               {/* Settings and More buttons */}
               <button
                 onClick={() => onNavigate("settings")}
@@ -329,7 +358,10 @@ const AppShell: React.FC<AppShellProps> = ({
       {/* Mobile slide-over sidebar */}
       {isMobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setIsMobileNavOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsMobileNavOpen(false)}
+          />
           <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 shadow-xl flex flex-col">
             <div className="h-14 px-3 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
               <div className="font-semibold">Menu</div>
@@ -360,17 +392,22 @@ const AppShell: React.FC<AppShellProps> = ({
                     setIsMobileNavOpen(false);
                   }}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border mt-1
-                  ${current === item.id
+                  flex items-center gap-2
+                  ${
+                    current === item.id
                       ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
                       : "bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    }`}
+                  }`}
                 >
-                  {item.label}
+                  {item.icon}
+                  <span>{item.label}</span>
                 </button>
               ))}
 
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
-                <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">History</div>
+                <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">
+                  History
+                </div>
                 <AnalysisHistorySidebar
                   items={analysisHistory}
                   onSelect={(item) => {
@@ -399,7 +436,11 @@ const AppShell: React.FC<AppShellProps> = ({
                 className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
                 aria-label="Toggle theme"
               >
-                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
               </button>
 
               <button
@@ -419,7 +460,6 @@ const AppShell: React.FC<AppShellProps> = ({
                 className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
               >
                 <MoreHorizontal className="h-4 w-4" />
-
               </button>
             </div>
           </div>
