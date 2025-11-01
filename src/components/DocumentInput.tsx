@@ -58,291 +58,236 @@ const DocumentInput: React.FC<DocumentInputProps> = ({
 
   type Sample = { id: string; label: string; text: string };
   const sampleContracts: Record<"en" | "hi", Sample[]> = {
-    en: [
-      {
-        id: "service-agreement",
-        label: "Service Agreement",
-        text: `MASTER SERVICE AGREEMENT\n\n
-
-This MASTER SERVICE AGREEMENT (the “Agreement”) is entered into as of October 28, 2025 (the “Effective Date”), by and between:\n\n
-
-Polaris Nimbus Solutions Pvt. Ltd., a company incorporated under the laws of India with its principal place of business at 12/8 Sapphire Towers, Sector 14, Pune, Maharashtra 411001, India (“Provider”), and\n\n
-
-Aurora Meridian Technologies LLC, a limited liability company organized under the laws of Delaware, United States, with its principal place of business at 4527 Cypress Park Drive, Wilmington, DE 19801, USA (“Customer”).\n\n
-
-Each of Provider and Customer may be referred to herein as a “Party” and collectively as the “Parties.”\n\n
-
-1. BACKGROUND / PURPOSE\n\n
-Provider is engaged in the business of providing software-as-a-service, professional services, maintenance, support, and other related technology services. Customer desires to engage Provider to perform certain services and deliverables described in one or more Statements of Work (each defined below) under the terms and conditions of this Agreement. Provider agrees to provide such services under the terms set forth herein.\n\n
-
-2. DEFINITIONS\n\n
-For purposes of this Agreement, the following terms will have the meanings set forth below:\n\n
-“Agreement” means this Master Service Agreement and all Statements of Work, Schedules, Exhibits and amendments hereto.\n\n
-“Confidential Information” means non-public, proprietary or confidential information disclosed by a Party to the other Party, whether orally or in writing, including but not limited to business strategies, plans, customer lists, price lists, technical information, source code, designs, trade secrets, and all information reasonably understood to be confidential.\n\n
-“Deliverables” means any tangible or intangible work product, documentation, code, reports, designs, drawings, data, or other items delivered by Provider to Customer under a Statement of Work.\n\n
-“Documentation” means the user manuals, technical manuals and other written materials provided to Customer that describe the functionality, operation and use of the Services and Deliverables.\n\n
-“Fees” means amounts payable by Customer to Provider as described in the applicable Statement of Work and any invoices.\n\n
-“Intellectual Property Rights” means patents, copyrights, moral rights, trademarks, trade secrets, domain names, know-how, database rights, and any other intellectual or industrial property rights.\n\n
-“Services” means the services to be performed by Provider as specified in a Statement of Work.\n\n
-“Statement of Work” or “SOW” means a written document signed by authorized representatives of both Parties that describes Services, Deliverables, Fees, timelines and other applicable terms and conditions and which references this Agreement.\n\n
-“Third Party” means any person or entity other than Provider or Customer.\n\n
-“SLA” means service level agreement terms, if any, attached to or referenced in a Statement of Work.\n\n
-
-3. SCOPE OF SERVICES\n\n
-3.1 Services and Deliverables. Provider shall perform the Services and deliver the Deliverables set forth in one or more Statements of Work in accordance with the schedules, specifications, performance standards, and acceptance criteria set forth in the applicable SOW.\n\n
-3.2 Change Orders. Any change to scope, timeline, deliverables or fees shall be implemented only by a written Change Order signed by authorized representatives of both Parties. Provider shall not be required to commence work under any requested change prior to mutual written approval.\n\n
-3.3 Customer Responsibilities. Customer shall provide timely access to personnel, facilities, systems, data, approvals and other resources reasonably required by Provider to perform the Services. Customer shall be responsible for the accuracy and completeness of data and other information provided to Provider.\n\n
-3.4 Subcontracting. Provider may subcontract performance of Services to affiliates or third parties; provided that Provider remains responsible for the acts and omissions of its subcontractors, and such subcontracting will not relieve Provider of any obligations under this Agreement.\n\n
-
-4. STATEMENT OF WORKS; ORDER OF PRECEDENCE\n\n
-4.1 Each SOW shall describe: (a) Services and Deliverables; (b) personnel assigned; (c) fees and payment schedule; (d) acceptance criteria; (e) timeline and milestones; (f) SLAs (if any); and (g) any specific assumptions.\n\n
-4.2 In the event of a conflict between a Statement of Work and this Agreement, the order of precedence shall be: (a) amendment to the SOW signed by both Parties; (b) the SOW; (c) this Agreement. Any inconsistency in an SOW shall be resolved in favor of the SOW unless the Provision of this Agreement expressly supersedes.\n\n
-
-5. TERM AND TERMINATION\n\n
-5.1 Term. The term of this Agreement begins on the Effective Date and continues for three (3) years, unless earlier terminated in accordance with Section 5. This Agreement shall automatically renew for successive one (1) year periods unless either Party provides written notice of non-renewal at least sixty (60) days prior to the end of the then-current term.\n\n
-5.2 Termination for Convenience. Either Party may terminate this Agreement or any SOW for convenience upon sixty (60) days’ prior written notice to the other Party. In the event of termination for convenience by Customer, Customer shall pay Provider for all Services performed and expenses incurred through the effective date of termination, plus reasonable wind-down costs.\n\n
-5.3 Termination for Cause. Either Party may terminate this Agreement or any SOW upon thirty (30) days’ written notice if the other Party materially breaches this Agreement and the breach remains uncured after thirty (30) days following receipt of written notice describing the breach. For non-payment by Customer, Provider may suspend Services after ten (10) days’ written notice.\n\n
-5.4 Immediate Termination. Either Party may terminate immediately upon written notice: (a) if the other Party becomes insolvent, files for bankruptcy, or has a receiver appointed; (b) if the other Party materially breaches confidentiality or data protection obligations; or (c) if required by law.\n\n
-5.5 Effect of Termination. Upon termination, Customer shall (a) pay all undisputed Fees for Services performed and Deliverables accepted through the effective date; (b) return or destroy Confidential Information as directed; and (c) receive any Deliverables completed and accepted. Provider shall deliver to Customer all work-in-progress and any materials purchased for Customer and may invoice for any non-cancellable commitments.\n\n
-
-... (continues in full as your text)\n\n
-
-SIGNATURES\n\n
-IN WITNESS WHEREOF, the Parties hereto have executed this Master Service Agreement as of the Effective Date.\n\n
-Provider: Polaris Nimbus Solutions Pvt. Ltd.\n
-By: _______________________________\n
-Name: Arjun S. Mehta\n
-Title: Chief Operating Officer\n
-Date: October 28, 2025\n\n
-Customer: Aurora Meridian Technologies LLC\n
-By: _______________________________\n
-Name: Lillian R. Foster\n
-Title: VP, Global Operations\n
-Date: October 28, 2025\n\n
-`,
-      },
-      {
-        id: "nda",
-        label: "Mutual NDA",
-        text: `MUTUAL NON-DISCLOSURE AGREEMENT\n\n
-
-This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of October 28, 2025 ("Effective Date"), by and between:\n\n
-
-Party A: AlphaVision Technologies Pvt. Ltd., a corporation organized under the laws of India, having its principal place of business at 23, Orion Tech Park, Nashik, Maharashtra 422005 ("Party A"), and\n\n
-
-Party B: QuantumEdge Systems Inc., a company duly incorporated under the laws of Delaware, USA, having its registered office at 497 Silicon Street, San Jose, California 95134 ("Party B").\n\n
-
-Party A and Party B shall be collectively referred to as the "Parties" and individually as a "Party".\n\n
-
-WHEREAS, the Parties desire to engage in discussions and business collaboration relating to artificial intelligence research, data-driven product development, and software deployment ("Purpose"); and\n\n
-
-WHEREAS, in connection with such Purpose, each Party may disclose or make available to the other Party certain confidential, proprietary, or trade secret information.\n\n
-
-NOW, THEREFORE, in consideration of the mutual promises and covenants contained herein, the Parties agree as follows:\n\n
-
-1. DEFINITION OF CONFIDENTIAL INFORMATION\n\n
-1.1 "Confidential Information" means all non-public information, whether oral, written, digital, visual, or in any other form, disclosed by one Party (“Disclosing Party”) to the other Party (“Receiving Party”), including but not limited to business plans, technical data, software code, algorithms, marketing strategies, research data, product specifications, designs, trade secrets, pricing information, and customer lists.\n\n
-1.2 Confidential Information shall also include any copies, reproductions, analyses, or summaries made by the Receiving Party.\n\n
-1.3 Information shall not be deemed Confidential Information if it:\n
-(a) is or becomes publicly available through no fault of the Receiving Party;\n
-(b) was rightfully in the Receiving Party’s possession before disclosure;\n
-(c) is lawfully obtained by the Receiving Party from a third party without breach of any confidentiality obligation; or\n
-(d) is independently developed by the Receiving Party without the use of or reference to the Disclosing Party’s Confidential Information.\n\n
-
-2. OBLIGATIONS OF THE RECEIVING PARTY\n\n
-2.1 The Receiving Party agrees to maintain the Confidential Information in strict confidence and to use it solely for the Purpose.\n\n
-2.2 The Receiving Party shall restrict disclosure of the Confidential Information to its employees, agents, or contractors who have a “need to know” for the Purpose and who are bound by confidentiality obligations at least as restrictive as those contained herein.\n\n
-2.3 The Receiving Party shall not disclose, publish, or otherwise disseminate any Confidential Information to any third party without the prior written consent of the Disclosing Party.\n\n
-2.4 The Receiving Party shall exercise at least the same degree of care as it uses to protect its own confidential information but in no event less than reasonable care.\n\n
-
-3. TERM AND TERMINATION\n\n
-3.1 This Agreement shall commence on the Effective Date and continue for a period of five (5) years, unless earlier terminated by either Party upon thirty (30) days’ written notice.\n\n
-3.2 Notwithstanding termination, all confidentiality and non-use obligations shall survive for an additional three (3) years following termination.\n\n
-
-4. RETURN OR DESTRUCTION OF MATERIALS\n\n
-Upon termination or upon written request of the Disclosing Party, the Receiving Party shall promptly return or destroy all documents, notes, and materials containing Confidential Information, and certify such destruction in writing.\n\n
-
-5. NO LICENSE OR WARRANTY\n\n
-5.1 Nothing in this Agreement shall be construed as granting any license or ownership rights under any intellectual property of the Disclosing Party.\n\n
-5.2 All Confidential Information is provided “AS IS,” without any warranty, express or implied, including fitness for a particular purpose or non-infringement.\n\n
-
-6. REMEDIES\n\n
-Each Party acknowledges that unauthorized disclosure or use of Confidential Information may cause irreparable harm to the Disclosing Party, for which monetary damages may be inadequate. Therefore, the Disclosing Party shall be entitled to seek injunctive or equitable relief, in addition to any other remedies available at law or in equity.\n\n
-
-7. GOVERNING LAW AND JURISDICTION\n\n
-7.1 This Agreement shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law principles.\n\n
-7.2 Any disputes arising under or in connection with this Agreement shall be subject to the exclusive jurisdiction of the courts located in Mumbai, Maharashtra.\n\n
-
-8. MISCELLANEOUS\n\n
-8.1 Entire Agreement: This Agreement constitutes the entire understanding between the Parties concerning the subject matter and supersedes all prior agreements, written or oral.\n\n
-8.2 Amendments: Any amendment to this Agreement must be made in writing and signed by both Parties.\n\n
-8.3 Assignment: Neither Party may assign this Agreement without the prior written consent of the other Party.\n\n
-8.4 Severability: If any provision of this Agreement is held invalid or unenforceable, the remaining provisions shall continue in full force and effect.\n\n
-8.5 Waiver: No failure or delay by either Party in exercising any right shall operate as a waiver thereof.\n\n
-
-9. NOTICES\n\n
-All notices under this Agreement shall be in writing and shall be delivered personally, by registered post, or by electronic mail to the following addresses:\n\n
-For Party A:\n
-Attention: Legal Department\n
-AlphaVision Technologies Pvt. Ltd.\n
-23, Orion Tech Park, Nashik, Maharashtra 422005\n
-Email: legal@alphavision.in\n\n
-For Party B:\n
-Attention: Legal Counsel\n
-QuantumEdge Systems Inc.\n
-497 Silicon Street, San Jose, California 95134\n
-Email: legal@quantumedge.com\n\n
-
-10. EXECUTION\n\n
-This Agreement may be executed in counterparts, each of which shall be deemed an original, and all of which together shall constitute one and the same instrument.\n\n
-
-IN WITNESS WHEREOF, the Parties have executed this Mutual Non-Disclosure Agreement as of the Effective Date.\n\n
-
-----------------------------------------\n
-For AlphaVision Technologies Pvt. Ltd.\n
-Name: Mr. Rohan Deshmukh\n
-Title: Chief Executive Officer\n
-Date: October 28, 2025\n\n
-
-----------------------------------------\n
-For QuantumEdge Systems Inc.\n
-Name: Ms. Emily Carter\n
-Title: Director of Strategic Partnerships\n
-Date: October 28, 2025\n\n
-`,
-      },
-      {
-        id: "residential-lease",
-        label: "Residential Lease",
-        text: `RESIDENTIAL LEASE AGREEMENT\n\n
-
-This Residential Lease Agreement ("Agreement") is entered into as of October 28, 2025 ("Effective Date"), by and between:\n\n
-
-Landlord: Mr. Rajesh Mehta, residing at 7, Orchid Residency, College Road, Nashik, Maharashtra 422002 ("Landlord")\n\n
-and\n\n
-Tenant: Ms. Anjali Sharma, residing at 12, Sunrise Apartments, Gangapur Road, Nashik, Maharashtra 422005 ("Tenant").\n\n
-
-Landlord and Tenant shall be collectively referred to as the "Parties" and individually as a "Party".\n\n
-
-WHEREAS, Landlord is the lawful owner of the residential premises described below and desires to lease it to the Tenant under the terms and conditions set forth herein.\n\n
-
-NOW, THEREFORE, in consideration of the mutual covenants and promises contained herein, the Parties agree as follows:\n\n
-
-1. PREMISES\n\n
-The Landlord hereby leases to the Tenant, and the Tenant hereby takes on lease from the Landlord, the residential premises located at:\n\n
-Flat No. 304, Lotus Heights Apartment, Tilak Nagar, Nashik, Maharashtra 422001 ("Premises"), including the right to use the parking space, common areas, and other facilities associated therewith.\n\n
-
-2. TERM\n\n
-2.1 The term of this Lease shall commence on November 1, 2025 ("Commencement Date") and shall continue until October 31, 2026 ("Termination Date"), unless sooner terminated as provided herein.\n\n
-2.2 Upon mutual agreement, the Lease may be renewed for an additional term under renegotiated terms.\n\n
-
-3. RENT\n\n
-3.1 The Tenant agrees to pay the Landlord a monthly rent of INR 18,000 (Indian Rupees Eighteen Thousand only).\n\n
-3.2 The rent shall be due and payable in advance on or before the 5th day of each month.\n\n
-3.3 Payments shall be made via bank transfer to the Landlord’s account:\n
-Account Name: Rajesh Mehta\n
-Bank: HDFC Bank, Nashik Main Branch\n
-Account No.: 123456789001\n
-IFSC: HDFC0000455\n\n
-3.4 Late Payment: If rent is not received within five (5) days after the due date, a late fee of INR 500 per day shall apply until full payment is made.\n\n
-
-4. SECURITY DEPOSIT\n\n
-4.1 Tenant shall pay a refundable security deposit of INR 36,000 (equivalent to two months’ rent) prior to moving in.\n\n
-4.2 The deposit shall be held by the Landlord as security for any damages, unpaid rent, or other defaults under this Agreement.\n\n
-4.3 The deposit shall be refunded within 15 days after the Tenant vacates the Premises, less any lawful deductions.\n\n
-
-5. USE OF PREMISES\n\n
-5.1 The Premises shall be used solely for residential purposes and occupied only by the Tenant and immediate family members.\n\n
-5.2 The Tenant shall not sublet, assign, or transfer any interest in the Premises without the prior written consent of the Landlord.\n\n
-5.3 The Tenant shall not use the Premises for any unlawful or commercial purpose.\n\n
-
-6. MAINTENANCE AND REPAIRS\n\n
-6.1 The Tenant shall keep the Premises clean, safe, and sanitary at all times.\n\n
-6.2 The Tenant shall promptly notify the Landlord of any damages or maintenance issues.\n\n
-6.3 The Landlord shall be responsible for major structural repairs, electrical, and plumbing systems.\n\n
-6.4 The Tenant shall be responsible for minor maintenance such as cleaning, replacing bulbs, and maintaining appliances.\n\n
-
-7. UTILITIES AND CHARGES\n\n
-The Tenant shall pay all utilities including electricity, water, internet, cooking gas, and cable TV. Maintenance fees and property taxes shall be borne by the Landlord.\n\n
-
-8. RULES AND REGULATIONS\n\n
-8.1 The Tenant agrees to comply with all housing society rules and regulations.\n\n
-8.2 The Tenant shall not cause nuisance, loud noise, or disturbance to neighbors.\n\n
-8.3 Pets are not allowed unless explicitly approved by the Landlord in writing.\n\n
-
-9. ALTERATIONS AND IMPROVEMENTS\n\n
-9.1 The Tenant shall not make any structural or decorative alterations without the Landlord’s prior written consent.\n\n
-9.2 Any improvements or fixtures installed by the Tenant shall become the property of the Landlord unless otherwise agreed.\n\n
-
-10. ENTRY AND INSPECTION\n\n
-The Landlord or authorized agent may enter the Premises upon at least 24 hours' prior notice for inspection, maintenance, or showing the property to prospective tenants or buyers.\n\n
-
-11. DAMAGE OR DESTRUCTION\n\n
-If the Premises are rendered uninhabitable due to fire, flood, or natural calamity, either Party may terminate this Agreement with written notice. Rent shall be abated proportionately for the period the Premises are unusable.\n\n
-
-12. DEFAULT\n\n
-12.1 In the event of non-payment of rent, breach of terms, or unlawful use, the Landlord may issue a written notice to remedy the breach within seven (7) days.\n\n
-12.2 Failure to cure within such period may result in termination and eviction proceedings as per applicable law.\n\n
-
-13. TERMINATION\n\n
-13.1 Either Party may terminate this Agreement by providing sixty (60) days' written notice.\n\n
-13.2 Upon termination, the Tenant shall vacate the Premises in good condition, reasonable wear and tear excepted.\n\n
-
-14. INDEMNIFICATION\n\n
-The Tenant agrees to indemnify and hold harmless the Landlord from any claims, damages, or losses arising out of Tenant’s use of the Premises, except those caused by the Landlord’s negligence or misconduct.\n\n
-
-15. GOVERNING LAW\n\n
-This Agreement shall be governed by and construed in accordance with the laws of India. Any disputes shall be subject to the jurisdiction of the courts in Nashik, Maharashtra.\n\n
-
-16. NOTICES\n\n
-All notices required under this Agreement shall be in writing and delivered personally, via registered post, or by email as follows:\n\n
-Landlord: Mr. Rajesh Mehta, Email: rajesh.mehta@orchidresidency.in\n
-Tenant: Ms. Anjali Sharma, Email: anjali.sharma92@gmail.com\n\n
-
-17. ENTIRE AGREEMENT\n\n
-This document constitutes the entire understanding between the Parties and supersedes all prior discussions or representations.\n\n
-No amendment or modification shall be valid unless made in writing and signed by both Parties.\n\n
-
-18. MISCELLANEOUS\n\n
-18.1 Waiver: Failure by either Party to enforce any term shall not be deemed a waiver of future enforcement.\n\n
-18.2 Severability: If any provision is held invalid, the remainder shall continue in effect.\n\n
-18.3 Counterparts: This Agreement may be executed in counterparts, each of which shall be deemed an original.\n\n
-
-IN WITNESS WHEREOF, the Parties have executed this Residential Lease Agreement as of the Effective Date.\n\n
-
--------------------------------------------\n
-Landlord: Rajesh Mehta\n
-Signature: ___________________________\n
-Date: October 28, 2025\n\n
-
--------------------------------------------\n
-Tenant: Anjali Sharma\n
-Signature: ___________________________\n
-Date: October 28, 2025\n\n
-
-Witnesses:\n
-1. Name: Sandeep Patil | Address: 55, Shivaji Nagar, Nashik | Signature: ___________\n
-2. Name: Ritu Kaur | Address: 91, Greenfield Colony, Nashik | Signature: ___________\n\n
-`,
-      },
-    ],
-    hi: [
-      {
-        id: "service-agreement",
-        label: "सेवा अनुबंध",
-        text: `सेवा अनुबंध (Service Agreement)\n\nयह अनुबंध क्लाइंटको एलएलसी ("क्लाइंट") और प्रोवाइडर इंक. ("प्रोवाइडर") के बीच किया गया है।\n\n1. सेवाओं का दायरा. प्रोवाइडर स्टेटमेंट ऑफ वर्क #1 में वर्णित फीचर्स का डिजाइन, विकास, परीक्षण और डिलीवरी करेगा; साप्ताहिक डेमो, दस्तावेज़ीकरण और हैंडओवर शामिल होंगे।\n\n2. अवधि और नवीनीकरण. प्रारंभिक अवधि छह (6) माह; इसके बाद स्वतः मासिक नवीनीकरण जब तक कि कोई पक्ष 30 दिन पूर्व लिखित सूचना न दे।\n\n3. शुल्क एवं व्यय. (क) मासिक रिटेनर: USD 10,000 (इनवॉइस अग्रिम, नेट-30)। (ख) पूर्व-स्वीकृत बाह्य व्यय लागत पर प्रतिपूर्ति। विलंब पर 1.5% मासिक ब्याज।\n\n4. परिवर्तन प्रबंधन. कार्य-क्षेत्र में महत्वपूर्ण परिवर्तन हेतु लिखित परिवर्तन आदेश आवश्यक होगा।\n\n5. बौद्धिक संपदा. (क) क्लाइंट आईपी: क्लाइंट के लिए विशेष रूप से बनाए गए डिलीवेरेबल्स का स्वामित्व पूर्ण भुगतान पर क्लाइंट को। (ख) प्रोवाइडर पृष्ठभूमि आईपी: प्रोवाइडर अपने पूर्व-विद्यमान/पुन: उपयोग योग्य टूल का स्वामी रहेगा; डिलीवेरेबल्स में निहित रूप में क्लाइंट को उनका स्थायी, विश्वव्यापी, रॉयल्टी-मुक्त लाइसेंस मिलेगा।\n\n6. गोपनीयता. पक्ष गोपनीय जानकारी की उचित सुरक्षा करेंगे और केवल अनुबंध निष्पादन हेतु उपयोग करेंगे।\n\n7. डेटा सुरक्षा. प्रोवाइडर उचित तकनीकी/संगठनात्मक सुरक्षा उपाय लागू करेगा और सुरक्षा घटना होने पर शीघ्र सूचित करेगा।\n\n8. वारंटी एवं अस्वीकरण. प्रोवाइडर सेवाएँ व्यावसायिक एवं कार्यकुशल तरीके से प्रदान करने की वारंटी देता है; अन्य सभी वारंटियाँ अस्वीकारित हैं।\n\n9. क्षतिपूर्ति. डिलीवेरेबल्स से उत्पन्न तृतीय-पक्ष आईपी उल्लंघन दावों के विरुद्ध प्रोवाइडर रक्षा/क्षतिपूर्ति करेगा (क्लाइंट सामग्री/अनधिकृत परिवर्तनों को छोड़कर)।\n\n10. दायित्व सीमा. किसी भी पक्ष की अप्रत्यक्ष/विशेष/परिणामी हानि हेतु कोई उत्तरदायित्व नहीं; कुल उत्तरदायित्व पिछले तीन (3) माह की फीस से अधिक नहीं।\n\n11. समाप्ति. भौतिक उल्लंघन पर 15 दिन में उपचार न होने पर पक्ष अनुबंध समाप्त कर सकता है; समाप्ति तिथि तक देय शुल्क देय होंगे।\n\n12. प्रभार्य विधि; क्षेत्राधिकार. यह अनुबंध डेलावेयर, यूएसए के कानूनों द्वारा शासित होगा; विशेष क्षेत्राधिकार न्यू कैसल काउंटी की अदालतें।\n\nप्रभावी तिथि: 2024-01-15\nहस्ताक्षर: ______________________`,
-      },
-      {
-        id: "nda",
-        label: "परस्पर गोपनीयता समझौता (NDA)",
-        text: `परस्पर गैर-प्रकटीकरण समझौता (Mutual NDA)\n\nयह समझौता अल्फा कॉर्प ("पक्ष अ") और बीटा लिमिटेड ("पक्ष ब") के बीच है।\n\n1. उद्देश्य. संभावित व्यावसायिक सहयोग का मूल्यांकन करने हेतु पक्ष गोपनीय जानकारी साझा कर सकते हैं।\n\n2. परिभाषा. "गोपनीय जानकारी" गैर-सार्वजनिक जानकारी है जो गोपनीय चिह्नित हो या उचित रूप से गोपनीय समझी जाए, जैसे रोडमैप, कोड, डिज़ाइन, ग्राहक डेटा, मूल्य निर्धारण।\n\n3. दायित्व. प्राप्तकर्ता (क) गोपनीय जानकारी का उपयोग केवल उद्देश्य हेतु करेगा, (ख) तृतीय पक्ष को प्रकटीकरण नहीं करेगा सिवाय उन कर्मचारियों/ठेकेदारों के जो समान दायित्वों से बँधे हैं, और (ग) उचित सावधानी से सुरक्षा करेगा।\n\n4. अपवाद. सार्वजनिक, पूर्व-ज्ञात, स्वतंत्र विकसित, या वैध तृतीय पक्ष से प्राप्त जानकारी गोपनीय नहीं मानी जाएगी।\n\n5. आवश्यक प्रकटीकरण. क़ानूनन आवश्यक प्रकटीकरण की स्थिति में यथासंभव अग्रिम सूचना और संरक्षण के उपायों में सहयोग।\n\n6. अवधि. प्रकटीकरण अवधि एक (1) वर्ष; गोपनीयता दायित्व तीन (3) वर्ष तक प्रभावी रहेंगे; व्यापार-गोपनीयियाँ क़ानून अनुसार संरक्षित रहेंगी।\n\n7. लाइसेंस नहीं. इस समझौते के अंतर्गत कोई लाइसेंस प्रदान नहीं किया जाता जब तक स्पष्ट रूप से न कहा गया हो।\n\n8. वापसी/नष्ट करना. अनुरोध पर प्राप्तकर्ता गोपनीय जानकारी वापस करेगा या नष्ट करेगा और प्रमाणित करेगा।\n\n9. उपचार. उल्लंघन से अपूरणीय क्षति हो सकती है; प्रकटीकरणकर्ता को निषेधाज्ञा सहित उपाय प्राप्त होंगे।\n\n10. विविध. यह समझौता किसी आगे के अनुबंध का दायित्व उत्पन्न नहीं करता।\n\nप्रभावी तिथि: 2024-03-10\nहस्ताक्षर: ______________________`,
-      },
-      {
-        id: "residential-lease",
-        label: "आवासीय पट्टा (Residential Lease)",
-        text: `आवासीय पट्टा अनुबंध\n\nभू-स्वामी: ग्रीन प्रॉपर्टीज एलएलसी ("भू-स्वामी")\nकिरायेदार: जॉन डो ("किरायेदार")\nपरिसर: 123 मेपल स्ट्रीट, यूनिट 4B, स्प्रिंगफील्ड, ST 00000\n\n1. अवधि. 1 मई 2024 से 30 अप्रैल 2025 तक बारह (12) माह।\n\n2. किराया. मासिक किराया USD 1,800; प्रत्येक माह की 1 तारीख को देय; 5 तारीख के बाद भुगतान पर USD 75 विलंब शुल्क।\n\n3. सुरक्षा जमा. USD 1,800 हस्ताक्षर पर देय; सामान्य घिसावट से परे क्षति/बकाया किराये के समायोजन के बाद 30 दिनों में वापसी (आइटमाइज्ड कटौतियाँ लागू)।\n\n4. उपयोगिताएँ. किरायेदार: बिजली, इंटरनेट; भू-स्वामी: पानी, कचरा।\n\n5. उपयोग. केवल आवासीय उपयोग; अवैध गतिविधि वर्जित; अधिकतम दो (2) वयस्क।\n\n6. रखरखाव. परिसर की सफाई/रखरखाव और समस्याओं की शीघ्र सूचना; भू-स्वामी संरचना/प्लंबिंग/विद्युत मरम्मत उचित समय में करेगा।\n\n7. परिवर्तन. लिखित पूर्व-सहमति के बिना भौतिक परिवर्तन नहीं।\n\n8. पालतू पशु. पूर्व स्वीकृति और USD 300 गैर-वापसी योग्य शुल्क के साथ एक (1) पालतू अनुमत; क्षति के लिए किरायेदार उत्तरदायी।\n\n9. प्रवेश. निरीक्षण/रख-रखाव/दिखाने हेतु 24 घंटे पूर्व सूचना पर प्रवेश; आपातकाल में तुरंत।\n\n10. बीमा. किरायेदार को रेंटर बीमा रखने की सलाह।\n\n11. डिफ़ॉल्ट/उपाय. भुगतान न होना या भौतिक उल्लंघन पर विधि अनुसार नोटिस और उपाय।\n\n12. प्रभार्य विधि. परिसर के राज्य का क़ानून लागू होगा।\n\nहस्ताक्षर: ______________________`,
-      },
-    ],
+ 
+    
+      en: [
+        {
+          id: "income-tax-notice",
+          label: "Income Tax Notice",
+          text: `INCOME TAX DEPARTMENT — NOTICE\n\n
+    Reference No.: ITD/ASMT/2025-26/0931\n
+    Date: November 1, 2025\n\n
+    To:\n
+    Mr. Vikram S. Patel\n
+    14B, Pearl Residency, Baner Road\n
+    Pune, Maharashtra 411045\n\n
+    Subject: Notice under Section 143(2) of the Income-tax Act, 1961 — Scrutiny of Return for AY 2025-26\n\n
+    1. NOTICE\n
+    Your Income Tax Return for Assessment Year 2025-26 has been selected for scrutiny under Section 143(2) of the Income-tax Act, 1961. The Assessing Officer requires clarification and supporting documents for certain items reported in your return for Financial Year 2024-25.\n\n
+    2. DOCUMENTS / INFORMATION REQUIRED (to be submitted within 30 days)\n
+    • Audited / unaudited financial statements for FY 2024-25 (if applicable).\\n
+    • Bank statements for all operative accounts for the period 01-Apr-2024 to 31-Mar-2025.\\n
+    • Salary slips and Form 16 / Form 16A (if applicable).\\n
+    • Invoices/receipts supporting business income or professional fees declared.\\n
+    • Proof of investments / deductions claimed under Chapter VI-A (tax-saving deposits, insurance, ELSS, etc.).\\n
+    • Documentary explanation and supporting evidence for any high-value or one-time transactions (sales, capital gains, large deposits or transfers).\n\n
+    3. MODE OF SUBMISSION\n
+    Documents should be uploaded via the Income Tax e-filing portal under your registered account (e-Assessment -> Upload Documents) or submitted physically to the Assessing Officer's office (address below) during office hours (Mon–Fri, 10:00–17:00).\n\n
+    4. CONSEQUENCES OF NON-COMPLIANCE\n
+    If you fail to furnish the requested information within the prescribed period, the assessment may be completed on the basis of available records and evidence, and penalties may be levied as per the provisions of the Income-tax Act.\n\n
+    5. CONTACT / OFFICE DETAILS\n
+    Assessing Officer: Smt. Meera K. Desai\n
+    Income Tax Office (Ward — Pune Central)\n
+    Giri Building, Fergusson College Road, Pune — 411004\n
+    Phone: +91-20-26123456 | Email: ao.pune.central@incometax.gov.in\n\n
+    6. APPEAL\n
+    If you disagree with any outcome of the assessment, you may avail statutory appeal remedies provided under the Income-tax Act (first appeal to the Commissioner (Appeals), subsequent appeals to Income Tax Appellate Tribunal, etc.).\n\n
+    This notice is issued without prejudice to any other action that the Department may be entitled to take under law.\n\n
+    By order of the Assessing Officer\n
+    Income Tax Department — Pune Central\n
+    Signature: _______________________\n
+    Name: Meera K. Desai\n
+    Designation: Assessing Officer\n
+    Date: November 1, 2025\n`
+        },
+    
+        {
+          id: "municipal-notice",
+          label: "Municipal Council Notice",
+          text: `PUNE MUNICIPAL CORPORATION — NOTICE FOR REMOVAL OF UNAUTHORISED STALL(S)\n\n
+    Ref.: PMC/ENC/2025/214\n
+    Date: November 1, 2025\n\n
+    To:\n
+    Mr. Sanjay B. Raut (Occupier)\n
+    Stall No.: M-23, Lane 5, Shastri Market, Ward No. 12\n
+    Camp Area, Pune — 411001\n\n
+    Subject: Notice to Remove Unauthorised Stall / Encroachment — Immediate Compliance Required\n\n
+    1. NOTICE\n
+    It has been observed during routine enforcement that an unauthorised stall/structure is being operated at the above-referenced location on public footpath/municipal land, in contravention of the Pune Municipal Corporation (Pavement & Encroachment) Regulations, 2019.\n\n
+    2. DIRECTIONS\n
+    You are hereby directed to remove the unauthorised stall, goods, signage and associated fixtures and clear the public area within 7 (seven) days from the date of this notice and restore the area to its original condition.\n\n
+    3. FAILURE TO COMPLY\n
+    If the stall/materials are not removed within the specified period, the Municipal Corporation will execute removal and clearance operations without further notice. All costs of removal, storage charges and applicable penalties will be recoverable from you under municipal by-laws.\n\n
+    4. PENALTY & STORAGE\n
+    • A penalty under the relevant municipal by-laws may be imposed.\\n
+    • Items removed will be stored at the Corporation's temporary depot for a period of 30 days. If not claimed within that period and storage/handling charges not paid, the goods may be disposed of in accordance with municipal procedure.\n\n
+    5. APPEAL / REPRESENTATION\n
+    If you believe this notice has been issued in error or you possess a valid permit, submit a written representation with documentary proof to the Office of the Municipal Commissioner, Pune, within 7 days from the date of this notice. Representations will be considered but do not stay removal unless an authorized order directs otherwise.\n\n
+    Contact:\n
+    Office of the Municipal Commissioner\n
+    Pune Municipal Corporation\n
+    Municipal Building, Shivaji Nagar, Pune — 411005\n
+    Phone: +91-20-25501234 | Email: enforcement@punecorporation.gov.in\n\n
+    By order of the Municipal Commissioner\n
+    Pune Municipal Corporation\n
+    Signature: _______________________\n
+    Name: Ajay R. Kulkarni\n
+    Designation: Executive Engineer (Enforcement)\n
+    Date: November 1, 2025\n`
+        },
+    
+        {
+          id: "legal-rent-agreement",
+          label: "Legal Rent Agreement",
+          text: `SHORT FORM RENTAL AGREEMENT\n\n
+    This RENTAL AGREEMENT is made on this 1st day of November, 2025 between:\n\n
+    Landlord: Ms. Kavita R. Sharma, residing at 9, Maple Grove, North Avenue, Pune — 411016 (hereinafter "Landlord"); and\n
+    Tenant: Mr. Rohan K. Mehra, S/o. K. Mehra, currently residing at 21C, Lakeview Apartments, Kothrud, Pune — 411038 (hereinafter "Tenant").\n\n
+    1. PREMISES\n
+    Landlord agrees to let and Tenant agrees to take on rent the residential premises described as Flat No. 7A, Horizon Towers, Model Colony, Pune — 411016 (the "Premises"), including one covered parking slot (No. P-12) as per inventory attached.\n\n
+    2. TERM\n
+    The term of this Agreement shall commence on 1 November, 2025 and shall continue for a fixed period of 12 (twelve) months to 31 October, 2026, unless earlier terminated in accordance with this Agreement.\n\n
+    3. RENT & DEPOSIT\n
+    Monthly Rent: INR 25,000 (Rupees Twenty-Five Thousand only) payable in advance on or before the 5th day of each calendar month by bank transfer to the Landlord's account (Account No. 9876543210, HDFC Bank, IFSC: HDFC0001234).\n
+    Security Deposit: INR 50,000 (equivalent to two months' rent) payable on or before the Commencement Date. The Deposit shall be refundable within 15 days of vacation subject to lawful deductions for damages, unpaid rent or other liabilities.\n\n
+    4. USE, OCCUPANCY & MAINTENANCE\n
+    4.1 The Premises shall be used solely for residential purposes by the Tenant and immediate family members. Subletting or assignment is prohibited without the Landlord's prior written consent.\n
+    4.2 Tenant shall keep the Premises clean and shall be responsible for minor repairs and routine maintenance (e.g., light bulbs, minor plumbing fixtures). Landlord shall be responsible for major structural, electrical and plumbing repairs.\n\n
+    5. UTILITIES & OUTGOINGS\n
+    The Tenant shall be responsible for payment of electricity, water (if separately metered), internet, cooking gas and cable/OTT subscriptions. Society maintenance charges shall be borne by the Tenant if invoiced to the Premises; property taxes remain the Landlord's responsibility unless otherwise agreed.\n\n
+    6. ALTERATIONS\n
+    Tenant shall not make structural alterations or major modifications without Landlord's prior written consent. Tenant-installed fixtures that are removable shall remain Tenant's property if removed and the Premises restored to original condition.\n\n
+    7. ENTRY & INSPECTION\n
+    Landlord may enter the Premises on 24 hours' prior notice for inspection, repairs or to show to prospective purchasers/tenants. Immediate entry is permitted in case of emergency.\n\n
+    8. DEFAULT & TERMINATION\n
+    8.1 If Tenant fails to pay rent within seven (7) days of due date or breaches any material term, Landlord may issue a written notice to remedy. Failure to remedy within seven (7) days entitles Landlord to terminate the Agreement and seek eviction as permitted by law.\n
+    8.2 Either Party may terminate this Agreement by providing sixty (60) days' prior written notice to the other Party.\n\n
+    9. INDEMNITY\n
+    Tenant agrees to indemnify and hold harmless Landlord from claims, losses or liabilities arising from Tenant's negligent or unlawful use of the Premises, except to the extent caused by Landlord's negligence.\n\n
+    10. GOVERNING LAW\n
+    This Agreement shall be governed by and construed in accordance with the laws of India. Disputes will be subject to the jurisdiction of courts in Pune, Maharashtra.\n\n
+    11. MISCELLANEOUS\n
+    This Agreement constitutes the entire understanding between the Parties. Amendments must be in writing and signed by both Parties. Electronic signatures shall be effective if agreed in writing.\n\n
+    IN WITNESS WHEREOF the Parties have executed this Agreement as of the date first above written.\n\n
+    Landlord: ___________________________\n
+    Name: Kavita R. Sharma\n
+    Date: November 1, 2025\n\n
+    Tenant: _____________________________\n
+    Name: Rohan K. Mehra\n
+    Date: November 1, 2025\n`
+        }
+      ],
+    
+      hi: [
+        {
+          id: "income-tax-notice",
+          label: "इनकम टैक्स नोटिस",
+          text: `आयकर विभाग — सूचना / नोटिस\n\n
+    संदर्भ संख्या: ITD/ASMT/2025-26/0931\n
+    तिथि: 1 नवम्बर, 2025\n\n
+    प्रति:\n
+    श्री विक्रम एस. पटेल\n
+    14B, पर्ल रेज़िडेंसी, बानेर रोड\n
+    पुणे, महाराष्ट्र — 411045\n\n
+    विषय: आयकर अधिनियम, 1961 की धारा 143(2) के तहत — आकलन वर्ष 2025-26 की जाँच हेतु नोटिस\n\n
+    1. नोटिस\n
+    आपका आयकर रिटर्न आकलन वर्ष 2025-26 के लिए धारा 143(2) के तहत जाँच हेतु चुना गया है। वित्तीय वर्ष 2024-25 में दाखिल कुछ प्रविष्टियों के सम्बन्ध में आकलन अधिकारी स्पष्टीकरण व सहायक दस्तावेज़ माँगते हैं।\n\n
+    2. आवश्यक दस्तावेज / जानकारी (30 दिनों के भीतर प्रस्तुत करें)\n
+    • वित्तीय वर्ष 2024-25 के ऑडिटेड/अनऑडिटेड खातों की प्रतियाँ।\\n
+    • 01-04-2024 से 31-03-2025 तक सभी बैंक खातों के स्टेटमेंट्स।\\n
+    • वेतन पर्चियाँ और Form 16 / Form 16A (यदि लागू)।\\n
+    • व्यावसायिक आय या पेशेवर शुल्क के समर्थन में चालान / रसीदें।\\n
+    • अध्याय VI-A के अंतर्गत दावा किये गए निवेश/कटौतियों के प्रमाण।\\n
+    • किसी भी उच्च-मूल्य या एक-बार लेन-देन का दस्तावेजी विवरण।\n\n
+    3. प्रस्तुत करने का तरीका\n
+    दस्तावेज आयकर ई-फाइलिंग पोर्टल के माध्यम से अपलोड करें या कार्यालय पर कार्यदिवसों में (सोम–शुक्र, 10:00–17:00) भौतिक रूप से प्रस्तुत कर सकते हैं।\n\n
+    4. अनुपालन विफलता के परिणाम\n
+    नियत अवधि में अनुपालन न किए जाने पर आकलन उपलब्ध अभिलेखों के आधार पर पूर्ण किया जा सकता है तथा आयकर अधिनियम के अंतर्गत दंड/अन्य कार्रवाई लागू हो सकती है।\n\n
+    5. संपर्क / कार्यालय विवरण\n
+    आकलन अधिकारी: श्रीमती मीरा के. देसाई\n
+    आयकर कार्यालय (वॉर्ड — पुणे सेंट्रल)\n
+    गिरी बिल्डिंग, फर्ग्युसन कॉलेज रोड, पुणे — 411004\n
+    फोन: +91-20-26123456 | ईमेल: ao.pune.central@incometax.gov.in\n\n
+    यह नोटिस किसी अन्य वैधानिक कार्रवाई के अधिकार को प्रभावित किए बिना जारी किया जाता है।\n\n
+    आदेश द्वारा\n
+    आकलन अधिकारी\n
+    हस्ताक्षर: _______________________\n
+    नाम: मीरा के. देसाई\n
+    पद: आकलन अधिकारी\n
+    तिथि: 1 नवम्बर, 2025\n`
+        },
+    
+        {
+          id: "municipal-notice",
+          label: "नगर पालिका नोटिस",
+          text: `पुणे नगरपालिकाः — अनधिकृत स्टॉल हटाने का नोटिस\n\n
+    संदर्भ: PMC/ENC/2025/214\n
+    तिथि: 1 नवम्बर, 2025\n\n
+    प्रति:\n
+    श्री संजय बी. राऊत (संचालक)\n
+    स्टॉल नं.: M-23, लेन 5, शास्त्री मार्केट, वार्ड नं. 12\n
+    कैंप एरिया, पुणे — 411001\n\n
+    विषय: सार्वजनिक स्थान पर अनधिकृत स्टॉल/अतिक्रमण — हटाने हेतु निर्देश\n\n
+    1. सूचना\n
+    निरीक्षण में पाया गया है कि उपर्युक्त स्थान पर सार्वजनिक फुटपाथ/नगरिक भूमि पर अनधिकृत स्टॉल स्थापित किया गया है, जो पुणे नगरपालिकाके नियमों का उल्लंघन है।\n\n
+    2. निर्देश\n
+    आपको निर्देश दिया जाता है कि इस नोटिस की तिथि से 7 (सात) दिनों के भीतर अनधिकृत स्टॉल, माल और संबंधित फिटिंग्स हटाकर स्थान को पूर्ववत् स्थिति में पुनर्स्थापित करें।\n\n
+    3. अनुपालन विफलता\n
+    निर्दिष्ट अवधि में अनुपालन नहीं होने पर नगर निगम द्वारा हटाने व सफाई कार्य कराया जाएगा तथा हटाने, भंडारण व दंड सम्बन्धी सभी शुल्क आपसे वसूल किये जायेंगे।\n\n
+    4. दंड एवं भंडारण\n
+    • लागू नगर नियमों के अनुसार दंड लगाए जा सकते हैं।\\n
+    • हटाई गई वस्तुएँ 30 दिनों तक निगम डिपो में संग्रहित रहेंगी; यदि वह अवधि उपरांत दावे/शुल्क न भरे जाएँ तो निपटान कर दिया जाएगा।\n\n
+    5. आपत्ति / संपर्क\n
+    यदि आप मानते हैं कि यह नोटिस त्रुटिपूर्ण है या आपके पास वैध परमिट है, तो 7 दिनों के भीतर नगर आयुक्त कार्यालय में लिखित आपत्ति प्रस्तुत करें। आपत्ति प्राप्त होने पर विचार किया जाएगा पर हटाने पर रोक तभी लगेगी जब सक्षम प्राधिकारी ने लिखित आदेश दिया हो।\n\n
+    संपर्क:\n
+    कार्यालय — नगर आयुक्त\n
+    पुणे नगरपालिका\n
+    नगर भवन, शिवाजी नगर, पुणे — 411005\n
+    फोन: +91-20-25501234 | ईमेल: enforcement@punecorporation.gov.in\n\n
+    आदेशानुसार\n
+    नगर आयुक्त\n
+    हस्ताक्षर: _______________________\n
+    नाम: अजय रा. कुलकर्णी\n
+    पद: कार्यकारी अभियंता (प्रवर्तन)\n
+    तिथि: 1 नवम्बर, 2025\n`
+        },
+    
+        {
+          id: "legal-rent-agreement",
+          label: "किराये का विधिक अनुबंध",
+          text: `किराये का संक्षिप्त अनुबंध (RENTAL AGREEMENT)\n\n
+    यह अनुबंध दिनांक 1 नवम्बर, 2025 को बनाया गया है:\n\n
+    भू-स्वामी: सुश्री कविता आर. शर्मा, पता: 9, मेपल ग्रोव, नॉर्थ एवेन्यू, पुणे — 411016 (\"भू-स्वामी\"); और\n
+    किरायेदार: श्री रोहन के. मेहरा, पता: 21C, लेकव्यू अपार्टमेंट्स, कोथरूड, पुणे — 411038 (\"किरायेदार\").\n\n
+    1. परिसर\n
+    फ्लैट नं. 7A, हरीज़न टावर्स, मॉडल कॉलोनी, पुणे — 411016 (\"परिसर\"), जिसमें एक कवर पार्किंग स्लॉट (P-12) शामिल है।\n\n
+    2. अवधि\n
+    पट्टा 1 नवम्बर, 2025 से 31 अक्तूबर, 2026 तक (12 माह) प्रभावी रहेगा; नवीनीकरण पारस्परिक लिखित सहमति पर होगा।\n\n
+    3. किराया व सुरक्षा जमा\n
+    मासिक किराया: ₹25,000, हर माह की 5 तारीख तक अग्रिम बैंक हस्तांतरण द्वारा भुगतान।\n
+    सुरक्षा जमा: ₹50,000 (दो माह) — प्रारम्भिक जमा तिथि पर देय। जमा वैधानिक कटौतियों के बाद 15 दिनों में प्रत्यावर्तनीय होगा।\n\n
+    4. उपयोग व मरम्मत\n
+    परिसर केवल आवासीय प्रयोजन हेतु उपयोग किया जाएगा। किरायेदार सामान्य सफाई व छोटे-मोटे मरम्मत के लिए उत्तरदायी होगा; संरचनात्मक व प्रमुख मरम्मत भू-स्वामी करेगा।\n\n
+    5. उपयोगिताएँ\n
+    बिजली, पानी (यदि पृथक मीटर), इंटरनेट, रसोई गैस एवं केबल/ओटीटी शुल्क किरायेदार द्वारा भुगतान किये जायेंगे।\n\n
+    6. परिवर्तन\n
+    किसी भी संरचनात्मक परिवर्तन हेतु पूर्व लिखित अनुमति आवश्यक है। किरायेदार द्वारा बिना अनुमति किए गए इंस्टॉलेशन को हटाने पर उसके व्यय किरायेदार को वहन करना होगा।\n\n
+    7. डिफ़ॉल्ट/समाप्ति\n
+    किरायेदार द्वारा किराया निर्धारित समय पर नहीं देने पर 7 दिन सुधार अवधि दी जाएगी; 60 दिन पूर्व लिखित सूचना द्वारा किसी भी पक्ष द्वारा अनुबंध समाप्त किया जा सकता है।\n\n
+    8. लागू कानून\n
+    यह अनुबंध भारत के कानूनों के अधीन होगा; वाद-प्रतिवाद पुणे के न्यायालयों के अधिकार क्षेत्र में होंगे।\n\n
+    हस्ताक्षर:\n\n
+    भू-स्वामी: _______________________\n
+    नाम: कविता आर. शर्मा\n
+    तिथि: 1 नवम्बर, 2025\n\n
+    किरायेदार: _______________________\n
+    नाम: रोहन के. मेहरा\n
+    तिथि: 1 नवम्बर, 2025\n`
+        }
+      ]
+   
+    
+    
   };
 
   // Ensure the input reflects the latest pasted text or extracted file content
