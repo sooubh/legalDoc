@@ -123,32 +123,32 @@ const VideoShowcaseModal: React.FC<VideoShowcaseModalProps> = ({ isOpen, onClose
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative w-full h-full max-w-7xl max-h-[95vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-slate-700">
-              {/* Header */}
-              <div className="relative bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 p-6 sm:p-8 flex-shrink-0">
+              {/* Header - Smaller */}
+              <div className="relative bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-4 py-3 sm:px-6 sm:py-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
                       Welcome to LegalEase AI
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                       Discover how we simplify legal document analysis
                     </p>
                   </div>
                   <button
                     onClick={handleClose}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors text-gray-700 dark:text-gray-200"
+                    className="ml-3 w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors text-gray-700 dark:text-gray-200"
                     aria-label="Close"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
               </div>
 
               {/* Video Showcase Section - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-6 sm:p-8">
-                {/* Video Player Container */}
-                <div className="relative mb-6 max-w-5xl mx-auto">
-                  <div className="relative aspect-video bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-xl overflow-hidden shadow-2xl">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
+                {/* Video Player Container - Larger */}
+                <div className="relative mb-4 sm:mb-6 max-w-6xl mx-auto">
+                  <div className="relative aspect-video bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-lg sm:rounded-xl overflow-hidden shadow-2xl">
                     {currentVideo.thumbnailUrl && !isPlaying && (
                       <img
                         src={currentVideo.thumbnailUrl}
@@ -204,32 +204,32 @@ const VideoShowcaseModal: React.FC<VideoShowcaseModalProps> = ({ isOpen, onClose
                     {/* Navigation Arrows */}
                     <button
                       onClick={prevSlide}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/95 dark:bg-slate-700/95 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 transition-all duration-200 shadow-xl hover:scale-110 z-10"
+                      className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/95 dark:bg-slate-700/95 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 transition-all duration-200 shadow-xl hover:scale-110 z-10"
                       aria-label="Previous video"
                     >
-                      <ChevronLeft className="h-7 w-7 text-gray-700 dark:text-gray-200" />
+                      <ChevronLeft className="h-5 w-5 sm:h-7 sm:w-7 text-gray-700 dark:text-gray-200" />
                     </button>
                     <button
                       onClick={nextSlide}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/95 dark:bg-slate-700/95 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 transition-all duration-200 shadow-xl hover:scale-110 z-10"
+                      className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/95 dark:bg-slate-700/95 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 transition-all duration-200 shadow-xl hover:scale-110 z-10"
                       aria-label="Next video"
                     >
-                      <ChevronRight className="h-7 w-7 text-gray-700 dark:text-gray-200" />
+                      <ChevronRight className="h-5 w-5 sm:h-7 sm:w-7 text-gray-700 dark:text-gray-200" />
                     </button>
                   </div>
 
                   {/* Video Info */}
-                  <div className="mt-6 text-center">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  <div className="mt-3 sm:mt-4 text-center">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
                       {currentVideo.title}
                     </h2>
-                    <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
                       {currentVideo.subtitle}
                     </p>
                   </div>
 
                   {/* Pagination Dots */}
-                  <div className="flex justify-center gap-2 mt-6">
+                  <div className="flex justify-center gap-2 mt-3 sm:mt-4">
                     {videoSlides.map((_, index) => (
                       <button
                         key={index}
@@ -246,14 +246,14 @@ const VideoShowcaseModal: React.FC<VideoShowcaseModalProps> = ({ isOpen, onClose
                 </div>
 
                 {/* Video Description */}
-                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-6 mb-6 max-w-5xl mx-auto">
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-center">
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 max-w-6xl mx-auto">
+                  <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed text-center">
                     {currentVideo.description}
                   </p>
                 </div>
 
                 {/* Category Features Preview */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-6xl mx-auto">
                   {videoSlides.map((slide, index) => (
                     <button
                       key={slide.id}

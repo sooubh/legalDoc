@@ -21,6 +21,7 @@
     saveAnalysisToHistory,
     getAnalysisHistoryForUser,
   } from "./services/analysis";
+import { subscribeToUserProfile, getUserProfile, updateUserPreferences } from "./services/userService";
   import Visualizations from "./components/Visualizations";
 import ProfilePage from "./pages/ProfilePage";
 import MorePage from "./pages/MorePage";
@@ -109,13 +110,46 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
       }
     };
 
-    // Firebase Auth state observer
+    // Firebase Auth state observer with realtime profile sync
     useEffect(() => {
       const auth = getAuth();
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
+      let profileUnsubscribe: (() => void) | null = null;
+
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
           setUser(user);
+          // Close login/signup modals when user successfully authenticates
+          if (route === "login" || route === "signup") {
+            const previousRoute = localStorage.getItem("previousRoute") || "upload";
+            setRoute(previousRoute as Route);
+            localStorage.removeItem("previousRoute");
+          }
           setAnalysisHistory(loadLocalAnalyses());
+
+          // Get user profile from Firestore and sync preferences
+          try {
+            const profile = await getUserProfile(user.uid);
+            if (profile?.preferences) {
+              // Sync language preference from Firestore
+              if (profile.preferences.language && profile.preferences.language !== language) {
+                setLanguage(profile.preferences.language);
+                localStorage.setItem("language", profile.preferences.language);
+              }
+            }
+          } catch (error) {
+            console.warn("Failed to load user profile:", error);
+          }
+
+          // Subscribe to realtime user profile updates
+          profileUnsubscribe = subscribeToUserProfile(user.uid, (profile) => {
+            if (profile?.preferences) {
+              // Sync language preference in realtime
+              if (profile.preferences.language && profile.preferences.language !== language) {
+                setLanguage(profile.preferences.language);
+                localStorage.setItem("language", profile.preferences.language);
+              }
+            }
+          });
 
           getAnalysisHistoryForUser()
             .then(setAnalysisHistory)
@@ -142,15 +176,31 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
         } else {
           setUser(null);
           setAnalysisHistory([]);
+          // Unsubscribe from profile updates when user logs out
+          if (profileUnsubscribe) {
+            profileUnsubscribe();
+            profileUnsubscribe = null;
+          }
         }
       });
-      return () => unsubscribe();
+      return () => {
+        unsubscribe();
+        if (profileUnsubscribe) {
+          profileUnsubscribe();
+        }
+      };
     }, []);
     // Handle new document upload
     const handleLanguageChange = (lang: "en" | "hi") => {
     setLanguage(lang);
     localStorage.setItem("language", lang);
     setShowLanguageModal(false);
+    // Update language preference in Firestore if user is logged in
+    if (user) {
+      updateUserPreferences(user.uid, { language: lang }).catch((error) => {
+        console.warn("Failed to update language preference in Firestore:", error);
+      });
+    }
     // Show video modal after language selection if not seen yet
     const hasSeenVideo = localStorage.getItem("videoShowcaseSeen") === "true";
     if (!hasSeenVideo) {
@@ -420,41 +470,66 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
           </div>
         )}
 
-        {/* Login/Signup Pages */}
-        {route === "login" || route === "signup" ? (
-          <div className="w-screen h-screen bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
-            <div className="w-full max-w-md">
-              {route === "login" && (
-                <>
-                  <LoginPage onNavigate={(r) => setRoute(r as Route)} />
-                  <p className="text-center mt-4">
-                    Don't have an account{" "}
-                    <button
-                      onClick={() => setRoute("signup")}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Sign up
-                    </button>
-                  </p>
-                </>
-              )}
-              {route === "signup" && (
-                <>
-                  <SignupPage onNavigate={(r) => setRoute(r as Route)} />
-                  <p className="text-center mt-4">
-                    Already have an account{" "}
-                    <button
-                      onClick={() => setRoute("login")}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Login
-                    </button>
-                  </p>
-                </>
-              )}
+        {/* Login/Signup Modals - Popup Overlays */}
+        {(route === "login" || route === "signup") && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200"
+            onClick={() => {
+              // Close modal when clicking outside
+              const previousRoute = localStorage.getItem("previousRoute") || "upload";
+              setRoute(previousRoute as Route);
+              localStorage.removeItem("previousRoute");
+            }}
+          >
+            <div 
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative transform transition-all animate-in zoom-in-95 duration-200 hide-scrollbar"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => {
+                  const previousRoute = localStorage.getItem("previousRoute") || "upload";
+                  setRoute(previousRoute as Route);
+                  localStorage.removeItem("previousRoute");
+                }}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 z-10"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              <div className="p-6 sm:p-8 pb-8">
+                {route === "login" && (
+                  <LoginPage 
+                    onNavigate={(r) => {
+                      if (r === "signup") {
+                        setRoute("signup");
+                      } else if (r === "terms" || r === "privacy") {
+                        setRoute(r as Route);
+                      }
+                    }} 
+                  />
+                )}
+                {route === "signup" && (
+                  <SignupPage 
+                    onNavigate={(r) => {
+                      if (r === "login") {
+                        setRoute("login");
+                      } else if (r === "terms" || r === "privacy") {
+                        setRoute(r as Route);
+                      }
+                    }} 
+                  />
+                )}
+              </div>
             </div>
           </div>
-        ) : (route === "terms" || route === "privacy") ? (
+        )}
+
+        {/* Terms and Privacy Pages - Still Full Page */}
+        {(route === "terms" || route === "privacy") ? (
           <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
             {route === "terms" && (
               <TermsAndConditionsPage 
@@ -499,8 +574,28 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
             isGeneratingPdf={isGeneratingPdf}
             user={user}
             onLogout={handleLogout}
-            onLogin={() => setRoute("login")}
-            onSignup={() => setRoute("signup")}
+                  onLogin={() => {
+                    // Keep current route but show login modal
+                    const currentRoute = route;
+                    if (currentRoute !== "login") {
+                      setRoute("login");
+                      // Store previous route to return to it
+                      if (currentRoute !== "signup") {
+                        localStorage.setItem("previousRoute", currentRoute);
+                      }
+                    }
+                  }}
+                  onSignup={() => {
+                    // Keep current route but show signup modal
+                    const currentRoute = route;
+                    if (currentRoute !== "signup") {
+                      setRoute("signup");
+                      // Store previous route to return to it
+                      if (currentRoute !== "login") {
+                        localStorage.setItem("previousRoute", currentRoute);
+                      }
+                    }
+                  }}
             language={language}
             onLanguageChange={handleLanguageChange}
           >
@@ -796,36 +891,6 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
             }
             localStorage.setItem("theme", theme);
           }}
-        />
-      </motion.div>
-    )}
-
-    {route === "terms" && (
-      <motion.div
-        key="terms"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.2 }}
-      >
-        <TermsAndConditionsPage 
-          onNavigate={(r) => setRoute(r as Route)}
-          language={language}
-        />
-      </motion.div>
-    )}
-
-    {route === "privacy" && (
-      <motion.div
-        key="privacy"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.2 }}
-      >
-        <PrivacyPolicyPage 
-          onNavigate={(r) => setRoute(r as Route)}
-          language={language}
         />
       </motion.div>
     )}
