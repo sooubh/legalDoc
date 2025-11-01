@@ -5,9 +5,10 @@ interface ChatFloatingProps {
   isOpen: boolean;
   onToggle: () => void;
   document: string;
+  language: "en" | "hi";
 }
 
-const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document }) => {
+const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document, language }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Close and reset expansion when toggling the main visibility
@@ -87,7 +88,7 @@ const ChatFloating: React.FC<ChatFloatingProps> = ({ isOpen, onToggle, document 
 
             {/* Chat Content */}
             <div className="relative flex-1 overflow-hidden">
-              <ChatPanel document={document} />
+              <ChatPanel document={document} language={language} />
             </div>
           </div>
         </div>

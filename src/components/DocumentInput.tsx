@@ -689,7 +689,7 @@ Witnesses:\n
               initial={{ opacity: 0, y: -14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -14 }}
-              className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 bg-white shadow-sm"
+              className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
             >
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-200">
@@ -701,14 +701,14 @@ Witnesses:\n
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate">
                   {uploadedFileName}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
                   {uploadedFileType}
                 </p>
               </div>
-              <div className="text-xs text-gray-600 font-medium">
+              <div className="text-xs text-gray-600 dark:text-slate-300 font-medium">
                 {uploadProgress}%
               </div>
             </motion.div>
@@ -749,11 +749,11 @@ Witnesses:\n
 
         {/* Divider */}
         <div className="flex items-center">
-          <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-4 text-gray-500 font-medium">
+          <div className="flex-1 border-t border-gray-300 dark:border-slate-600"></div>
+          <span className="px-4 text-gray-500 dark:text-slate-400 font-medium">
             {translations[language].orText}
           </span>
-          <div className="flex-1 border-t border-gray-300"></div>
+          <div className="flex-1 border-t border-gray-300 dark:border-slate-600"></div>
         </div>
 
         {/* Text Input */}
@@ -795,7 +795,7 @@ Witnesses:\n
             <button
               onClick={handleSubmit}
               disabled={!documentText.trim() || isAnalyzing}
-              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:shadow-blue-400/50 hover:shadow-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all flex items-center space-x-2"
+              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:shadow-blue-400/50 hover:shadow-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center space-x-2"
             >
               {isAnalyzing ? (
                 <>

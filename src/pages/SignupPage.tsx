@@ -3,7 +3,11 @@ import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, GithubAuth
 import { useToast } from '../hooks/useToast';
 import ToastContainer from '../components/ToastContainer';
 
-const SignupPage: React.FC = () => {
+interface SignupPageProps {
+  onNavigate?: (route: string) => void;
+}
+
+const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -118,8 +122,33 @@ const SignupPage: React.FC = () => {
       {/* Terms checkbox */}
       <div className="flex-row">
         <div>
-          <input type="checkbox" />
-          <label>I agree to the terms and conditions</label>
+          <input type="checkbox" id="terms-checkbox" required />
+          <label htmlFor="terms-checkbox">
+            I agree to the{" "}
+            {onNavigate ? (
+              <button
+                type="button"
+                onClick={() => onNavigate("terms")}
+                className="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Terms and Conditions
+              </button>
+            ) : (
+              "Terms and Conditions"
+            )}
+            {" "}and{" "}
+            {onNavigate ? (
+              <button
+                type="button"
+                onClick={() => onNavigate("privacy")}
+                className="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Privacy Policy
+              </button>
+            ) : (
+              "Privacy Policy"
+            )}
+          </label>
         </div>
       </div>
 
@@ -128,6 +157,28 @@ const SignupPage: React.FC = () => {
       </button>
 
       <p className="p">Already have an account? <span className="span">Sign In</span></p>
+      
+      {/* Terms and Privacy Links */}
+      <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs text-gray-600 dark:text-gray-400">
+        {onNavigate && (
+          <>
+            <button
+              onClick={() => onNavigate("terms")}
+              className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+            >
+              Terms and Conditions
+            </button>
+            <span className="text-gray-400">•</span>
+            <button
+              onClick={() => onNavigate("privacy")}
+              className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+            >
+              Privacy Policy
+            </button>
+          </>
+        )}
+      </div>
+
       <p className="p line">Or With</p>
 
       {/* Social buttons */}

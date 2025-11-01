@@ -12,6 +12,7 @@ import LawyerList from "../mapsComponents/LawyerList";
 import LawyerDetailModal from "../mapsComponents/LawyerDetailModal";
 import LegalAnalyzer from "../mapsComponents/LegalAnalyzer";
 import Spinner from "../mapsComponents/Spinner";
+import LawyerCardSkeleton from "../mapsComponents/LawyerCardSkeleton";
 
 type AppView = "search" | "analyze";
 
@@ -20,8 +21,10 @@ export default function LawyerLocatorPage() {
   const [userLocation, setUserLocation] =
     useState<GeolocationCoordinates | null>(null);
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
+  const [displayedLawyers, setDisplayedLawyers] = useState<Lawyer[]>([]);
   const [selectedLawyer, setSelectedLawyer] = useState<Lawyer | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,14 +67,22 @@ export default function LawyerLocatorPage() {
       getLocation();
       return;
     }
-    setIsLoading(true);
+    setIsSearching(true);
     setError(null);
     setLawyers([]);
+    setDisplayedLawyers([]);
     setSuggestions([]);
     try {
       const results = await findLawyersNearMe(specialty, userLocation);
       setLawyers(results);
-      if (results.length === 0) {
+      
+      // Display results progressively (one by one)
+      if (results.length > 0) {
+        for (let i = 0; i < results.length; i++) {
+          await new Promise(resolve => setTimeout(resolve, 150)); // Small delay between each
+          setDisplayedLawyers(prev => [...prev, results[i]]);
+        }
+      } else {
         const newSuggestions = await getRelatedSpecialties(specialty);
         setSuggestions(newSuggestions);
       }
@@ -82,7 +93,7 @@ export default function LawyerLocatorPage() {
           : "An unknown error occurred during search."
       );
     } finally {
-      setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
@@ -135,13 +146,27 @@ export default function LawyerLocatorPage() {
               locationError={locationError}
             />
 
-            {isLoading && lawyers.length === 0 && !error && (
-              <div className="text-center p-12">
-                <Spinner />
-                <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
-                  {userLocation
-                    ? `Finding ${searchQuery} lawyers...`
-                    : "Accessing your location..."}
+            {isSearching && displayedLawyers.length === 0 && !error && (
+              <div className="space-y-6">
+                <div className="text-center mb-6">
+                  <p className="text-lg text-slate-600 dark:text-slate-300 font-medium">
+                    {userLocation
+                      ? `Finding ${searchQuery} lawyers...`
+                      : "Accessing your location..."}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <LawyerCardSkeleton key={i} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {isSearching && displayedLawyers.length > 0 && (
+              <div className="text-center mb-4">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Found {displayedLawyers.length} of {lawyers.length} lawyers...
                 </p>
               </div>
             )}
@@ -152,8 +177,9 @@ export default function LawyerLocatorPage() {
               </p>
             )}
 
-            {!isLoading &&
+            {!isSearching &&
               lawyers.length === 0 &&
+              displayedLawyers.length === 0 &&
               !locationError &&
               !searchQuery && (
                 <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm mt-6">
@@ -167,7 +193,7 @@ export default function LawyerLocatorPage() {
                 </div>
               )}
 
-            {!isLoading && lawyers.length === 0 && searchQuery && !error && (
+            {!isSearching && lawyers.length === 0 && displayedLawyers.length === 0 && searchQuery && !error && (
               <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm mt-6">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
                   No Results Found
@@ -196,7 +222,12 @@ export default function LawyerLocatorPage() {
               </div>
             )}
 
-            <LawyerList lawyers={lawyers} onSelectLawyer={setSelectedLawyer} />
+            <LawyerList 
+              lawyers={displayedLawyers} 
+              onSelectLawyer={setSelectedLawyer}
+              isLoading={isSearching && displayedLawyers.length < lawyers.length}
+              remainingCount={Math.max(0, lawyers.length - displayedLawyers.length)}
+            />
           </>
         )}
 

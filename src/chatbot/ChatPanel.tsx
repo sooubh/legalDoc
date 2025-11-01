@@ -5,9 +5,10 @@ import { LiveServerMessage } from '@google/genai';
 
 interface ChatPanelProps {
   document: string;
+  language: "en" | "hi";
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ document }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ document, language }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +56,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document }) => {
 
     try {
         const fullHistory = [...messages, userMessage];
-        const responseText = await sendTextMessage(fullHistory, document);
+        const responseText = await sendTextMessage(fullHistory, document, language);
 
         setMessages((prev) => {
             const newMessages = [...prev];
@@ -204,8 +205,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document }) => {
         }
         
         const systemInstruction = document 
-            ? `You are a helpful assistant. Please answer the user's questions based on the following context. If the answer is not found in the context, say so.\n\nCONTEXT:\n"""${document}"""`
-            : "You are a helpful assistant.";
+            ? `You are a helpful assistant. Please answer the user's questions based on the following context. If the answer is not found in the context, say so.\n\nLanguage: ${language === 'hi' ? 'Hindi' : 'English'}. Respond in ${language === 'hi' ? 'Hindi' : 'English'}.\n\nCONTEXT:\n"""${document}"""`
+            : `You are a helpful assistant. Language: ${language === 'hi' ? 'Hindi' : 'English'}. Respond in ${language === 'hi' ? 'Hindi' : 'English'}.`;
 
         try {
             await geminiServiceRef.current.startSession(systemInstruction, {
@@ -224,7 +225,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ document }) => {
             setIsListening(false);
         }
     }
-  }, [isListening, document, onOpen, onMessage, onError, onClose]);
+  }, [isListening, document, language, onOpen, onMessage, onError, onClose]);
 
   return (
     <div className="flex h-full flex-col bg-white">

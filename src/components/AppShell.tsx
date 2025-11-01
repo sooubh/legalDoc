@@ -11,6 +11,8 @@ import {
   UserPlus,
   LogOut,
   Scale,
+  Languages,
+  Video,
 } from "lucide-react";
 import AnalysisHistorySidebar from "../analysis/AnalysisHistorySidebar.tsx";
 import type { AnalysisHistoryItem } from "../types/history.ts";
@@ -63,6 +65,8 @@ const AppShell: React.FC<AppShellProps> = ({
   onLogout,
   onLogin,
   onSignup,
+  language,
+  onLanguageChange,
 }) => {
   const [theme, setTheme] = useState<"light" | "dark">(
     () =>
@@ -85,6 +89,7 @@ const AppShell: React.FC<AppShellProps> = ({
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
 
   // Bottom nav tab selection mapping (three tabs)
   const tabToRoute = {
@@ -143,6 +148,51 @@ const AppShell: React.FC<AppShellProps> = ({
             <span>
               This is not legal advice. Consult a lawyer for decisions.
             </span>
+          </div>
+          {/* Language Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+              onBlur={() => setTimeout(() => setIsLanguageDropdownOpen(false), 200)}
+              className="inline-flex items-center gap-1.5 h-8 px-2 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-xs font-medium"
+              aria-label="Change language"
+              title={`Current language: ${language === 'hi' ? 'Hindi' : 'English'}`}
+            >
+              <Languages className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{language === 'hi' ? 'हिंदी' : 'EN'}</span>
+            </button>
+            {isLanguageDropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md shadow-lg z-50">
+                <button
+                  onClick={() => {
+                    onLanguageChange('en');
+                    setIsLanguageDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-t-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${
+                    language === 'en' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium' : 'text-gray-700 dark:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>English</span>
+                    {language === 'en' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    onLanguageChange('hi');
+                    setIsLanguageDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-b-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${
+                    language === 'hi' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium' : 'text-gray-700 dark:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>हिंदी (Hindi)</span>
+                    {language === 'hi' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
+                  </div>
+                </button>
+              </div>
+            )}
           </div>
           {/* Header icon actions */}
 
@@ -272,6 +322,13 @@ const AppShell: React.FC<AppShellProps> = ({
               >
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
+              </button>
+              <button
+                onClick={() => onNavigate("video")}
+                className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                <Video className="h-4 w-4" />
+                <span>Video Showcase</span>
               </button>
               <button
                 onClick={() => onNavigate("more")}
@@ -427,6 +484,43 @@ const AppShell: React.FC<AppShellProps> = ({
                   onFetch={onFetchHistory}
                 />
               </div>
+              
+              {/* Mobile Language Switcher */}
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">
+                  Language
+                </div>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      onLanguageChange('en');
+                      setIsMobileNavOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border flex items-center justify-between ${
+                      language === 'en'
+                        ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900'
+                        : 'bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>English</span>
+                    {language === 'en' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
+                  </button>
+                  <button
+                    onClick={() => {
+                      onLanguageChange('hi');
+                      setIsMobileNavOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border flex items-center justify-between ${
+                      language === 'hi'
+                        ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900'
+                        : 'bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>हिंदी (Hindi)</span>
+                    {language === 'hi' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
+                  </button>
+                </div>
+              </div>
             </nav>
 
             <div className="p-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
@@ -460,6 +554,16 @@ const AppShell: React.FC<AppShellProps> = ({
                 className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
               >
                 <Settings className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  onNavigate("video");
+                  setIsMobileNavOpen(false);
+                }}
+                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                <Video className="h-4 w-4" />
+                <span className="text-xs">Video</span>
               </button>
               <button
                 onClick={() => {

@@ -22,12 +22,18 @@
     getAnalysisHistoryForUser,
   } from "./services/analysis";
   import Visualizations from "./components/Visualizations";
-  import ProfilePage from "./pages/ProfilePage";
-  import MorePage from "./pages/MorePage";
-  import FullscreenModal from "./components/FullscreenModal";
-  import LoginPage from "./pages/LoginPage";
-  import SignupPage from "./pages/SignupPage";
-  import ChatFloating from "./chatbot/ChatFloating";
+import ProfilePage from "./pages/ProfilePage";
+import MorePage from "./pages/MorePage";
+import FullscreenModal from "./components/FullscreenModal";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ChatFloating from "./chatbot/ChatFloating";
+import RoadmapPage from "./pages/RoadmapPage";
+import VideoShowcasePage from "./pages/VideoShowcasePage";
+import VideoShowcaseModal from "./components/VideoShowcaseModal";
+import SettingsPage from "./pages/SettingsPage";
+import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
   // Define a type for the route
   export type Route =
@@ -38,15 +44,28 @@
     | "visuals"
     | "profile"
     | "more"
-    | "lawyer";
+    | "lawyer"
+    | "roadmap"
+    | "video"
+    | "settings"
+    | "terms"
+    | "privacy";
 
   function App() {
-    const [user, setUser] = useState<User | null>(null);
-    const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [language, _setLanguage] = useState<"en" | "hi">("en");
-    const [simplificationLevel, _setSimplificationLevel] =
-      useState<SimplificationLevel>("simple");
+  const [user, setUser] = useState<User | null>(null);
+  const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [language, setLanguage] = useState<"en" | "hi">(() => {
+    const saved = localStorage.getItem("language");
+    return (saved === "en" || saved === "hi") ? saved : "en";
+  });
+  const [showLanguageModal, setShowLanguageModal] = useState(() => {
+    const hasSelected = localStorage.getItem("language") !== null;
+    return !hasSelected;
+  });
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [simplificationLevel, _setSimplificationLevel] =
+    useState<SimplificationLevel>("simple");
 
     const [route, setRoute] = useState<Route>("upload");
     const [submittedContent, setSubmittedContent] = useState<string>("");
@@ -114,7 +133,7 @@
             setVisuals(unsavedAnalysis.visuals);
             setSubmittedContent(unsavedAnalysis.submittedContent);
             setPdfPreviewUrl(unsavedAnalysis.pdfPreviewUrl);
-            _setLanguage(unsavedAnalysis.language);
+            setLanguage(unsavedAnalysis.language);
             _setSimplificationLevel(unsavedAnalysis.simplificationLevel);
             setRoute("results");
           } else {
@@ -122,14 +141,44 @@
           }
         } else {
           setUser(null);
-
           setAnalysisHistory([]);
         }
       });
       return () => unsubscribe();
     }, []);
     // Handle new document upload
-    const handleDocumentSubmit = async (
+    const handleLanguageChange = (lang: "en" | "hi") => {
+    setLanguage(lang);
+    localStorage.setItem("language", lang);
+    setShowLanguageModal(false);
+    // Show video modal after language selection if not seen yet
+    const hasSeenVideo = localStorage.getItem("videoShowcaseSeen") === "true";
+    if (!hasSeenVideo) {
+      setTimeout(() => setShowVideoModal(true), 800);
+    }
+  };
+
+  // Check on mount if video should be shown (for users who already have language selected)
+  useEffect(() => {
+    const hasSeenVideo = localStorage.getItem("videoShowcaseSeen") === "true";
+    const hasSelectedLanguage = localStorage.getItem("language") !== null;
+    
+    // Show video modal if language is already selected and video hasn't been seen
+    if (hasSelectedLanguage && !hasSeenVideo) {
+      // Wait a bit for the app to initialize
+      const timer = setTimeout(() => {
+        setShowVideoModal(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleVideoModalClose = () => {
+    setShowVideoModal(false);
+    localStorage.setItem("videoShowcaseSeen", "true");
+  };
+
+  const handleDocumentSubmit = async (
       content: string,
       fileMeta?: { pdfUrl?: string; mime?: string }
     ) => {
@@ -263,7 +312,7 @@
       setSelectedAnalysisId(item.id);
       if (item.metadata) {
         if (item.metadata.language === "en" || item.metadata.language === "hi") {
-          _setLanguage(item.metadata.language);
+          setLanguage(item.metadata.language);
         }
         _setSimplificationLevel(
           item.metadata.simplificationLevel as SimplificationLevel
@@ -290,6 +339,47 @@
 
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-slate-800">
+        {/* Video Showcase Modal - Fullscreen Popup for New Users */}
+        {showVideoModal && (
+          <VideoShowcaseModal isOpen={showVideoModal} onClose={handleVideoModalClose} />
+        )}
+
+        {/* Language Selection Modal */}
+        {showLanguageModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+              <h2 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-slate-100 text-center">
+                Choose Your Language / अपनी भाषा चुनें
+              </h2>
+              <p className="text-gray-600 dark:text-slate-300 mb-6 text-center">
+                Select your preferred language for responses
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className="w-full px-6 py-4 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium text-lg"
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <span>🇬🇧</span>
+                    <span>English</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('hi')}
+                  className="w-full px-6 py-4 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium text-lg"
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <span>🇮🇳</span>
+                    <span>हिंदी (Hindi)</span>
+                  </div>
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-4 text-center">
+                You can change this later from the header menu
+              </p>
+            </div>
+          </div>
+        )}
         {/* Login Modal */}
         {showLoginModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -336,7 +426,7 @@
             <div className="w-full max-w-md">
               {route === "login" && (
                 <>
-                  <LoginPage />
+                  <LoginPage onNavigate={(r) => setRoute(r as Route)} />
                   <p className="text-center mt-4">
                     Don't have an account{" "}
                     <button
@@ -350,7 +440,7 @@
               )}
               {route === "signup" && (
                 <>
-                  <SignupPage />
+                  <SignupPage onNavigate={(r) => setRoute(r as Route)} />
                   <p className="text-center mt-4">
                     Already have an account{" "}
                     <button
@@ -363,6 +453,35 @@
                 </>
               )}
             </div>
+          </div>
+        ) : (route === "terms" || route === "privacy") ? (
+          <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+            {route === "terms" && (
+              <TermsAndConditionsPage 
+                onNavigate={(r) => {
+                  // If navigating back, go to login if user is not authenticated
+                  if (r === "settings") {
+                    setRoute("settings");
+                  } else {
+                    setRoute("login");
+                  }
+                }}
+                language={language}
+              />
+            )}
+            {route === "privacy" && (
+              <PrivacyPolicyPage 
+                onNavigate={(r) => {
+                  // If navigating back, go to login if user is not authenticated
+                  if (r === "settings") {
+                    setRoute("settings");
+                  } else {
+                    setRoute("login");
+                  }
+                }}
+                language={language}
+              />
+            )}
           </div>
         ) : (
           <AppShell
@@ -382,8 +501,8 @@
             onLogout={handleLogout}
             onLogin={() => setRoute("login")}
             onSignup={() => setRoute("signup")}
-            language={language}              // ✅ pass current language
-  onLanguageChange={_setLanguage}
+            language={language}
+            onLanguageChange={handleLanguageChange}
           >
           
           <AnimatePresence mode="wait">
@@ -630,6 +749,86 @@
      <LawyerLocatorPage />
       </motion.div>
     )}
+
+    {route === "roadmap" && (
+      <motion.div
+        key="roadmap"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <RoadmapPage />
+      </motion.div>
+    )}
+
+    {route === "video" && (
+      <motion.div
+        key="video"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <VideoShowcasePage />
+      </motion.div>
+    )}
+
+    {route === "settings" && (
+      <motion.div
+        key="settings"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <SettingsPage 
+          onNavigate={(r) => setRoute(r as Route)}
+          onLanguageChange={handleLanguageChange}
+          language={language}
+          currentTheme={typeof window !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light"}
+          onThemeChange={(theme) => {
+            const root = document.documentElement;
+            if (theme === "dark") {
+              root.classList.add("dark");
+            } else {
+              root.classList.remove("dark");
+            }
+            localStorage.setItem("theme", theme);
+          }}
+        />
+      </motion.div>
+    )}
+
+    {route === "terms" && (
+      <motion.div
+        key="terms"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <TermsAndConditionsPage 
+          onNavigate={(r) => setRoute(r as Route)}
+          language={language}
+        />
+      </motion.div>
+    )}
+
+    {route === "privacy" && (
+      <motion.div
+        key="privacy"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <PrivacyPolicyPage 
+          onNavigate={(r) => setRoute(r as Route)}
+          language={language}
+        />
+      </motion.div>
+    )}
   </AnimatePresence>
   {/* ChatFloating with smooth shift */}
             <motion.div
@@ -644,6 +843,7 @@
                 isOpen={isChatOpen}
                 onToggle={handleToggleChat}
                 document={documentContext}
+                language={language}
               />
               </motion.div>
             {fs && (

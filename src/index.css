@@ -444,6 +444,22 @@
   }
 }
 
+/* Lawyer card progressive loading animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+
 /* Desktop chat trigger hover effects */
 .desktop-chat-trigger {
   transition: all 0.2s ease-in-out;

@@ -194,7 +194,7 @@ export class GeminiLiveService {
 }
 
 
-export async function sendTextMessage(fullHistory: ChatMessage[], document: string): Promise<string> {
+export async function sendTextMessage(fullHistory: ChatMessage[], document: string, language: "en" | "hi" = "en"): Promise<string> {
     if (!import.meta.env.VITE_GEMINI_API_KEY) {
         throw new Error("VITE_GEMINI_API_KEY environment variable not set");
     }
@@ -205,14 +205,18 @@ export async function sendTextMessage(fullHistory: ChatMessage[], document: stri
         parts: [{ text: msg.content }]
     }));
 
+    const languageInstruction = `Language: ${language === 'hi' ? 'Hindi' : 'English'}. All your responses must be in ${language === 'hi' ? 'Hindi (हिंदी)' : 'English'}.`;
+    
+    const systemInstruction = document 
+        ? `You are a helpful assistant. Please answer the user's questions based on the following context. If the answer is not found in the context, say so.\n\n${languageInstruction}\n\nCONTEXT:\n"""${document}"""`
+        : `You are a helpful assistant. ${languageInstruction}`;
+
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: contents,
-        ...(document && {
-            config: {
-                systemInstruction: `You are a helpful assistant. Please answer the user's questions based on the following context. If the answer is not found in the context, say so.\n\nCONTEXT:\n"""${document}"""`
-            }
-        })
+        config: {
+            systemInstruction
+        }
     });
 
     return response.text || "No response generated";
