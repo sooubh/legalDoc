@@ -4,9 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "start": "serve -s dist"
-  },
+  "build": "vite build",
+  "start": "serve -s dist",
+  "dev": "vite",
+  "preview": "vite preview"
+}
+,
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
     "@google/genai": "^1.26.0",
