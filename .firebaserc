@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "legalease-ai-v1"
+  },
   "targets": {},
   "etags": {}
 }
