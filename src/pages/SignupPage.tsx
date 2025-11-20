@@ -126,10 +126,10 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     <div className="w-full" onClick={(e) => e.stopPropagation()}>
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Create Account
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Sign up to get started with LegalEase AI
         </p>
       </div>
@@ -137,19 +137,19 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       <form onSubmit={handleSignup} className="space-y-5">
         {/* Email input */}
         <div className="space-y-2">
-          <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="signup-email" className="block text-sm font-medium text-foreground">
             Email Address
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
               </svg>
             </div>
             <input 
               type="email" 
               id="signup-email"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              className="block w-full pl-10 pr-3 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-colors"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -160,19 +160,19 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
 
         {/* Password input */}
         <div className="space-y-2">
-          <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="signup-password" className="block text-sm font-medium text-foreground">
             Password
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
             <input 
               type="password" 
               id="signup-password"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              className="block w-full pl-10 pr-3 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-colors"
               placeholder="Enter your password (min. 6 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -180,7 +180,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
               minLength={6}
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Must be at least 6 characters</p>
+          <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
         </div>
 
         {/* Terms checkbox */}
@@ -189,32 +189,32 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             type="checkbox" 
             id="terms-checkbox" 
             required
-            className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600"
+            className="mt-0.5 w-4 h-4 text-primary border-input rounded focus:ring-ring bg-background"
           />
-          <label htmlFor="terms-checkbox" className="text-sm text-gray-700 dark:text-gray-300">
+          <label htmlFor="terms-checkbox" className="text-sm text-foreground">
             I agree to the{" "}
             {onNavigate ? (
               <button
                 type="button"
                 onClick={() => onNavigate("terms")}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline font-medium"
+                className="text-primary hover:text-primary/80 hover:underline font-medium"
               >
                 Terms and Conditions
               </button>
             ) : (
-              <span className="text-blue-600 dark:text-blue-400 font-medium">Terms and Conditions</span>
+              <span className="text-primary font-medium">Terms and Conditions</span>
             )}
             {" "}and{" "}
             {onNavigate ? (
               <button
                 type="button"
                 onClick={() => onNavigate("privacy")}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline font-medium"
+                className="text-primary hover:text-primary/80 hover:underline font-medium"
               >
                 Privacy Policy
               </button>
             ) : (
-              <span className="text-blue-600 dark:text-blue-400 font-medium">Privacy Policy</span>
+              <span className="text-primary font-medium">Privacy Policy</span>
             )}
           </label>
         </div>
@@ -223,11 +223,11 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         <button 
           type="submit" 
           disabled={isLoading}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+          className="w-full py-3 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-primary-foreground font-semibold rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <span className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -241,10 +241,10 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-slate-600"></div>
+            <div className="w-full border-t border-border"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400">
+            <span className="px-2 bg-card text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -256,7 +256,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             type="button" 
             onClick={handleGoogleSignup} 
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-3 px-4 border border-input rounded-lg bg-card text-foreground hover:bg-accent transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -270,7 +270,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             type="button" 
             onClick={handleGithubSignup} 
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-3 px-4 border border-input rounded-lg bg-card text-foreground hover:bg-accent transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"/>
@@ -280,19 +280,19 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Sign in link */}
-        <div className="text-center pt-4 border-t border-gray-200 dark:border-slate-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-center pt-4 border-t border-border">
+          <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
             {onNavigate ? (
               <button
                 type="button"
                 onClick={() => onNavigate("login")}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors"
+                className="text-primary hover:text-primary/80 font-semibold transition-colors"
               >
                 Sign In
               </button>
             ) : (
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">Sign In</span>
+              <span className="text-primary font-semibold">Sign In</span>
             )}
           </p>
         </div>
@@ -300,6 +300,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
 
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
+
   );
 };
 

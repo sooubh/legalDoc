@@ -101,7 +101,7 @@ dist
 
 # IDE files
 .idea/
-.vscode/
+# .vscode/
 *.suo
 *.ntvs*
 *.njsproj

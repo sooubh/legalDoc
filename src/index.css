@@ -2,9 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
-/* App theming */
-:root {
-  color-scheme: light;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -38,17 +108,9 @@
   border-radius: 0px;
 }
 
-@layer base {
-  html,
-  body,
-  #root {
-    height: 100%;
-  }
-}
-
 @layer components {
   .card {
-    @apply bg-white rounded-2xl shadow border border-gray-100;
+    @apply bg-card text-card-foreground rounded-2xl shadow border border-border;
   }
 }
 
@@ -60,7 +122,7 @@
 .container.bottom-nav .tabs {
   display: flex;
   position: relative;
-  background-color: #fff;
+  background-color: hsl(var(--card));
   box-shadow: 0 0 1px 0 rgba(24, 94, 224, 0.15),
     0 6px 12px 0 rgba(24, 94, 224, 0.15);
   padding: 0.75rem;
@@ -82,7 +144,7 @@
   height: 30px;
   width: 33.33%; /* Equal width for 4 tabs */
   font-size: 0.8rem;
-  color: black;
+  color: hsl(var(--foreground));
   font-weight: 500;
   border-radius: 99px;
   cursor: pointer;
@@ -91,7 +153,7 @@
 }
 
 .container.bottom-nav .tab:focus-visible {
-  box-shadow: 0 0 0 2px rgba(24, 94, 224, 0.35);
+  box-shadow: 0 0 0 2px hsl(var(--ring));
 }
 
 .container.bottom-nav .glider {
@@ -102,14 +164,14 @@
   display: flex;
   height: 30px;
   width: 30%; /* Equal width for 4 tabs */
-  background-color: #e6eef9;
+  background-color: hsl(var(--secondary));
   z-index: 1;
   border-radius: 99px;
   transition: 0.25s ease-out;
 }
 
 .container.bottom-nav input[type="radio"]:checked + label {
-  color: #185ee0;
+  color: hsl(var(--primary));
 }
 
 /* Four-tab positions */
@@ -137,7 +199,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: #ffffff;
+  background-color: hsl(var(--card));
   padding: 30px;
   width: 450px;
   border-radius: 20px;
@@ -148,6 +210,7 @@
 .login-form ::placeholder {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  color: hsl(var(--muted-foreground));
 }
 
 .login-form button {
@@ -155,18 +218,19 @@
 }
 
 .login-form .flex-column > label {
-  color: #151717;
+  color: hsl(var(--foreground));
   font-weight: 600;
 }
 
 .login-form .inputForm {
-  border: 1.5px solid #ecedec;
+  border: 1px solid hsl(var(--input));
   border-radius: 10px;
   height: 50px;
   display: flex;
   align-items: center;
   padding-left: 10px;
   transition: 0.2s ease-in-out;
+  background-color: hsl(var(--background));
 }
 
 .login-form .input {
@@ -175,6 +239,8 @@
   border: none;
   width: 85%;
   height: 100%;
+  background-color: transparent;
+  color: hsl(var(--foreground));
 }
 
 .login-form .input:focus {
@@ -182,7 +248,8 @@
 }
 
 .login-form .inputForm:focus-within {
-  border: 1.5px solid #2d79f3;
+  border: 1px solid hsl(var(--ring));
+  box-shadow: 0 0 0 1px hsl(var(--ring));
 }
 
 .login-form .flex-row {
@@ -195,38 +262,39 @@
 
 .login-form .flex-row > div > label {
   font-size: 14px;
-  color: black;
+  color: hsl(var(--foreground));
   font-weight: 400;
 }
 
 .login-form .span {
   font-size: 14px;
   margin-left: 5px;
-  color: #2d79f3;
+  color: hsl(var(--primary));
   font-weight: 500;
   cursor: pointer;
 }
 
 .login-form .button-submit {
   margin: 20px 0 10px 0;
-  background-color: #151717;
+  background-color: hsl(var(--primary));
   border: none;
-  color: white;
+  color: hsl(var(--primary-foreground));
   font-size: 15px;
   font-weight: 500;
   border-radius: 10px;
   height: 50px;
   width: 100%;
   cursor: pointer;
+  transition: 0.2s ease-in-out;
 }
 
 .login-form .button-submit:hover {
-  background-color: #252727;
+  background-color: hsl(var(--primary) / 0.9);
 }
 
 .login-form .p {
   text-align: center;
-  color: black;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
   margin: 5px 0;
 }
@@ -241,14 +309,16 @@
   align-items: center;
   font-weight: 500;
   gap: 10px;
-  border: 1px solid #ededef;
-  background-color: white;
+  border: 1px solid hsl(var(--input));
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
   cursor: pointer;
   transition: 0.2s ease-in-out;
 }
 
 .login-form .btn:hover {
-  border: 1px solid #2d79f3;
+  border: 1px solid hsl(var(--ring));
+  background-color: hsl(var(--accent));
 }
 
 /* Toast notification styles */
@@ -263,7 +333,7 @@
 }
 
 .toast {
-  background: white;
+  background: hsl(var(--card));
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 16px 20px;
@@ -273,19 +343,20 @@
   align-items: center;
   gap: 12px;
   animation: slideIn 0.3s ease-out;
-  border-left: 4px solid #ef4444;
+  border: 1px solid hsl(var(--border));
+  border-left: 4px solid hsl(var(--destructive));
 }
 
 .toast.success {
-  border-left-color: #10b981;
+  border-left-color: hsl(142.1 76.2% 36.3%);
 }
 
 .toast.warning {
-  border-left-color: #f59e0b;
+  border-left-color: hsl(47.9 95.8% 53.1%);
 }
 
 .toast.info {
-  border-left-color: #3b82f6;
+  border-left-color: hsl(var(--primary));
 }
 
 .toast-icon {
@@ -301,13 +372,13 @@
 .toast-title {
   font-weight: 600;
   font-size: 14px;
-  color: #1f2937;
+  color: hsl(var(--foreground));
   margin: 0 0 4px 0;
 }
 
 .toast-message {
   font-size: 13px;
-  color: #6b7280;
+  color: hsl(var(--muted-foreground));
   margin: 0;
   line-height: 1.4;
 }
@@ -318,12 +389,13 @@
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  color: #9ca3af;
+  color: hsl(var(--muted-foreground));
   transition: color 0.2s;
 }
 
 .toast-close:hover {
-  color: #6b7280;
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--accent));
 }
 
 @keyframes slideIn {
@@ -512,20 +584,20 @@
 
 .chat-message-bubble {
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.9);
+  background: hsl(var(--background) / 0.9);
 }
 
 .chat-message-bubble.dark {
-  background: rgba(30, 41, 59, 0.9);
+  background: hsl(var(--secondary) / 0.9);
 }
 
 .chat-input-container {
   backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.8);
+  background: hsl(var(--background) / 0.8);
 }
 
 .chat-input-container.dark {
-  background: rgba(30, 41, 59, 0.8);
+  background: hsl(var(--secondary) / 0.8);
 }
 
 .quick-question-card {

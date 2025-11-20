@@ -29,7 +29,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const [showMFA, setShowMFA] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [mfaResolver, setMfaResolver] = useState<any>(null);
-  const [mfaVerificationId, setMfaVerificationId] = useState<string | null>(null);
   const [isVerifyingMFA, setIsVerifyingMFA] = useState(false);
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
@@ -223,7 +222,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     } catch (err: any) {
       // Enhanced error handling for GitHub
       let errorCode = err.code;
-      let errorMessage = err.message;
 
       // Handle specific GitHub OAuth errors
       if (err.code === 'auth/account-exists-with-different-credential') {
@@ -248,10 +246,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     <div className="w-full" onClick={(e) => e.stopPropagation()}>
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Welcome Back
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Sign in to your account to continue
         </p>
       </div>
@@ -259,19 +257,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
       <form onSubmit={handleLogin} className="space-y-5">
         {/* Email input */}
         <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground">
             Email Address
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
               </svg>
             </div>
             <input 
               type="email" 
               id="email"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              className="block w-full pl-10 pr-3 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-colors"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -282,19 +280,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
         {/* Password input */}
         <div className="space-y-2">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="password" className="block text-sm font-medium text-foreground">
             Password
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
             <input 
               type="password" 
               id="password"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              className="block w-full pl-10 pr-3 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-colors"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -309,14 +307,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             <input 
               type="checkbox" 
               id="remember-me" 
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600"
+              className="w-4 h-4 text-primary border-input rounded focus:ring-ring bg-background"
             />
-            <span className="ml-2 text-gray-700 dark:text-gray-300">Remember me</span>
+            <span className="ml-2 text-foreground">Remember me</span>
           </label>
           <button
             type="button"
             onClick={() => setShowForgotPassword(true)}
-            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+            className="text-primary hover:text-primary/80 font-medium transition-colors"
           >
             Forgot password?
           </button>
@@ -326,11 +324,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         <button 
           type="submit" 
           disabled={isLoading}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+          className="w-full py-3 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-primary-foreground font-semibold rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <span className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -344,10 +342,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-slate-600"></div>
+            <div className="w-full border-t border-border"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400">
+            <span className="px-2 bg-card text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -359,7 +357,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             type="button" 
             onClick={handleGoogleLogin} 
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-3 px-4 border border-input rounded-lg bg-card text-foreground hover:bg-accent transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -373,7 +371,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             type="button" 
             onClick={handleGithubLogin} 
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-3 px-4 border border-input rounded-lg bg-card text-foreground hover:bg-accent transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"/>
@@ -383,30 +381,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Sign up link */}
-        <div className="text-center pt-4 border-t border-gray-200 dark:border-slate-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-center pt-4 border-t border-border">
+          <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
             {onNavigate ? (
               <button
                 type="button"
                 onClick={() => onNavigate("signup")}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors"
+                className="text-primary hover:text-primary/80 font-semibold transition-colors"
               >
                 Sign Up
               </button>
             ) : (
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">Sign Up</span>
+              <span className="text-primary font-semibold">Sign Up</span>
             )}
           </p>
         </div>
 
         {/* Terms and Privacy Links */}
         {onNavigate && (
-          <div className="flex flex-wrap justify-center gap-3 pt-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap justify-center gap-3 pt-2 text-xs text-muted-foreground">
             <button
               type="button"
               onClick={() => onNavigate("terms")}
-              className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+              className="hover:text-primary hover:underline transition-colors"
             >
               Terms
             </button>
@@ -414,7 +412,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             <button
               type="button"
               onClick={() => onNavigate("privacy")}
-              className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+              className="hover:text-primary hover:underline transition-colors"
             >
               Privacy
             </button>
@@ -426,30 +424,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-card text-card-foreground rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Reset Password</h2>
+              <h2 className="text-xl font-bold text-foreground">Reset Password</h2>
               <button
                 onClick={() => {
                   setShowForgotPassword(false);
                   setResetEmail('');
                   setEmailSent(false);
                 }}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Enter your email address and we'll send you a link to reset your password.
             </p>
             {!isSendingReset && !emailSent && (
-              <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-                <p className="text-xs text-yellow-800 dark:text-yellow-200 font-medium mb-1">
+              <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mb-1">
                   💡 Email Delivery Tips:
                 </p>
-                <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1 list-disc list-inside">
+                <ul className="text-xs text-yellow-600 dark:text-yellow-400 space-y-1 list-disc list-inside">
                   <li>Check your spam/junk folder if you don't see the email</li>
                   <li>Add noreply emails to your contacts to prevent spam filtering</li>
                   <li>The email may take a few minutes to arrive</li>
@@ -457,25 +455,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                  className="w-full pl-10 pr-4 py-2 border border-input rounded-md focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground"
                 />
               </div>
             </div>
             {isSendingReset ? (
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Sending email...</p>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Sending email...</p>
                 </div>
               </div>
             ) : (
@@ -483,7 +481,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                 <div className="flex gap-3 mb-4">
                   <button
                     onClick={handleForgotPassword}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                    className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
                   >
                     Send Reset Link
                   </button>
@@ -492,7 +490,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                       setShowForgotPassword(false);
                       setResetEmail('');
                     }}
-                    className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 transition-colors"
+                    className="px-4 py-2 border border-input rounded-md hover:bg-accent text-foreground transition-colors"
                   >
                     Cancel
                   </button>
@@ -500,27 +498,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                 
                 {/* Success Message - Show after email sent */}
                 {emailSent && (
-                  <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                  <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-md">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                        <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
                           <span className="text-green-600 dark:text-green-400 text-sm">✓</span>
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                        <p className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">
                           Email Sent Successfully!
                         </p>
-                        <div className="text-xs text-green-700 dark:text-green-300 space-y-2">
+                        <div className="text-xs text-green-600 dark:text-green-400 space-y-2">
                           <p>We've sent a password reset link to:</p>
                           <p className="font-mono font-semibold">{resetEmail}</p>
-                          <div className="mt-3 pt-3 border-t border-green-200 dark:border-green-800">
+                          <div className="mt-3 pt-3 border-t border-green-500/20">
                             <p className="font-medium mb-2">If you don't see the email:</p>
                             <ol className="list-decimal list-inside space-y-1 pl-2">
                               <li>Check your <strong>spam/junk folder</strong></li>
                               <li>Wait a few minutes (email delivery can take 1-5 minutes)</li>
                               <li>Verify the email address is correct</li>
-                              <li>Add <code className="text-xs bg-green-100 dark:bg-green-900 px-1 rounded">noreply@</code> to your contacts</li>
+                              <li>Add <code className="text-xs bg-green-500/20 px-1 rounded">noreply@</code> to your contacts</li>
                             </ol>
                           </div>
                         </div>
@@ -546,40 +544,39 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
       {/* 2FA Verification Modal */}
       {showMFA && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-card text-card-foreground rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-border">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Two-Factor Authentication</h2>
+                <Shield className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-bold text-foreground">Two-Factor Authentication</h2>
               </div>
               <button
                 onClick={() => {
                   setShowMFA(false);
                   setMfaCode('');
-                  setMfaVerificationId(null);
                 }}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Enter the verification code from your authenticator app.
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Verification Code
               </label>
               <div className="relative">
-                <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   type="text"
                   value={mfaCode}
                   onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-center text-2xl font-mono tracking-widest"
+                  className="w-full pl-10 pr-4 py-2 border border-input rounded-md focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground text-center text-2xl font-mono tracking-widest"
                 />
               </div>
             </div>
@@ -587,7 +584,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               <button
                 onClick={handleMFAVerification}
                 disabled={isVerifyingMFA || mfaCode.length !== 6}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isVerifyingMFA ? 'Verifying...' : 'Verify'}
               </button>
@@ -595,10 +592,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                 onClick={() => {
                   setShowMFA(false);
                   setMfaCode('');
-                  setMfaVerificationId(null);
                   setMfaResolver(null);
                 }}
-                className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 transition-colors"
+                className="px-4 py-2 border border-input rounded-md hover:bg-accent text-foreground transition-colors"
               >
                 Cancel
               </button>

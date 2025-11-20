@@ -388,7 +388,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
     const documentContext = submittedContent || "";
 
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-slate-800">
+      <div className="min-h-screen bg-background">
         {/* Video Showcase Modal - Fullscreen Popup for New Users */}
         {showVideoModal && (
           <VideoShowcaseModal isOpen={showVideoModal} onClose={handleVideoModalClose} />
@@ -396,18 +396,18 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
         {/* Language Selection Modal */}
         {showLanguageModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-              <h2 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-slate-100 text-center">
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-card text-card-foreground rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-border">
+              <h2 className="text-2xl font-semibold mb-2 text-foreground text-center">
                 Choose Your Language / अपनी भाषा चुनें
               </h2>
-              <p className="text-gray-600 dark:text-slate-300 mb-6 text-center">
+              <p className="text-muted-foreground mb-6 text-center">
                 Select your preferred language for responses
               </p>
               <div className="space-y-3">
                 <button
                   onClick={() => handleLanguageChange('en')}
-                  className="w-full px-6 py-4 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium text-lg"
+                  className="w-full px-6 py-4 rounded-lg border-2 border-primary bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium text-lg"
                 >
                   <div className="flex items-center justify-center gap-3">
                     <span>🇬🇧</span>
@@ -416,7 +416,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                 </button>
                 <button
                   onClick={() => handleLanguageChange('hi')}
-                  className="w-full px-6 py-4 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium text-lg"
+                  className="w-full px-6 py-4 rounded-lg border-2 border-primary bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium text-lg"
                 >
                   <div className="flex items-center justify-center gap-3">
                     <span>🇮🇳</span>
@@ -424,7 +424,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                   </div>
                 </button>
               </div>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-4 text-center">
+              <p className="text-xs text-muted-foreground mt-4 text-center">
                 You can change this later from the header menu
               </p>
             </div>
@@ -432,12 +432,12 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
         )}
         {/* Login Modal */}
         {showLoginModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-slate-100">
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-card text-card-foreground rounded-lg p-6 max-w-md w-full mx-4 border border-border shadow-lg">
+              <h2 className="text-xl font-semibold mb-4 text-foreground">
                 Sign In Required
               </h2>
-              <p className="text-gray-600 dark:text-slate-300 mb-6">
+              <p className="text-muted-foreground mb-6">
                 Please sign in to save your analysis to your account.
               </p>
               <div className="flex space-x-3">
@@ -446,7 +446,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                     setShowLoginModal(false);
                     setRoute("login");
                   }}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
                 >
                   Sign In
                 </button>
@@ -455,13 +455,13 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                     setShowLoginModal(false);
                     setRoute("signup");
                   }}
-                  className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
+                  className="flex-1 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 transition-colors"
                 >
                   Sign Up
                 </button>
                 <button
                   onClick={() => setShowLoginModal(false)}
-                  className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                  className="px-4 py-2 border border-input rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   Cancel
                 </button>
@@ -473,7 +473,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
         {/* Login/Signup Modals - Popup Overlays */}
         {(route === "login" || route === "signup") && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200"
             onClick={() => {
               // Close modal when clicking outside
               const previousRoute = localStorage.getItem("previousRoute") || "upload";
@@ -482,7 +482,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
             }}
           >
             <div 
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative transform transition-all animate-in zoom-in-95 duration-200 hide-scrollbar"
+              className="bg-card text-card-foreground rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative transform transition-all animate-in zoom-in-95 duration-200 hide-scrollbar border border-border"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
@@ -492,7 +492,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                   setRoute(previousRoute as Route);
                   localStorage.removeItem("previousRoute");
                 }}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 z-10"
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg bg-secondary hover:bg-secondary/80 transition-colors text-muted-foreground hover:text-foreground z-10"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,7 +530,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
         {/* Terms and Privacy Pages - Still Full Page */}
         {(route === "terms" || route === "privacy") ? (
-          <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+          <div className="min-h-screen bg-background">
             {route === "terms" && (
               <TermsAndConditionsPage 
                 onNavigate={(r) => {
@@ -609,7 +609,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.2 }}
       >
-        <div className="bg-white rounded-2xl shadow p-4 md:p-6 border border-gray-100">
+        <div className="bg-card text-card-foreground rounded-2xl shadow p-4 md:p-6 border border-border">
           <DocumentInput
             onSubmit={handleDocumentSubmit}
             isAnalyzing={isAnalyzing}
@@ -638,12 +638,12 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
           >
             {/* Analysis Section */}
             <div className="space-y-4 md:space-y-6">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
+              <div className="bg-card text-card-foreground rounded-2xl shadow border border-border p-4 md:p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-gray-900">Analysis</div>
+                  <div className="font-semibold text-foreground">Analysis</div>
                   <button
                     onClick={() => setFs({ key: "analysis" })}
-                    className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                    className="text-xs px-3 py-1 rounded border border-input hover:bg-accent hover:text-accent-foreground"
                   >
                     Fullscreen
                   </button>
@@ -661,12 +661,12 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
               </div>
 
               {/* Visualizations */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6">
+              <div className="bg-card text-card-foreground rounded-2xl shadow border border-border p-4 md:p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-gray-900">Visualizations</div>
+                  <div className="font-semibold text-foreground">Visualizations</div>
                   <button
                     onClick={() => setFs({ key: "visuals" })}
-                    className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                    className="text-xs px-3 py-1 rounded border border-input hover:bg-accent hover:text-accent-foreground"
                   >
                     Fullscreen
                   </button>
@@ -686,9 +686,9 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                   transition={{ duration: 0.35, ease: "easeInOut" }}
                   className="space-y-4 md:space-y-6"
                 >
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-gray-100 dark:border-slate-700 p-4 md:p-6 lg:sticky lg:top-0">
+                  <div className="bg-card text-card-foreground rounded-2xl shadow border border-border p-4 md:p-6 lg:sticky lg:top-0">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="font-semibold text-gray-900">
+                      <div className="font-semibold text-foreground">
                         Original Document
                       </div>
                       <div className="flex items-center space-x-2">
@@ -697,13 +697,13 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                             setIsDocumentMinimized(!isDocumentMinimized)
                           }
                           className="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium
-                            text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-800
-                            border border-gray-200 dark:border-slate-700
-                            hover:bg-gray-200 dark:hover:bg-slate-700
+                            text-secondary-foreground bg-secondary
+                            border border-border
+                            hover:bg-secondary/80
                             active:scale-95 transition-all duration-200"
                         >
                           <svg
-                            className="w-4 h-4 text-gray-700 dark:text-gray-200"
+                            className="w-4 h-4 text-secondary-foreground"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -720,7 +720,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
                         <button
                           onClick={() => setFs({ key: "document" })}
-                          className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+                          className="text-xs px-3 py-1 rounded border border-input hover:bg-accent hover:text-accent-foreground"
                         >
                           Fullscreen
                         </button>
@@ -745,21 +745,20 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                   transition={{ duration: 0.35, ease: "easeInOut" }}
                   className="fixed bottom-4 right-4 z-50"
                 >
-                  <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-3">
+                  <div className="bg-card text-card-foreground rounded-lg shadow-lg border border-border p-3">
                     <div className="flex items-center space-x-3">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-foreground">
                         Original Document
                       </div>
                       <button
                         onClick={() => setIsDocumentMinimized(false)}
                         className="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium
-                          text-white bg-gradient-to-r from-blue-600 to-indigo-600
-                          hover:from-blue-700 hover:to-indigo-700
-                          shadow-sm active:scale-95 transition-all duration-200
-                          dark:from-blue-500 dark:to-indigo-500"
+                          text-primary-foreground bg-primary
+                          hover:bg-primary/90
+                          shadow-sm active:scale-95 transition-all duration-200"
                       >
                         <svg
-                          className="w-4 h-4 text-white"
+                          className="w-4 h-4 text-primary-foreground"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -776,7 +775,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
                       <button
                         onClick={() => setFs({ key: "document" })}
-                        className="text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 transition-colors"
+                        className="text-xs px-3 py-1 rounded border border-input hover:bg-accent hover:text-accent-foreground transition-colors"
                       >
                         Fullscreen
                       </button>
@@ -789,7 +788,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
             
           </div>
         ) : (
-          <div className="text-gray-600">
+          <div className="text-muted-foreground">
             No analysis yet. Upload a document first.
           </div>
         )}

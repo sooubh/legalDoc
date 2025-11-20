@@ -132,7 +132,7 @@ export default function LawyerLocatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans">
+    <div className="min-h-screen bg-background font-sans text-foreground">
       <Header currentView={view} setView={setView} />
 
       <main className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
@@ -149,7 +149,7 @@ export default function LawyerLocatorPage() {
             {isSearching && displayedLawyers.length === 0 && !error && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <p className="text-lg text-slate-600 dark:text-slate-300 font-medium">
+                  <p className="text-lg text-muted-foreground font-medium">
                     {userLocation
                       ? `Finding ${searchQuery} lawyers...`
                       : "Accessing your location..."}
@@ -165,14 +165,14 @@ export default function LawyerLocatorPage() {
 
             {isSearching && displayedLawyers.length > 0 && (
               <div className="text-center mb-4">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   Found {displayedLawyers.length} of {lawyers.length} lawyers...
                 </p>
               </div>
             )}
 
             {error && (
-              <p className="text-center text-red-600 bg-red-100 p-4 rounded-lg mt-6">
+              <p className="text-center text-destructive bg-destructive/10 p-4 rounded-lg mt-6 border border-destructive/20">
                 {error}
               </p>
             )}
@@ -182,11 +182,11 @@ export default function LawyerLocatorPage() {
               displayedLawyers.length === 0 &&
               !locationError &&
               !searchQuery && (
-                <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm mt-6">
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                <div className="text-center p-12 bg-card rounded-xl shadow-sm mt-6 border border-border">
+                  <h2 className="text-2xl font-bold text-card-foreground">
                     Welcome to Lawyer Locator AI
                   </h2>
-                  <p className="mt-2 text-slate-600 dark:text-slate-300">
+                  <p className="mt-2 text-muted-foreground">
                     Enter a legal specialty (e.g., "family law," "personal
                     injury") to find lawyers near you.
                   </p>
@@ -194,16 +194,16 @@ export default function LawyerLocatorPage() {
               )}
 
             {!isSearching && lawyers.length === 0 && displayedLawyers.length === 0 && searchQuery && !error && (
-              <div className="text-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm mt-6">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+              <div className="text-center p-12 bg-card rounded-xl shadow-sm mt-6 border border-border">
+                <h2 className="text-2xl font-bold text-card-foreground">
                   No Results Found
                 </h2>
-                <p className="mt-2 text-slate-600 dark:text-slate-300">
+                <p className="mt-2 text-muted-foreground">
                   We couldn't find any lawyers for "{searchQuery}".
                 </p>
                 {suggestions.length > 0 && (
                   <div className="mt-6">
-                    <h3 className="text-slate-700 dark:text-slate-300 font-semibold">
+                    <h3 className="text-card-foreground font-semibold">
                       Try searching for:
                     </h3>
                     <div className="flex flex-wrap justify-center gap-2 mt-3">
@@ -211,7 +211,7 @@ export default function LawyerLocatorPage() {
                         <button
                           key={suggestion}
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                          className="px-4 py-2 bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/80 transition-colors text-sm font-medium"
                         >
                           {suggestion}
                         </button>

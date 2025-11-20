@@ -28,16 +28,16 @@ const Spinner: React.FC = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
-          className="absolute h-16 w-16 border-4 border-indigo-500 rounded-full"
+          className="absolute h-16 w-16 border-4 border-primary rounded-full"
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
         />
         <motion.div
-          className="absolute h-10 w-10 border-4 border-indigo-400 rounded-full border-t-transparent"
+          className="absolute h-10 w-10 border-4 border-primary/70 rounded-full border-t-transparent"
           animate={{ rotate: -360 }}
           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
         />
-        <Loader2 className="h-8 w-8 text-indigo-600 animate-pulse" />
+        <Loader2 className="h-8 w-8 text-primary animate-pulse" />
       </motion.div>
 
       {/* Animated Text */}
@@ -49,7 +49,7 @@ const Spinner: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6 }}
-            className="text-lg font-medium text-slate-700 dark:text-slate-300 text-center"
+            className="text-lg font-medium text-muted-foreground text-center"
           >
             {messages[currentMessageIndex]}
           </motion.p>
@@ -69,7 +69,7 @@ const Spinner: React.FC = () => {
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            className="h-2 w-2 bg-indigo-500 rounded-full"
+            className="h-2 w-2 bg-primary rounded-full"
             variants={{
               hidden: { opacity: 0.2, y: 0 },
               visible: {

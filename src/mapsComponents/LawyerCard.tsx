@@ -9,40 +9,40 @@ interface LawyerCardProps {
 
 const LawyerCard: React.FC<LawyerCardProps> = ({ lawyer, onSelect }) => {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col">
+    <div className="bg-card rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col border border-border">
         <div className="p-6 flex-grow">
             <div className="flex justify-between items-center">
-                <div className="uppercase tracking-wide text-sm text-indigo-500 dark:text-indigo-400 font-semibold">{lawyer.specialty || 'Legal Services'}</div>
+                <div className="uppercase tracking-wide text-sm text-primary font-semibold">{lawyer.specialty || 'Legal Services'}</div>
                 {lawyer.rating !== undefined && (
                     <div className="flex items-center">
-                        <span className="text-slate-600 dark:text-slate-300 font-bold mr-1">{lawyer.rating.toFixed(1)}</span>
+                        <span className="text-muted-foreground font-bold mr-1">{lawyer.rating.toFixed(1)}</span>
                         <StarIcon className="h-5 w-5 text-yellow-400" />
                     </div>
                 )}
             </div>
-            <h3 className="block mt-1 text-lg leading-tight font-bold text-black dark:text-white">{lawyer.name}</h3>
+            <h3 className="block mt-1 text-lg leading-tight font-bold text-card-foreground">{lawyer.name}</h3>
             
-            <div className="mt-4 space-y-2 text-slate-600 dark:text-slate-300">
+            <div className="mt-4 space-y-2 text-muted-foreground">
                 {lawyer.address && (
                     <div className="flex items-start">
-                        <LocationMarkerIcon className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-slate-400 dark:text-slate-500" />
+                        <LocationMarkerIcon className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-muted-foreground/70" />
                         <p>{lawyer.address}</p>
                     </div>
                 )}
                 {lawyer.phone && (
                     <div className="flex items-center">
-                        <PhoneIcon className="h-5 w-5 mr-2 flex-shrink-0 text-slate-400 dark:text-slate-500" />
-                        <a href={`tel:${lawyer.phone}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{lawyer.phone}</a>
+                        <PhoneIcon className="h-5 w-5 mr-2 flex-shrink-0 text-muted-foreground/70" />
+                        <a href={`tel:${lawyer.phone}`} className="hover:text-primary transition-colors">{lawyer.phone}</a>
                     </div>
                 )}
             </div>
 
-            <p className="mt-4 text-slate-700 dark:text-slate-300 text-sm line-clamp-3">{lawyer.summary || 'No summary available.'}</p>
+            <p className="mt-4 text-muted-foreground text-sm line-clamp-3">{lawyer.summary || 'No summary available.'}</p>
         </div>
-        <div className="p-6 bg-slate-50/70 dark:bg-slate-700/50 border-t dark:border-slate-600 flex flex-wrap gap-y-2 gap-x-4 items-center justify-between">
+        <div className="p-6 bg-muted/30 border-t border-border flex flex-wrap gap-y-2 gap-x-4 items-center justify-between">
             <button
                 onClick={() => onSelect(lawyer)}
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold transition-colors text-sm"
+                className="text-primary hover:text-primary/80 font-semibold transition-colors text-sm"
             >
                 View Details & Contact
             </button>
@@ -52,7 +52,7 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyer, onSelect }) => {
                         href={lawyer.website.startsWith('http') ? lawyer.website : `https://${lawyer.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                        className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                         onClick={(e) => e.stopPropagation()}
                     >
                         Website <ExternalLinkIcon className="h-4 w-4 ml-1.5" />
@@ -63,7 +63,7 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyer, onSelect }) => {
                         href={lawyer.source.uri}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                        className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                         onClick={(e) => e.stopPropagation()}
                     >
                         Map <ExternalLinkIcon className="h-4 w-4 ml-1.5" />

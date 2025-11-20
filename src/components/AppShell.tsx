@@ -13,7 +13,13 @@ import {
   Scale,
   Languages,
   Video,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  FileText,
+  PieChart,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import AnalysisHistorySidebar from "../analysis/AnalysisHistorySidebar.tsx";
 import type { AnalysisHistoryItem } from "../types/history.ts";
 
@@ -44,9 +50,9 @@ interface AppShellProps {
 }
 
 const navItems: NavItem[] = [
-  { id: "upload", label: "Upload", icon: null },
-  { id: "results", label: "Results", icon: null },
-  { id: "visuals", label: "Visuals", icon: null },
+  { id: "upload", label: "Upload", icon: <Upload className="h-5 w-5" /> },
+  { id: "results", label: "Results", icon: <FileText className="h-5 w-5" /> },
+  { id: "visuals", label: "Visuals", icon: <PieChart className="h-5 w-5" /> },
 ];
 
 const AppShell: React.FC<AppShellProps> = ({
@@ -90,6 +96,7 @@ const AppShell: React.FC<AppShellProps> = ({
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Bottom nav tab selection mapping (three tabs)
   const tabToRoute = {
@@ -118,235 +125,305 @@ const AppShell: React.FC<AppShellProps> = ({
   };
 
   return (
-    <div className="w-screen h-screen grid grid-rows-[56px_1fr_72px] md:grid-rows-[64px_1fr] md:grid-cols-[300px_1fr] bg-slate-50 dark:bg-slate-900">
-      {/* Top bar */}
-      <div className="md:col-span-2 h-14 md:h-16 border-b border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between px-3 md:px-4">
+    <div className="w-screen h-screen flex flex-col md:flex-row bg-background overflow-hidden">
+      {/* Top bar - Fixed height on mobile, part of flex column */}
+      <div className="md:hidden h-14 border-b border-border bg-background/80 backdrop-blur flex items-center justify-between px-3 shrink-0 z-20">
         <div className="flex items-center gap-2">
-          {/* Mobile hamburger */}
           <button
-            className="md:hidden inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white"
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border text-foreground bg-background"
             aria-label="Open menu"
             onClick={() => setIsMobileNavOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="h-7 w-7 md:h-8 md:w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm md:text-base">
+          <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
             L
           </div>
           <div className="leading-tight">
-            <div className="text-gray-900 dark:text-slate-100 font-semibold text-sm md:text-base">
+            <div className="text-foreground font-semibold text-sm">
               LegalEase AI
             </div>
-            <div className="text-[9px] md:text-[10px] text-gray-500 dark:text-slate-400 tracking-wide">
-              Demystifying Legal Docs
-            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-2 text-[11px] md:text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-            <span>
-              This is not legal advice. Consult a lawyer for decisions.
-            </span>
-          </div>
-          {/* Language Switcher */}
-          <div className="relative">
-            <button
-              onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-              onBlur={() => setTimeout(() => setIsLanguageDropdownOpen(false), 200)}
-              className="inline-flex items-center gap-1.5 h-8 px-2 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-xs font-medium"
-              aria-label="Change language"
-              title={`Current language: ${language === 'hi' ? 'Hindi' : 'English'}`}
-            >
-              <Languages className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{language === 'hi' ? 'हिंदी' : 'EN'}</span>
-            </button>
-            {isLanguageDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md shadow-lg z-50">
-                <button
-                  onClick={() => {
-                    onLanguageChange('en');
-                    setIsLanguageDropdownOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-t-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${
-                    language === 'en' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium' : 'text-gray-700 dark:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>English</span>
-                    {language === 'en' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
-                  </div>
-                </button>
-                <button
-                  onClick={() => {
-                    onLanguageChange('hi');
-                    setIsLanguageDropdownOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-b-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${
-                    language === 'hi' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium' : 'text-gray-700 dark:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>हिंदी (Hindi)</span>
-                    {language === 'hi' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
-          {/* Header icon actions */}
-
-          <button
-            onClick={toggleTheme}
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
-            aria-label="Toggle theme"
-            title={theme === "dark" ? "Light mode" : "Dark mode"}
-          >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </button>
-          <button
-            onClick={() => onNavigate("profile")}
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
-            aria-label="Profile"
-            title="Profile"
-          >
-            <User className="h-4 w-4" />
-          </button>
-          <div className="flex items-center gap-4">
-            {" "}
-            {/* gap added for spacing between buttons */}
-            {!user ? (
-              <>
-                {/* Sign In */}
-                <button
-                  onClick={onLogin}
-                  className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
-          bg-gradient-to-r from-blue-500 to-indigo-600 text-white
-          border border-white/10 shadow-sm shadow-blue-500/20
-          transition-all duration-300 hover:scale-105 hover:shadow-blue-500/40 active:scale-95"
-                >
-                  <LogIn className="h-4 w-4" />
-                  <span>Login</span>
-                </button>
-
-                {/* Sign Up */}
-                <button
-                  onClick={onSignup}
-                  className="relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full
-          bg-gradient-to-r from-emerald-500 to-teal-600 text-white
-          border border-white/10 shadow-sm shadow-emerald-500/20
-          transition-all duration-300 hover:scale-105 hover:shadow-emerald-500/40 active:scale-95"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  <span>Sign Up</span>
-                </button>
-              </>
-            ) : (
-              /* Logout Icon */
-              <button
-                onClick={onLogout}
-                className="relative flex items-center justify-center w-10 h-10 rounded-full
-        bg-gradient-to-r from-red-500 to-rose-600 text-white
-        border border-white/10 shadow-md shadow-red-500/20
-        transition-all duration-300 hover:scale-110 hover:shadow-red-500/40 active:scale-95"
-                title="Logout"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
-            )}
-          </div>
-        </div>
+        {/* Mobile header actions if needed */}
       </div>
 
-      {/* Sidebar (hidden on mobile) with integrated History */}
-      <aside className="hidden md:block row-start-2 border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-        <div className="h-full flex flex-col">
-          <div className="p-3">
-            <button
-              onClick={() => onNavigate("upload")}
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-200"
-            >
-              + New Analysis
-            </button>
-          </div>
+      {/* Sidebar (Desktop) */}
+      <motion.aside
+        initial={false}
+        animate={{ width: isSidebarCollapsed ? 80 : 280 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="hidden md:flex flex-col border-r border-border bg-card text-card-foreground relative z-30 h-full shrink-0"
+      >
+        {/* Header Logo Area */}
+        <div className={`h-16 flex items-center px-4 border-b border-border ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} shrink-0`}>
+           {!isSidebarCollapsed ? (
+             <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+                <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shrink-0">
+                  L
+                </div>
+                <div className="leading-tight">
+                  <div className="text-foreground font-bold text-lg">
+                    LegalEase
+                  </div>
+                  <div className="text-[10px] text-muted-foreground tracking-wide">
+                    AI Legal Assistant
+                  </div>
+                </div>
+             </div>
+           ) : (
+             <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+               L
+             </div>
+           )}
+        </div>
 
-          <nav className="px-3 space-y-1">
-            {navItems.map((item) => (
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="absolute -right-3 top-20 z-50 p-1.5 rounded-full bg-card border border-border shadow-lg hover:bg-accent text-primary transition-all hover:scale-110"
+        >
+          {isSidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </button>
+
+        {/* Main Content Wrapper */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Navigation Section - Compact and auto-sized */}
+          <div className="px-3 py-3 shrink-0">
+            <div className="mb-4">
               <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border
-                flex items-center gap-2
-                ${
-                  current === item.id
-                    ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
-                    : "bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                onClick={() => onNavigate("upload")}
+                className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all duration-200
+                ${isSidebarCollapsed 
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                  : 'bg-primary text-primary-foreground hover:shadow-primary/25 hover:shadow-lg'
                 }`}
+                title={isSidebarCollapsed ? "New Analysis" : ""}
               >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </nav>
-
-          <button
-            onClick={() => onNavigate("lawyer")}
-            className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-          >
-            <Scale className="h-4 w-4" />
-            <span>
-              <strong>Lawyer Locator AI</strong>
-            </span>
-          </button>
-          {/* Integrated History content */}
-          <div className="mt-4 border-t border-gray-200 dark:border-slate-700 flex-1 min-h-0">
-            <AnalysisHistorySidebar
-              items={analysisHistory}
-              onSelect={(item) => onSelectAnalysis?.(item)}
-              selectedId={selectedAnalysisId}
-              onFetch={onFetchHistory}
-            />
-          </div>
-
-          {/* Authentication and Action buttons at bottom */}
-          <div className="p-3 border-t border-gray-200 dark:border-slate-700">
-            <div className="space-y-2">
-              {/* Settings and More buttons */}
-              <button
-                onClick={() => onNavigate("settings")}
-                className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-              >
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </button>
-              <button
-                onClick={() => onNavigate("video")}
-                className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-              >
-                <Video className="h-4 w-4" />
-                <span>Video Showcase</span>
-              </button>
-              <button
-                onClick={() => onNavigate("more")}
-                className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-                <span>More</span>
+                <span className="text-xl leading-none">+</span>
+                {!isSidebarCollapsed && <span>New Analysis</span>}
               </button>
             </div>
+
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <div key={item.id} className="relative group">
+                  <button
+                    onClick={() => onNavigate(item.id)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-3
+                    ${
+                      current === item.id
+                        ? "bg-secondary text-secondary-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
+                  >
+                    <span className={`${current === item.id ? 'text-primary' : ''}`}>
+                      {item.icon}
+                    </span>
+                    {!isSidebarCollapsed && <span>{item.label}</span>}
+                  </button>
+                  
+                  {/* Animated Tooltip for Collapsed State */}
+                  {isSidebarCollapsed && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-popover text-popover-foreground border border-border text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-x-2 group-hover:translate-x-0">
+                      {item.label}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+
+            <div className="mt-1">
+               <div className="relative group">
+                  <button
+                    onClick={() => onNavigate("lawyer")}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-3
+                    ${isSidebarCollapsed ? 'justify-center px-0' : ''} text-muted-foreground hover:bg-accent hover:text-accent-foreground`}
+                  >
+                    <Scale className="h-5 w-5" />
+                    {!isSidebarCollapsed && <span>Lawyer Locator</span>}
+                  </button>
+                   {isSidebarCollapsed && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-popover text-popover-foreground border border-border text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-x-2 group-hover:translate-x-0">
+                      Lawyer Locator
+                    </div>
+                  )}
+               </div>
+            </div>
+          </div>
+
+          {/* History content - Takes remaining space */}
+          <div className="border-t border-border flex-1 min-h-0 flex flex-col overflow-hidden">
+            {!isSidebarCollapsed ? (
+              <AnalysisHistorySidebar
+                items={analysisHistory}
+                onSelect={(item) => onSelectAnalysis?.(item)}
+                selectedId={selectedAnalysisId}
+                onFetch={onFetchHistory}
+              />
+            ) : (
+               <div className="flex flex-col items-center pt-6 gap-4 opacity-50">
+                 <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-[10px] font-bold text-muted-foreground border border-border">
+                    HIS
+                 </div>
+               </div>
+            )}
           </div>
         </div>
-      </aside>
 
-      {/* Content */}
-      <main className="row-start-2 overflow-auto p-3 md:p-6">
-        <div className="max-w-7xl mx-auto pb-24 md:pb-0 text-[15px] md:text-base leading-[1.45] md:leading-6">
-          {children}
+        {/* Footer Actions - Pinned to bottom, more compact */}
+        <div className="px-3 py-2 border-t border-border bg-muted/50 shrink-0">
+          <div className="space-y-0.5">
+            {[
+              { id: 'settings', icon: <Settings className="h-4 w-4" />, label: 'Settings', action: () => onNavigate("settings") },
+              { id: 'video', icon: <Video className="h-4 w-4" />, label: 'Video Showcase', action: () => onNavigate("video") },
+              { id: 'more', icon: <MoreHorizontal className="h-4 w-4" />, label: 'More', action: () => onNavigate("more") },
+            ].map((btn) => (
+              <div key={btn.id} className="relative group">
+                <button
+                  onClick={btn.action}
+                  className={`w-full inline-flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                >
+                  {btn.icon}
+                  {!isSidebarCollapsed && <span>{btn.label}</span>}
+                </button>
+                 {isSidebarCollapsed && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-popover text-popover-foreground border border-border text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-x-2 group-hover:translate-x-0">
+                    {btn.label}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {/* User Profile / Logout Section */}
+          <div className={`mt-2 pt-2 border-t border-border flex items-center ${isSidebarCollapsed ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+             <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            
+            {!isSidebarCollapsed && (
+               <div className="h-4 w-px bg-border" />
+            )}
+
+            <button
+              onClick={() => onNavigate("profile")}
+              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              title="Profile"
+            >
+              <User className="h-4 w-4" />
+            </button>
+
+            {!isSidebarCollapsed && user && (
+               <div className="h-4 w-px bg-border" />
+            )}
+            
+            {user && (
+               <button
+                onClick={onLogout}
+                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
+      </motion.aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+         {/* Desktop Header (Top Bar) - Only visible on desktop inside main area now */}
+         <header className="hidden md:flex h-16 border-b border-border bg-background/80 backdrop-blur items-center justify-between px-6 shrink-0">
+            {/* Left side of header */}
+            <div className="flex items-center gap-4">
+               <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="font-medium">AI Legal Assistant Active</span>
+               </div>
+            </div>
+
+            {/* Right side of header */}
+            <div className="flex items-center gap-4">
+               {/* Language Switcher */}
+               <div className="relative group">
+                  <button
+                    onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                    onBlur={() => setTimeout(() => setIsLanguageDropdownOpen(false), 200)}
+                    className="inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-border text-foreground bg-background hover:bg-accent hover:text-accent-foreground transition-all text-sm font-medium"
+                  >
+                    <Languages className="h-4 w-4 text-muted-foreground" />
+                    <span>{language === 'hi' ? 'हिंदी' : 'English'}</span>
+                  </button>
+                   {isLanguageDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-40 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden">
+                      <button
+                        onClick={() => {
+                          onLanguageChange('en');
+                          setIsLanguageDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between ${
+                          language === 'en' ? 'bg-secondary text-secondary-foreground font-medium' : 'text-foreground'
+                        }`}
+                      >
+                        <span>English</span>
+                        {language === 'en' && <span className="text-primary">✓</span>}
+                      </button>
+                      <button
+                        onClick={() => {
+                          onLanguageChange('hi');
+                          setIsLanguageDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between ${
+                          language === 'hi' ? 'bg-secondary text-secondary-foreground font-medium' : 'text-foreground'
+                        }`}
+                      >
+                        <span>हिंदी (Hindi)</span>
+                        {language === 'hi' && <span className="text-primary">✓</span>}
+                      </button>
+                    </div>
+                  )}
+               </div>
+
+               {!user ? (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={onLogin}
+                      className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Login
+                    </button>
+                    <button
+                      onClick={onSignup}
+                      className="px-5 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+               ) : (
+                  <div className="flex items-center gap-3">
+                     <div className="text-sm text-right hidden lg:block">
+                        <div className="font-medium text-foreground">Welcome back</div>
+                        <div className="text-xs text-muted-foreground">Premium Plan</div>
+                     </div>
+                     <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
+                        {user.displayName?.[0] || 'U'}
+                     </div>
+                  </div>
+               )}
+            </div>
+         </header>
+
+         {/* Scrollable Content */}
+         <div className="flex-1 overflow-auto p-4 md:p-8 scroll-smooth">
+            <div className="max-w-6xl mx-auto">
+               {children}
+            </div>
+         </div>
       </main>
 
       {/* Bottom navigation - Uiverse tabs (JSX version) */}
@@ -416,14 +493,14 @@ const AppShell: React.FC<AppShellProps> = ({
       {isMobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setIsMobileNavOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 shadow-xl flex flex-col">
-            <div className="h-14 px-3 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
-              <div className="font-semibold">Menu</div>
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-background border-r border-border shadow-xl flex flex-col">
+            <div className="h-14 px-3 border-b border-border flex items-center justify-between">
+              <div className="font-semibold text-foreground">Menu</div>
               <button
-                className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+                className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border text-muted-foreground bg-background"
                 aria-label="Close menu"
                 onClick={() => setIsMobileNavOpen(false)}
               >
@@ -431,12 +508,36 @@ const AppShell: React.FC<AppShellProps> = ({
               </button>
             </div>
             <nav className="p-3 space-y-1 flex-1 overflow-auto">
+              {!user && (
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <button
+                    onClick={() => {
+                      onLogin?.();
+                      setIsMobileNavOpen(false);
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-secondary text-secondary-foreground border border-border"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span>Login</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onSignup?.();
+                      setIsMobileNavOpen(false);
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground border border-primary"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Sign Up</span>
+                  </button>
+                </div>
+              )}
               <button
                 onClick={() => {
                   onNavigate("upload");
                   setIsMobileNavOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 rounded-md text-sm font-medium border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-200"
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-medium border border-primary/20 bg-primary/10 text-primary hover:bg-primary/20"
               >
                 + New Analysis
               </button>
@@ -452,8 +553,8 @@ const AppShell: React.FC<AppShellProps> = ({
                   flex items-center gap-2
                   ${
                     current === item.id
-                      ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
-                      : "bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                      ? "bg-secondary text-secondary-foreground border-border"
+                      : "bg-background text-foreground hover:bg-accent border-transparent"
                   }`}
                 >
                   {item.icon}
@@ -462,7 +563,7 @@ const AppShell: React.FC<AppShellProps> = ({
               ))}
               <button
             onClick={() => onNavigate("lawyer")}
-            className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+            className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-border hover:bg-accent text-foreground bg-background"
           >
             <Scale className="h-4 w-4" />
             <span>
@@ -470,8 +571,8 @@ const AppShell: React.FC<AppShellProps> = ({
             </span>
           </button>
 
-              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
-                <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">
+              <div className="mt-3 pt-3 border-t border-border">
+                <div className="text-xs font-semibold text-muted-foreground mb-2">
                   History
                 </div>
                 <AnalysisHistorySidebar
@@ -486,8 +587,8 @@ const AppShell: React.FC<AppShellProps> = ({
               </div>
               
               {/* Mobile Language Switcher */}
-              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
-                <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">
+              <div className="mt-3 pt-3 border-t border-border">
+                <div className="text-xs font-semibold text-muted-foreground mb-2">
                   Language
                 </div>
                 <div className="space-y-1">
@@ -498,12 +599,12 @@ const AppShell: React.FC<AppShellProps> = ({
                     }}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border flex items-center justify-between ${
                       language === 'en'
-                        ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900'
-                        : 'bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
+                        ? 'bg-secondary text-secondary-foreground border-border'
+                        : 'bg-background text-foreground hover:bg-accent border-transparent'
                     }`}
                   >
                     <span>English</span>
-                    {language === 'en' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
+                    {language === 'en' && <span className="text-primary">✓</span>}
                   </button>
                   <button
                     onClick={() => {
@@ -512,31 +613,31 @@ const AppShell: React.FC<AppShellProps> = ({
                     }}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors border flex items-center justify-between ${
                       language === 'hi'
-                        ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900'
-                        : 'bg-white text-gray-800 hover:bg-gray-50 border-transparent dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
+                        ? 'bg-secondary text-secondary-foreground border-border'
+                        : 'bg-background text-foreground hover:bg-accent border-transparent'
                     }`}
                   >
                     <span>हिंदी (Hindi)</span>
-                    {language === 'hi' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
+                    {language === 'hi' && <span className="text-primary">✓</span>}
                   </button>
                 </div>
               </div>
             </nav>
 
-            <div className="p-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
+            <div className="p-3 border-t border-border flex items-center justify-between">
               <button
                 onClick={() => {
                   onNavigate("profile");
                   setIsMobileNavOpen(false);
                 }}
-                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-border text-foreground bg-background"
                 aria-label="Profile"
               >
                 <User className="h-4 w-4" />
               </button>
               <button
                 onClick={toggleTheme}
-                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-200 text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+                className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-border text-foreground bg-background"
                 aria-label="Toggle theme"
               >
                 {theme === "dark" ? (
@@ -551,7 +652,7 @@ const AppShell: React.FC<AppShellProps> = ({
                   onNavigate("settings");
                   setIsMobileNavOpen(false);
                 }}
-                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-border hover:bg-accent text-foreground bg-background"
               >
                 <Settings className="h-4 w-4" />
               </button>
@@ -560,7 +661,7 @@ const AppShell: React.FC<AppShellProps> = ({
                   onNavigate("video");
                   setIsMobileNavOpen(false);
                 }}
-                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-border hover:bg-accent text-foreground bg-background"
               >
                 <Video className="h-4 w-4" />
                 <span className="text-xs">Video</span>
@@ -570,7 +671,7 @@ const AppShell: React.FC<AppShellProps> = ({
                   onNavigate("more");
                   setIsMobileNavOpen(false);
                 }}
-                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-gray-200 hover:bg-gray-50 text-gray-800 bg-white dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+                className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-border hover:bg-accent text-foreground bg-background"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </button>
