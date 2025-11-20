@@ -136,9 +136,7 @@ const AppShell: React.FC<AppShellProps> = ({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-            L
-          </div>
+          <img src="/logo.png" alt="LegalEase AI" className="h-8 w-8 object-contain" />
           <div className="leading-tight">
             <div className="text-foreground font-semibold text-sm">
               LegalEase AI
@@ -159,9 +157,7 @@ const AppShell: React.FC<AppShellProps> = ({
         <div className={`h-16 flex items-center px-4 border-b border-border ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} shrink-0`}>
            {!isSidebarCollapsed ? (
              <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-                <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shrink-0">
-                  L
-                </div>
+                <img src="/logo.png" alt="LegalEase AI" className="h-10 w-10 object-contain shrink-0" />
                 <div className="leading-tight">
                   <div className="text-foreground font-bold text-lg">
                     LegalEase
@@ -172,9 +168,7 @@ const AppShell: React.FC<AppShellProps> = ({
                 </div>
              </div>
            ) : (
-             <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
-               L
-             </div>
+             <img src="/logo.png" alt="LegalEase AI" className="h-10 w-10 object-contain" />
            )}
         </div>
 
