@@ -38,6 +38,7 @@ interface AppShellProps {
   onSelectAnalysis?: (item: AnalysisHistoryItem) => void;
   onFetchHistory?: () => void;
   onSave?: () => void;
+  onDeleteAnalysis?: (id: string) => void;
   onDownload?: () => void;
   isSaved?: boolean;
   isGeneratingPdf?: boolean;
@@ -49,12 +50,6 @@ interface AppShellProps {
   onLanguageChange: (lang: "en" | "hi") => void;
 }
 
-const navItems: NavItem[] = [
-  { id: "upload", label: "Upload", icon: <Upload className="h-5 w-5" /> },
-  { id: "results", label: "Results", icon: <FileText className="h-5 w-5" /> },
-  { id: "visuals", label: "Visuals", icon: <PieChart className="h-5 w-5" /> },
-];
-
 const AppShell: React.FC<AppShellProps> = ({
   current,
   onNavigate,
@@ -64,6 +59,7 @@ const AppShell: React.FC<AppShellProps> = ({
   onSelectAnalysis,
   onFetchHistory,
   onSave,
+  onDeleteAnalysis,
   onDownload,
   isSaved,
   isGeneratingPdf,
@@ -74,53 +70,107 @@ const AppShell: React.FC<AppShellProps> = ({
   language,
   onLanguageChange,
 }) => {
-  const [theme, setTheme] = useState<"light" | "dark">(
-    () =>
-      (typeof window !== "undefined" &&
-        (localStorage.getItem("theme") as "light" | "dark")) ||
-      "light"
-  );
+  const translations = {
+    en: {
+      upload: "Upload",
+      results: "Results",
+      visuals: "Visuals",
+      newAnalysis: "New Analysis",
+      lawyerLocator: "Lawyer Locator",
+      lawyerLocatorAI: "Lawyer Locator AI",
+      settings: "Settings",
+      videoShowcase: "Video Showcase",
+      more: "More",
+      video: "Video",
+      login: "Login",
+      signup: "Sign Up",
+      welcomeBack: "Welcome back",
+      premiumPlan: "Premium Plan",
+      aiActive: "AI Legal Assistant Active",
+      menu: "Menu",
+      history: "History",
+      language: "Language",
+      profile: "Profile",
+      toggleTheme: "Toggle theme",
+      lightMode: "Light mode",
+      darkMode: "Dark mode",
+      logout: "Logout",
+    },
+    hi: {
+      upload: "अपलोड",
+      results: "परिणाम",
+      visuals: "दृश्य",
+      newAnalysis: "नया विश्लेषण",
+      lawyerLocator: "वकील खोजें",
+      lawyerLocatorAI: "वकील खोज एआई",
+      settings: "सेटिंग्स",
+      videoShowcase: "वीडियो शोकेस",
+      more: "अधिक",
+      video: "वीडियो",
+      login: "लॉग इन",
+      signup: "साइन अप",
+      welcomeBack: "वापसी पर स्वागत है",
+      premiumPlan: "प्रीमियम योजना",
+      aiActive: "एआई कानूनी सहायक सक्रिय",
+      menu: "मेनू",
+      history: "इतिहास",
+      language: "भाषा",
+      profile: "प्रोफ़ाइल",
+      toggleTheme: "थीम बदलें",
+      lightMode: "लाइट मोड",
+      darkMode: "डार्क मोड",
+      logout: "लॉग आउट",
+    },
+  };
 
-  useEffect(() => {
-    try {
-      const root = document.documentElement;
-      if (theme === "dark") root.classList.add("dark");
-      else root.classList.remove("dark");
-      localStorage.setItem("theme", theme);
-    } catch (error) {
-      console.error("Failed to set theme:", error);
-    }
-  }, [theme]);
+  const t = translations[language];
 
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const navItems: NavItem[] = [
+    { id: "upload", label: t.upload, icon: <Upload className="h-5 w-5" /> },
+    { id: "results", label: t.results, icon: <FileText className="h-5 w-5" /> },
+    { id: "visuals", label: t.visuals, icon: <PieChart className="h-5 w-5" /> },
+  ];
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("theme") as "light" | "dark") || "light";
+    }
+    return "light";
+  });
 
-  // Bottom nav tab selection mapping (three tabs)
-  const tabToRoute = {
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
+  // Mapping for bottom tabs
+  const tabToRoute: Record<string, string> = {
     upload: "upload",
     results: "results",
     visuals: "visuals",
-  } as const;
-
-  const routeToTab = (route: string) => {
-    if (route === "upload") return "upload" as const;
-    if (route === "results") return "results" as const;
-    if (route === "visuals") return "visuals" as const;
-    return "upload" as const;
   };
 
-  const selectedTab = routeToTab(current);
+  const routeToTab: Record<string, string> = {
+    upload: "upload",
+    results: "results",
+    visuals: "visuals",
+  };
 
-  const handleTabKey = (
-    e: React.KeyboardEvent<HTMLLabelElement>,
-    routeId: keyof typeof tabToRoute
-  ) => {
+  const selectedTab = routeToTab[current] || "upload";
+
+  const handleTabKey = (e: React.KeyboardEvent, tab: string) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onNavigate(tabToRoute[routeId]);
+      onNavigate(tabToRoute[tab]);
     }
   };
 
@@ -192,10 +242,10 @@ const AppShell: React.FC<AppShellProps> = ({
                   ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
                   : 'bg-primary text-primary-foreground hover:shadow-primary/25 hover:shadow-lg'
                 }`}
-                title={isSidebarCollapsed ? "New Analysis" : ""}
+                title={isSidebarCollapsed ? t.newAnalysis : ""}
               >
                 <span className="text-xl leading-none">+</span>
-                {!isSidebarCollapsed && <span>New Analysis</span>}
+                {!isSidebarCollapsed && <span>{t.newAnalysis}</span>}
               </button>
             </div>
 
@@ -235,11 +285,11 @@ const AppShell: React.FC<AppShellProps> = ({
                     ${isSidebarCollapsed ? 'justify-center px-0' : ''} text-muted-foreground hover:bg-accent hover:text-accent-foreground`}
                   >
                     <Scale className="h-5 w-5" />
-                    {!isSidebarCollapsed && <span>Lawyer Locator</span>}
+                    {!isSidebarCollapsed && <span>{t.lawyerLocator}</span>}
                   </button>
                    {isSidebarCollapsed && (
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-popover text-popover-foreground border border-border text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-x-2 group-hover:translate-x-0">
-                      Lawyer Locator
+                      {t.lawyerLocator}
                     </div>
                   )}
                </div>
@@ -254,6 +304,8 @@ const AppShell: React.FC<AppShellProps> = ({
                 onSelect={(item) => onSelectAnalysis?.(item)}
                 selectedId={selectedAnalysisId}
                 onFetch={onFetchHistory}
+                onDelete={onDeleteAnalysis}
+                language={language}
               />
             ) : (
                <div className="flex flex-col items-center pt-6 gap-4 opacity-50">
@@ -269,9 +321,9 @@ const AppShell: React.FC<AppShellProps> = ({
         <div className="px-3 py-2 border-t border-border bg-muted/50 shrink-0">
           <div className="space-y-0.5">
             {[
-              { id: 'settings', icon: <Settings className="h-4 w-4" />, label: 'Settings', action: () => onNavigate("settings") },
-              { id: 'video', icon: <Video className="h-4 w-4" />, label: 'Video Showcase', action: () => onNavigate("video") },
-              { id: 'more', icon: <MoreHorizontal className="h-4 w-4" />, label: 'More', action: () => onNavigate("more") },
+              { id: 'settings', icon: <Settings className="h-4 w-4" />, label: t.settings, action: () => onNavigate("settings") },
+              { id: 'video', icon: <Video className="h-4 w-4" />, label: t.videoShowcase, action: () => onNavigate("video") },
+              { id: 'more', icon: <MoreHorizontal className="h-4 w-4" />, label: t.more, action: () => onNavigate("more") },
             ].map((btn) => (
               <div key={btn.id} className="relative group">
                 <button
@@ -295,7 +347,7 @@ const AppShell: React.FC<AppShellProps> = ({
              <button
               onClick={toggleTheme}
               className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              title={theme === "dark" ? "Light mode" : "Dark mode"}
+              title={theme === "dark" ? t.lightMode : t.darkMode}
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
@@ -307,7 +359,7 @@ const AppShell: React.FC<AppShellProps> = ({
             <button
               onClick={() => onNavigate("profile")}
               className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              title="Profile"
+              title={t.profile}
             >
               <User className="h-4 w-4" />
             </button>
@@ -320,7 +372,7 @@ const AppShell: React.FC<AppShellProps> = ({
                <button
                 onClick={onLogout}
                 className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                title="Logout"
+                title={t.logout}
               >
                 <LogOut className="h-4 w-4" />
               </button>
@@ -337,7 +389,7 @@ const AppShell: React.FC<AppShellProps> = ({
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
                   <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span className="font-medium">AI Legal Assistant Active</span>
+                  <span className="font-medium">{t.aiActive}</span>
                </div>
             </div>
 
@@ -389,20 +441,20 @@ const AppShell: React.FC<AppShellProps> = ({
                       onClick={onLogin}
                       className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                     >
-                      Login
+                      {t.login}
                     </button>
                     <button
                       onClick={onSignup}
                       className="px-5 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
                     >
-                      Sign Up
+                      {t.signup}
                     </button>
                   </div>
                ) : (
                   <div className="flex items-center gap-3">
                      <div className="text-sm text-right hidden lg:block">
-                        <div className="font-medium text-foreground">Welcome back</div>
-                        <div className="text-xs text-muted-foreground">Premium Plan</div>
+                        <div className="font-medium text-foreground">{t.welcomeBack}</div>
+                        <div className="text-xs text-muted-foreground">{t.premiumPlan}</div>
                      </div>
                      <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
                         {user.displayName?.[0] || 'U'}
@@ -439,7 +491,7 @@ const AppShell: React.FC<AppShellProps> = ({
               tabIndex={selectedTab === "upload" ? 0 : -1}
               onKeyDown={(e) => handleTabKey(e, "upload")}
             >
-              Upload
+              {t.upload}
             </label>
 
             <input
@@ -457,7 +509,7 @@ const AppShell: React.FC<AppShellProps> = ({
               tabIndex={selectedTab === "results" ? 0 : -1}
               onKeyDown={(e) => handleTabKey(e, "results")}
             >
-              Results
+              {t.results}
             </label>
 
             <input
@@ -475,7 +527,7 @@ const AppShell: React.FC<AppShellProps> = ({
               tabIndex={selectedTab === "visuals" ? 0 : -1}
               onKeyDown={(e) => handleTabKey(e, "visuals")}
             >
-              Visuals
+              {t.visuals}
             </label>
 
             <span className="glider" />
@@ -492,7 +544,7 @@ const AppShell: React.FC<AppShellProps> = ({
           />
           <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-background border-r border-border shadow-xl flex flex-col">
             <div className="h-14 px-3 border-b border-border flex items-center justify-between">
-              <div className="font-semibold text-foreground">Menu</div>
+              <div className="font-semibold text-foreground">{t.menu}</div>
               <button
                 className="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border text-muted-foreground bg-background"
                 aria-label="Close menu"
@@ -512,7 +564,7 @@ const AppShell: React.FC<AppShellProps> = ({
                     className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-secondary text-secondary-foreground border border-border"
                   >
                     <LogIn className="h-4 w-4" />
-                    <span>Login</span>
+                    <span>{t.login}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -522,7 +574,7 @@ const AppShell: React.FC<AppShellProps> = ({
                     className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground border border-primary"
                   >
                     <UserPlus className="h-4 w-4" />
-                    <span>Sign Up</span>
+                    <span>{t.signup}</span>
                   </button>
                 </div>
               )}
@@ -533,7 +585,7 @@ const AppShell: React.FC<AppShellProps> = ({
                 }}
                 className="w-full text-left px-3 py-2 rounded-md text-sm font-medium border border-primary/20 bg-primary/10 text-primary hover:bg-primary/20"
               >
-                + New Analysis
+                + {t.newAnalysis}
               </button>
 
               {navItems.map((item) => (
@@ -561,13 +613,13 @@ const AppShell: React.FC<AppShellProps> = ({
           >
             <Scale className="h-4 w-4" />
             <span>
-              <strong>Lawyer Locator AI</strong>
+              <strong>{t.lawyerLocatorAI}</strong>
             </span>
           </button>
 
               <div className="mt-3 pt-3 border-t border-border">
                 <div className="text-xs font-semibold text-muted-foreground mb-2">
-                  History
+                  {t.history}
                 </div>
                 <AnalysisHistorySidebar
                   items={analysisHistory}
@@ -577,13 +629,15 @@ const AppShell: React.FC<AppShellProps> = ({
                   }}
                   selectedId={selectedAnalysisId}
                   onFetch={onFetchHistory}
+                  onDelete={onDeleteAnalysis}
+                  language={language}
                 />
               </div>
               
               {/* Mobile Language Switcher */}
               <div className="mt-3 pt-3 border-t border-border">
                 <div className="text-xs font-semibold text-muted-foreground mb-2">
-                  Language
+                  {t.language}
                 </div>
                 <div className="space-y-1">
                   <button
@@ -658,7 +712,7 @@ const AppShell: React.FC<AppShellProps> = ({
                 className=" inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border border-border hover:bg-accent text-foreground bg-background"
               >
                 <Video className="h-4 w-4" />
-                <span className="text-xs">Video</span>
+                <span className="text-xs">{t.video}</span>
               </button>
               <button
                 onClick={() => {

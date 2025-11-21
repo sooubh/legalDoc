@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { DocumentAnalysis, SimplificationLevel, ClauseEnforceabilityResult, VisualizationBundle } from '../types/legal';
+import type { DocumentAnalysis, SimplificationLevel, ClauseEnforceabilityResult, VisualizationBundle, AuthenticityAnalysis } from '../types/legal';
 import type { ChatRequest, ChatMessage } from '../types/chat';
 import { jsonrepair } from 'jsonrepair';
 
@@ -671,5 +671,64 @@ export async function generateVisualizationsWithGemini(params: VisualizationPara
   // eslint-disable-next-line no-console
   console.log('[Gemini][visualizations][mapped]', bundle);
   return bundle;
+}
+
+export async function analyzeDocumentAuthenticity(content: string, language: 'en' | 'hi'): Promise<AuthenticityAnalysis> {
+  const genAI = getGenAI();
+  if (!genAI) {
+    throw new Error('Missing Gemini API key. Please configure it in Settings.');
+  }
+
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
+  const prompt = [
+    'You are a legal expert AI. Analyze the following document text for authenticity, safety, and compliance with government guidelines (e.g., Indian Contract Act or relevant local laws).',
+    'Return a strict JSON object with the following structure:',
+    '',
+    'interface AuthenticityAnalysis {',
+    '  authenticityScore: number; // 0-100 (Probability of being a genuine, legally binding document)',
+    '  isCompliant: boolean; // Does it follow standard legal guidelines?',
+    '  compliantWith: string; // Name of the act/law it complies with or violates',
+    '  redFlags: string[]; // List of suspicious elements (e.g., "Missing signatures", "Vague terms", "Unbalanced clauses")',
+    '  safetyScore: number; // 0-100 (How safe is this for the user to sign?)',
+    '  safetyAnalysis: string; // Brief explanation of the safety score',
+    '  fakeIndication: "Low" | "Medium" | "High"; // Likelihood of being a fake/scam document',
+    '  recommendation: string; // Final advice (e.g., "Proceed with caution", "Consult a lawyer immediately")',
+    '}',
+    '',
+    `- Language for text fields: ${language === 'hi' ? 'Hindi' : 'English'}.`,
+    '- Be critical. Look for signs of templates, missing key clauses, or unfair terms.',
+    '- Return ONLY JSON.',
+    '',
+    'Document Text (first 5000 chars):',
+    content.slice(0, 5000),
+  ].join('\n');
+
+  const response = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 1024,
+      responseMimeType: 'application/json',
+    },
+  });
+
+  const text = response.response.text();
+  try {
+    const data = safeParseJson(text);
+    return {
+      authenticityScore: typeof data.authenticityScore === 'number' ? data.authenticityScore : 0,
+      isCompliant: !!data.isCompliant,
+      compliantWith: typeof data.compliantWith === 'string' ? data.compliantWith : 'Unknown',
+      redFlags: Array.isArray(data.redFlags) ? data.redFlags : [],
+      safetyScore: typeof data.safetyScore === 'number' ? data.safetyScore : 0,
+      safetyAnalysis: typeof data.safetyAnalysis === 'string' ? data.safetyAnalysis : '',
+      fakeIndication: ['Low', 'Medium', 'High'].includes(data.fakeIndication) ? data.fakeIndication : 'Medium',
+      recommendation: typeof data.recommendation === 'string' ? data.recommendation : '',
+    };
+  } catch (err) {
+    console.error('Failed to parse authenticity analysis', err);
+    throw new Error('Failed to analyze authenticity');
+  }
 }
 

@@ -5,6 +5,7 @@ import {
   Clock,
   AlertTriangle,
   FileText,
+  Trash2,
 } from "lucide-react";
 import type { AnalysisHistoryItem } from "../types/history.ts";
 
@@ -13,6 +14,8 @@ interface AnalysisHistorySidebarProps {
   onSelect: (item: AnalysisHistoryItem) => void;
   selectedId?: string;
   onFetch?: () => void;
+  onDelete?: (id: string) => void;
+  language?: "en" | "hi";
 }
 
 const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
@@ -20,8 +23,27 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
   onSelect,
   selectedId,
   onFetch,
+  onDelete,
+  language = "en",
 }) => {
   const [expanded, setExpanded] = React.useState<{ [key: string]: boolean }>({});
+
+  const translations = {
+    en: {
+      history: "History",
+      untitled: "Untitled Analysis",
+      items: "items",
+      highRisk: "High Risk",
+    },
+    hi: {
+      history: "इतिहास",
+      untitled: "शीर्षकहीन विश्लेषण",
+      items: "आइटम",
+      highRisk: "उच्च जोखिम",
+    },
+  };
+
+  const t = translations[language];
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -37,7 +59,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
 
   const formatDate = (timestamp: AnalysisHistoryItem["timestamp"]) => {
     const date = toJsDate(timestamp as any);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(language === "hi" ? "hi-IN" : "en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -46,7 +68,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
 
   const formatTime = (timestamp: AnalysisHistoryItem["timestamp"]) => {
     const date = toJsDate(timestamp as any);
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString(language === "hi" ? "hi-IN" : "en-US", {
       hour: "numeric",
       minute: "2-digit",
     });
@@ -54,7 +76,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
 
   // Group items by analysis name (title)
   const groupedItems = items.reduce((acc, item) => {
-    const name = item.title || "Untitled Analysis";
+    const name = item.title || t.untitled;
     if (!acc[name]) acc[name] = [];
     acc[name].push(item);
     return acc;
@@ -64,7 +86,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
     <div className="h-full flex flex-col">
       <div className="px-3 py-2 border-b border-gray-200 dark:border-slate-700">
         <h3 className="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
-          History
+          {t.history}
         </h3>
       </div>
 
@@ -87,7 +109,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
                 <span className="truncate">{name}</span>
               </span>
               <span className="text-xs text-gray-500 dark:text-slate-400">
-                {nameItems.length} items
+                {nameItems.length} {t.items}
               </span>
             </button>
 
@@ -101,7 +123,7 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
                       selectedId === item.id
                         ? "bg-blue-50 dark:bg-blue-900/20"
                         : ""
-                    }`}
+                    } group relative pr-10`}
                   >
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-gray-400" />
@@ -117,9 +139,23 @@ const AnalysisHistorySidebar: React.FC<AnalysisHistorySidebarProps> = ({
                       {item.analysis.overallRiskLevel === "high" && (
                         <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
                           <AlertTriangle className="h-3 w-3" />
-                          High Risk
+                          {t.highRisk}
                         </span>
                       )}
+                    </div>
+                    
+                    {/* Delete Button - Only visible on hover/group hover */}
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete?.(item.id);
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                        title="Delete analysis"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </button>
                 ))}

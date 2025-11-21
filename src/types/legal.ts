@@ -38,6 +38,18 @@ export interface TimelineEvent {
   event: string;
   summary: string;
 }
+
+export interface AuthenticityAnalysis {
+  authenticityScore: number; // 0-100
+  isCompliant: boolean;
+  compliantWith: string; // e.g., "Indian Contract Act, 1872"
+  redFlags: string[];
+  safetyScore: number; // 0-100
+  safetyAnalysis: string;
+  fakeIndication: "Low" | "Medium" | "High";
+  recommendation: string;
+}
+
 export interface DocumentAnalysis {
   id: string;
   documentType: string;
@@ -47,7 +59,8 @@ export interface DocumentAnalysis {
   actionPoints: string[];
   citations: Citation[];
   timeline?: TimelineEvent[];
-  overallRiskLevel?: 'low' | 'medium' | 'high'; // ✅ add this
+  overallRiskLevel?: 'low' | 'medium' | 'high';
+  authenticity?: AuthenticityAnalysis;
 }
 
 export type EnforceabilityStatus = 'enforceable' | 'restricted' | 'not_enforceable' | 'uncertain';

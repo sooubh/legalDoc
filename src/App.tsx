@@ -16,10 +16,12 @@
   import {
     analyzeDocumentWithGemini,
     generateVisualizationsWithGemini,
+    analyzeDocumentAuthenticity,
   } from "./services/gemini";
   import {
     saveAnalysisToHistory,
     getAnalysisHistoryForUser,
+    deleteAnalysisFromHistory,
   } from "./services/analysis";
 import { subscribeToUserProfile, getUserProfile, updateUserPreferences } from "./services/userService";
   import Visualizations from "./components/Visualizations";
@@ -246,6 +248,8 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
         setAnalysis(result);
         setRoute("results");
 
+
+
         // Generate visualizations
         setIsVisualsLoading(true);
         const visualsResult = await generateVisualizationsWithGemini({
@@ -256,6 +260,14 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
         });
         setVisuals(visualsResult);
         setIsVisualsLoading(false);
+
+        // Run Authenticity Check
+        try {
+            const authResult = await analyzeDocumentAuthenticity(content, language);
+            setAnalysis(prev => prev ? { ...prev, authenticity: authResult } : null);
+        } catch (e) {
+            console.error("Authenticity check failed", e);
+        }
 
         // Save unsaved analysis to localStorage
         const unsavedAnalysis = {
@@ -359,6 +371,38 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
       } catch (e) {
         console.error("Failed to fetch analysis history:", e);
         alert("Failed to fetch analysis history.");
+      }
+    };
+
+    const handleDeleteAnalysis = async (id: string) => {
+      if (!confirm(language === "hi" ? "क्या आप वाकई इस विश्लेषण को हटाना चाहते हैं?" : "Are you sure you want to delete this analysis?")) {
+        return;
+      }
+
+      try {
+        // Optimistic update
+        const previousHistory = [...analysisHistory];
+        setAnalysisHistory(prev => prev.filter(item => item.id !== id));
+
+        // If it's the currently selected analysis, clear it
+        if (selectedAnalysisId === id) {
+          handleNewAnalysis();
+        }
+
+        // Delete from storage
+        await deleteAnalysisFromHistory(id);
+
+        // Update local storage if it was a local item
+        if (id.startsWith("local-")) {
+          const localAnalyses = loadLocalAnalyses();
+          const updatedLocal = localAnalyses.filter(item => item.id !== id);
+          localStorage.setItem("localAnalyses", JSON.stringify(updatedLocal));
+        }
+      } catch (error) {
+        console.error("Failed to delete analysis:", error);
+        alert("Failed to delete analysis. Please try again.");
+        // Revert optimistic update on error
+        handleFetchHistory();
       }
     };
 
@@ -572,6 +616,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
             selectedAnalysisId={selectedAnalysisId}
             onSelectAnalysis={handleSelectAnalysis}
             onFetchHistory={handleFetchHistory}
+            onDeleteAnalysis={handleDeleteAnalysis}
             onSave={handleSaveAnalysis}
             onDownload={handleDownloadPdf}
             isSaved={analysisHistory.some(

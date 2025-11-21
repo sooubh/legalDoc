@@ -12,7 +12,7 @@ type AnalysisHistoryCreate = Omit<AnalysisHistoryItem, 'id' | 'timestamp'> & {
 export const saveAnalysisToHistory = async (analysisItem: Omit<AnalysisHistoryItem, 'id'>): Promise<string> => {
   try {
     console.log('🔄 Attempting to save analysis to Firestore...');
-    
+
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
@@ -55,7 +55,7 @@ export const saveAnalysisToHistory = async (analysisItem: Omit<AnalysisHistoryIt
       stack: error?.stack,
       name: error?.name
     });
-    
+
     // Check if it's a permission error
     if (error?.code === 'permission-denied') {
       console.error('🚫 Permission denied - check your Firestore rules');
@@ -64,7 +64,7 @@ export const saveAnalysisToHistory = async (analysisItem: Omit<AnalysisHistoryIt
     } else if (error?.code === 'invalid-argument') {
       console.error('📝 Invalid data format');
     }
-    
+
     // For now, return a local ID if Firestore fails
     console.warn('Firestore save failed, using local ID');
     return `local-${Date.now()}`;
@@ -74,7 +74,7 @@ export const saveAnalysisToHistory = async (analysisItem: Omit<AnalysisHistoryIt
 export const getAnalysisHistoryForUser = async (): Promise<AnalysisHistoryItem[]> => {
   try {
     console.log('🔄 Attempting to fetch analysis history from Firestore...');
-    
+
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
@@ -93,7 +93,7 @@ export const getAnalysisHistoryForUser = async (): Promise<AnalysisHistoryItem[]
     console.log('📖 Executing query...');
     const querySnapshot = await getDocs(q);
     console.log('✅ Query successful, found', querySnapshot.size, 'documents');
-    
+
     const history: AnalysisHistoryItem[] = [];
     querySnapshot.forEach((doc) => {
       history.push({ id: doc.id, ...doc.data() } as AnalysisHistoryItem);
@@ -111,5 +111,33 @@ export const getAnalysisHistoryForUser = async (): Promise<AnalysisHistoryItem[]
     // Return empty array instead of throwing to prevent app crashes
     console.warn('Firestore fetch failed, returning empty array');
     return [];
+  }
+};
+
+export const deleteAnalysisFromHistory = async (id: string): Promise<void> => {
+  try {
+    console.log('🗑️ Attempting to delete analysis:', id);
+
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    // If it's a local ID (starts with "local-"), we don't need to delete from Firestore
+    if (id.startsWith('local-')) {
+      console.log('✅ Local analysis deletion handled by client state');
+      return;
+    }
+
+    if (!user) {
+      throw new Error('User not authenticated. Cannot delete from history.');
+    }
+
+    const { deleteDoc, doc } = await import('firebase/firestore');
+    const docRef = doc(db, 'analysisHistory', id);
+
+    await deleteDoc(docRef);
+    console.log('✅ Successfully deleted analysis from Firestore:', id);
+  } catch (error: any) {
+    console.error('❌ Error deleting analysis:', error);
+    throw error;
   }
 };
