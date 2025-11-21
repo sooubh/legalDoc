@@ -3,15 +3,13 @@ import type { DocumentAnalysis, SimplificationLevel, ClauseEnforceabilityResult,
 import type { ChatRequest, ChatMessage } from '../types/chat';
 import { jsonrepair } from 'jsonrepair';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+import { getGeminiApiKey } from '../utils/apiKey';
 
-if (!API_KEY) {
-  // We don't throw at import time to avoid breaking build; callers should handle errors.
-  // eslint-disable-next-line no-console
-  console.warn('VITE_GEMINI_API_KEY is not set. Gemini analysis will fail until configured.');
-}
-
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+const getGenAI = () => {
+  const key = getGeminiApiKey();
+  if (!key) return null;
+  return new GoogleGenerativeAI(key);
+};
 
 const MODEL_NAME = 'gemini-2.0-flash';
 
@@ -82,7 +80,7 @@ function safeParseJson(raw: string): any {
   // 1) Direct parse
   try {
     return tryParse(raw);
-  } catch {}
+  } catch { }
   // 2) Repair raw then parse
   try {
     return tryRepairThenParse(raw);
@@ -96,7 +94,7 @@ function safeParseJson(raw: string): any {
     // 3a) Parse extracted
     try {
       return tryParse(extracted);
-    } catch {}
+    } catch { }
     // 3b) Repair extracted then parse
     try {
       return tryRepairThenParse(extracted);
@@ -113,9 +111,10 @@ function safeParseJson(raw: string): any {
 
 export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<DocumentAnalysis> {
   const { content, language, simplificationLevel } = params;
+  const genAI = getGenAI();
 
   if (!genAI) {
-    throw new Error('Missing Gemini API key. Set VITE_GEMINI_API_KEY in your environment.');
+    throw new Error('Missing Gemini API key. Please configure it in Settings.');
   }
 
   const chunks = splitTextIntoChunks(content, 4000, 400);
@@ -142,7 +141,7 @@ export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<
     const part = chunks[i];
     const prompt = buildChunkPrompt(part, language, simplificationLevel, i + 1, chunks.length);
     const response = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }]}],
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 2048,
@@ -210,7 +209,7 @@ export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<
         risks: merged.risks.slice(0, 30),
       });
       const sumResp = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: sumPrompt }]}],
+        contents: [{ role: 'user', parts: [{ text: sumPrompt }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 512 },
       });
       merged.plainSummary = sumResp.response.text().trim();
@@ -267,8 +266,7 @@ function buildPrompt(content: string, language: 'en' | 'hi', level: Simplificati
     '}',
     '',
     `- Language for plainSummary and explanations: ${language === 'hi' ? 'Hindi' : 'English'}.`,
-    `- Simplification level for simplifiedText: ${level} (use ${
-      level === 'eli5' ? 'very simple, everyday language' : level === 'simple' ? 'clear, non-legal language' : 'concise professional tone'
+    `- Simplification level for simplifiedText: ${level} (use ${level === 'eli5' ? 'very simple, everyday language' : level === 'simple' ? 'clear, non-legal language' : 'concise professional tone'
     }).`,
     '- Keep clause.originalText as quotes from the input where possible.',
     "- For each clause, include rolePerspectives with tailored interpretations for relevant roles depending on document type: Tenancy (Tenant/Landlord), Employment (Employee/Employer), Consumer contract (Consumer/Business). If unclear, include the most plausible roles.",
@@ -338,7 +336,7 @@ function isLikelyUrl(u: string): boolean {
   try {
     const url = new URL(u);
     return !!url.protocol && !!url.hostname;
-  } catch {}
+  } catch { }
   return false;
 }
 
@@ -355,7 +353,7 @@ function mapToDocumentAnalysis(data: any): DocumentAnalysis {
     riskLevel: (['low', 'medium', 'high'] as const).includes(c.riskLevel) ? c.riskLevel : 'medium',
     explanation: safeString(c.explanation),
     rolePerspectives: safeArray(c.rolePerspectives).map((rp: any) => ({
-      role: ['Tenant','Landlord','Employee','Employer','Consumer','Business'].includes(rp?.role) ? rp.role : undefined,
+      role: ['Tenant', 'Landlord', 'Employee', 'Employer', 'Consumer', 'Business'].includes(rp?.role) ? rp.role : undefined,
       interpretation: safeString(rp?.interpretation),
       obligations: safeArray(rp?.obligations).map((s) => safeString(s)).filter(Boolean),
       risks: safeArray(rp?.risks).map((s) => safeString(s)).filter(Boolean),
@@ -390,8 +388,9 @@ function mapToDocumentAnalysis(data: any): DocumentAnalysis {
 }
 
 export async function chatWithGemini(req: ChatRequest): Promise<ChatMessage> {
+  const genAI = getGenAI();
   if (!genAI) {
-    throw new Error('Missing Gemini API key. Set VITE_GEMINI_API_KEY in your environment.');
+    throw new Error('Missing Gemini API key. Please configure it in Settings.');
   }
 
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
@@ -437,7 +436,7 @@ export async function chatWithGemini(req: ChatRequest): Promise<ChatMessage> {
   ].join('\n');
 
   const response = await model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: userPrompt }]}],
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: 0.3,
       maxOutputTokens: 2048,
@@ -457,8 +456,9 @@ export interface EnforceabilityParams {
 }
 
 export async function analyzeClauseEnforceabilityWithGemini(params: EnforceabilityParams): Promise<ClauseEnforceabilityResult> {
+  const genAI = getGenAI();
   if (!genAI) {
-    throw new Error('Missing Gemini API key. Set VITE_GEMINI_API_KEY in your environment.');
+    throw new Error('Missing Gemini API key. Please configure it in Settings.');
   }
 
   const { clause, jurisdiction, language } = params;
@@ -491,7 +491,7 @@ export async function analyzeClauseEnforceabilityWithGemini(params: Enforceabili
   ].join('\n');
 
   const response = await model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: prompt }]}],
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.3,
       maxOutputTokens: 2048,
@@ -515,7 +515,7 @@ export async function analyzeClauseEnforceabilityWithGemini(params: Enforceabili
   const safeString = (v: any, fallback = ''): string => (typeof v === 'string' ? v : fallback);
   const safeArray = (v: any): any[] => (Array.isArray(v) ? v : []);
   const validStatus = (s: any): ClauseEnforceabilityResult['status'] => (
-    ['enforceable','restricted','not_enforceable','uncertain'].includes(s) ? s : 'uncertain'
+    ['enforceable', 'restricted', 'not_enforceable', 'uncertain'].includes(s) ? s : 'uncertain'
   ) as ClauseEnforceabilityResult['status'];
 
   const result: ClauseEnforceabilityResult = {
@@ -545,8 +545,9 @@ export interface VisualizationParams {
 }
 
 export async function generateVisualizationsWithGemini(params: VisualizationParams): Promise<VisualizationBundle> {
+  const genAI = getGenAI();
   if (!genAI) {
-    throw new Error('Missing Gemini API key. Set VITE_GEMINI_API_KEY in your environment.');
+    throw new Error('Missing Gemini API key. Please configure it in Settings.');
   }
 
   const { document, language, partyALabel = 'Party A', partyBLabel = 'Party B' } = params;
@@ -587,7 +588,7 @@ export async function generateVisualizationsWithGemini(params: VisualizationPara
   ].join('\n');
 
   const response = await model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: prompt }]}],
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.2,
       maxOutputTokens: 4096,
@@ -645,7 +646,7 @@ export async function generateVisualizationsWithGemini(params: VisualizationPara
       nodes: safeArray(f?.nodes).map((n: any, nidx: number) => ({
         id: safeString(n?.id, `${fidx + 1}-n${nidx + 1}`),
         label: safeString(n?.label),
-        type: ['start','decision','process','end'].includes(n?.type) ? n?.type : undefined,
+        type: ['start', 'decision', 'process', 'end'].includes(n?.type) ? n?.type : undefined,
       })),
       edges: safeArray(f?.edges).map((e: any) => ({
         from: safeString(e?.from),

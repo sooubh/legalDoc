@@ -1,12 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 
-if (!import.meta.env.VITE_GEMINI_API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+import { getGeminiApiKey } from "../utils/apiKey";
 
 export async function generateExplanation(inputData: object | string): Promise<string> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    throw new Error("Gemini API key not found. Please configure it in Settings.");
+  }
+  const ai = new GoogleGenAI({ apiKey });
   let jsonData: any;
 
   // Convert inputData to JSON object if it's a string
@@ -102,23 +103,24 @@ Include summary tables for quick reference of key findings, dates, parties, obli
   `;
 
   try {
-  const response = await ai.models.generateContent({
-    model,
-    contents: prompt,
-  });
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+    });
 
-  // Safely access response.text
-  let htmlContent = response?.text?.trim() ?? "";
+    // Safely access response.text
+    let htmlContent = response?.text?.trim() ?? "";
 
-  if (htmlContent.startsWith("```html")) {
-    htmlContent = htmlContent.substring(7);
+    if (htmlContent.startsWith("```html")) {
+      htmlContent = htmlContent.substring(7);
+    }
+    if (htmlContent.endsWith("```")) {
+      htmlContent = htmlContent.slice(0, -3);
+    }
+
+    return htmlContent.trim();
+  } catch (error) {
+    console.error("Error generating explanation with Gemini:", error);
+    throw new Error("Failed to get analysis from AI. Please check the API configuration and input data.");
   }
-  if (htmlContent.endsWith("```")) {
-    htmlContent = htmlContent.slice(0, -3);
-  }
-
-  return htmlContent.trim();
-} catch (error) {
-  console.error("Error generating explanation with Gemini:", error);
-  throw new Error("Failed to get analysis from AI. Please check the API configuration and input data.");
-}}
+}

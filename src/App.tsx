@@ -280,9 +280,15 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
           timestamp: new Date() as any,
         };
         appendLocalAnalysis(localItem);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        alert("Analysis failed. Please set VITE_GEMINI_API_KEY and try again.");
+        if (err.message && (err.message.includes("API key") || err.message.includes("VITE_GEMINI_API_KEY"))) {
+            if (confirm(language === "hi" ? "API कुंजी गायब है। क्या आप इसे सेटिंग्स में कॉन्फ़िगर करना चाहते हैं?" : "Missing API Key. Go to Settings to configure it?")) {
+                setRoute("settings");
+            }
+        } else {
+            alert(language === "hi" ? "विश्लेषण विफल रहा। कृपया पुन: प्रयास करें।" : "Analysis failed. Please try again.");
+        }
       } finally {
         setIsAnalyzing(false);
       }

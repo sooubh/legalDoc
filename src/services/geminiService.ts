@@ -1,5 +1,6 @@
 import { GoogleGenAI, LiveServerMessage, Modality, Blob, Content } from "@google/genai";
 import type { ChatMessage } from "../types/types";
+import { getGeminiApiKey } from "../utils/apiKey";
 
 // FIX: The `LiveSession` type is not exported from `@google/genai`.
 // We can infer it from the return type of the `ai.live.connect` method.
@@ -9,41 +10,41 @@ type LiveSession = Awaited<ReturnType<InstanceType<typeof GoogleGenAI>["live"]["
 
 // FIX: Replaced the incorrect `encode` function with the correct implementation from the Gemini API documentation. The previous version had multiple reference errors and incorrect logic.
 function encode(bytes: Uint8Array): string {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
 }
 
 function decode(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
 }
 
 async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
+    data: Uint8Array,
+    ctx: AudioContext,
+    sampleRate: number,
+    numChannels: number,
 ): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    for (let channel = 0; channel < numChannels; channel++) {
+        const channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < frameCount; i++) {
+            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+        }
     }
-  }
-  return buffer;
+    return buffer;
 }
 
 function createBlob(data: Float32Array): Blob {
@@ -71,7 +72,7 @@ export interface LiveCallbacks {
 export class GeminiLiveService {
     private ai: GoogleGenAI;
     private session: LiveSession | null = null;
-    
+
     private inputAudioContext: AudioContext;
     private outputAudioContext: AudioContext;
     private mediaStream: MediaStream | null = null;
@@ -83,10 +84,11 @@ export class GeminiLiveService {
     private sessionPromise: Promise<LiveSession> | null = null;
 
     constructor() {
-        if (!import.meta.env.VITE_GEMINI_API_KEY) {
-            throw new Error("VITE_GEMINI_API_KEY environment variable not set");
+        const apiKey = getGeminiApiKey();
+        if (!apiKey) {
+            throw new Error("Gemini API key not found. Please configure it in Settings.");
         }
-        this.ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+        this.ai = new GoogleGenAI({ apiKey });
         this.inputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
         this.outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
     }
@@ -135,16 +137,16 @@ export class GeminiLiveService {
             const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
             const pcmBlob = createBlob(inputData);
             if (this.sessionPromise) {
-                 this.sessionPromise.then((session) => {
+                this.sessionPromise.then((session) => {
                     session.sendRealtimeInput({ media: pcmBlob });
-                 });
+                });
             }
         };
 
         this.mediaStreamSource.connect(this.scriptProcessor);
         this.scriptProcessor.connect(this.inputAudioContext.destination);
     }
-    
+
     public async playAudio(base64Audio: string): Promise<void> {
         this.nextStartTime = Math.max(this.nextStartTime, this.outputAudioContext.currentTime);
         const audioBuffer = await decodeAudioData(
@@ -195,19 +197,20 @@ export class GeminiLiveService {
 
 
 export async function sendTextMessage(fullHistory: ChatMessage[], document: string, language: "en" | "hi" = "en"): Promise<string> {
-    if (!import.meta.env.VITE_GEMINI_API_KEY) {
-        throw new Error("VITE_GEMINI_API_KEY environment variable not set");
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) {
+        throw new Error("Gemini API key not found. Please configure it in Settings.");
     }
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-    
+    const ai = new GoogleGenAI({ apiKey });
+
     const contents: Content[] = fullHistory.map(msg => ({
         role: msg.role,
         parts: [{ text: msg.content }]
     }));
 
     const languageInstruction = `Language: ${language === 'hi' ? 'Hindi' : 'English'}. All your responses must be in ${language === 'hi' ? 'Hindi (हिंदी)' : 'English'}.`;
-    
-    const systemInstruction = document 
+
+    const systemInstruction = document
         ? `You are a helpful assistant. Please answer the user's questions based on the following context. If the answer is not found in the context, say so.\n\n${languageInstruction}\n\nCONTEXT:\n"""${document}"""`
         : `You are a helpful assistant. ${languageInstruction}`;
 
