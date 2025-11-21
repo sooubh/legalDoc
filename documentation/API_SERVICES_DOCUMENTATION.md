@@ -417,4 +417,88 @@ const db = getFirestore(app);
 
 ---
 
+## Additional Services
+
+### User Profile Service (`src/services/userService.ts`)
+
+Manages user profiles and preferences in Firestore.
+
+#### Core Functions
+
+```typescript
+export const createUserProfile = async (user: User, provider: string): Promise<void>
+export const getUserProfile = async (uid: string): Promise<UserProfile | null>
+export const updateUserProfile = async (uid: string, updates: Partial<UserProfile>): Promise<void>
+export const subscribeToUserProfile = (uid: string, callback: (profile: UserProfile | null) => void): (() => void)
+export const updateUserPreferences = async (uid: string, preferences: { language?: 'en' | 'hi'; theme?: 'light' | 'dark' }): Promise<void>
+```
+
+#### Features
+- Automatic profile creation on signup
+- Real-time profile synchronization
+- Preference management (language, theme)
+- Last login tracking
+- Provider tracking (email, Google, etc.)
+
+### Analysis History Service (`src/services/analysis.ts`)
+
+Manages saved analysis documents.
+
+#### Core Functions
+
+```typescript
+export const saveAnalysisToHistory = async (analysis: Omit<AnalysisHistoryItem, 'id'>): Promise<string>
+export const getAnalysisHistoryForUser = async (): Promise<AnalysisHistoryItem[]>
+export const deleteAnalysisFromHistory = async (id: string): Promise<void>
+```
+
+#### Features
+- Save analysis to Firestore
+- Retrieve user's analysis history
+- Delete analyses (local and cloud)
+- Dual storage (localStorage + Firestore)
+
+### Gemini Service (`src/services/geminiService.ts`)
+
+Live audio chat service using Gemini's native audio model.
+
+#### Core Class
+
+```typescript
+export class GeminiLiveService {
+  public async startSession(systemInstruction: string, callbacks: LiveCallbacks): Promise<void>
+  public async playAudio(base64Audio: string): Promise<void>
+  public stopSession(): void
+}
+```
+
+#### Features
+- Real-time audio input/output
+- Voice conversation support
+- Audio streaming
+- Microphone integration
+- Text messaging fallback
+
+### Gemini Map Service (`src/services/geminiMapService.ts`)
+
+Lawyer location and recommendation service.
+
+#### Features
+- Location-based lawyer search
+- AI-powered lawyer recommendations
+- Specialization matching
+- Rating and review analysis
+
+### Gemini PDF Service (`src/services/geminiPdfService.ts`)
+
+PDF-specific AI operations.
+
+#### Features
+- Context-aware PDF analysis
+- PDF content summarization
+- Multi-page document handling
+- Structured PDF data extraction
+
+---
+
 _This documentation covers the API services and integration patterns used in the LegalEase AI application. For implementation details, refer to the source code in the `src/services/` directory._

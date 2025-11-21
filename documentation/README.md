@@ -1,333 +1,349 @@
-## LegalEase AI – Document Analyzer
-
-A fast, modern web app that analyzes legal documents clause-by-clause, generates plain-language explanations, and provides role-specific perspectives (e.g., Tenant vs Landlord, Employee vs Employer, Consumer vs Business). Built with Vite + React + TypeScript + Tailwind and powered by Google's Gemini API.
-
-> 📚 **Comprehensive Documentation Available**: This project includes detailed documentation covering architecture, API services, deployment, and more. See the documentation files below for complete information.
-
-### Key Features
-
-- **Chunked document analysis**: Splits long documents into overlapping chunks for reliable extraction. Merges clauses, risks, action points, and citations across chunks with de-duplication.
-  - Ensures Risk Radar, Action Points, and Legal Citations populate consistently on large inputs.
-- **Clause insights**: Breaks documents into clauses with titles, original text, simplified explanations, risk levels, and analysis.
-- **Role-specific perspectives**: For each clause, shows tailored interpretations, obligations, and risks for relevant roles:
-  - Tenancy: Tenant, Landlord
-  - Employment: Employee, Employer
-  - Consumer contracts: Consumer, Business
-- **Plain summary**: A brief summary of the whole document in selected language.
-- **Risk radar**: Consolidated list of risks with severities and recommendations.
-- **Action points**: Concrete follow-ups derived from the analysis.
-- **Citations (optional)**: Includes real, verifiable sources only when confidently inferable.
-- **Bilingual support**: English and Hindi outputs for summaries/explanations.
-- **Multiple simplification levels**: `professional`, `simple`, `eli5`.
--
-- **Try Sample Contracts (EN/HI)**: Built-in long-form samples with selector:
-  - Service Agreement, Mutual NDA, Residential Lease
-  - Choose a sample and click "Try Sample Contract" to auto-fill and analyze
-- **Robust inputs**: Paste text or drag-and-drop PDFs; PDF text extraction with pdf.js and OCR fallback via Tesseract when needed
-- **Visualizations**: Auto-generated flowcharts and timelines with fullscreen view and scrollable containers to avoid overlap
-- **Modern UI shell**: Sidebar navigation (Upload, Results, Visuals, Chat, Profile, More), top bar with disclaimer, and sticky PDF viewer panel in Results.
-- **Fullscreen pop view**: One-click Fullscreen on Analysis, Visualizations, and Original Document opens a modal covering the entire window.
-- **Light/Dark theme**: Class-based dark mode with persistent toggle in the sidebar bottom section.
-
-### Tech Stack
-
-- **Frontend**: React, TypeScript, Tailwind CSS, Vite
-- **Model API**: Google Generative AI (Gemini)
-
-### Getting Started
-
-#### 1) Prerequisites
-
-- Node.js 18+
-- A Google Gemini API key
-
-#### 2) Install dependencies
-
-```bash
-npm install
-```
-
-#### 3) Environment variables
-
-Create a `.env` file in the project root (same folder as `package.json`):
-
-```bash
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-Vite exposes env vars prefixed with `VITE_`. The app reads `VITE_GEMINI_API_KEY` at runtime.
-
-#### 4) Start the dev server
-
-```bash
-npm run dev
-```
-
-#### 5) Build for production
-
-```bash
-npm run build
-npm run preview
-```
-
-### Project Structure
-
-```text
-legal/
-  src/
-    components/
-      AnalysisResults.tsx      # Renders summary, clauses, role-specific views, risks, actions, citations
-      DocumentInput.tsx        # Paste/upload, sample selector, triggers analysis
-      ChatPanel.tsx, ChatFloating.tsx # Optional Q&A on top of the document
-      AppShell.tsx              # Top bar + sidebar shell with theme toggle and bottom actions
-      FullscreenModal.tsx       # Reusable fullscreen pop-over wrapper
-      OriginalContent.tsx       # Sticky panel wrapper for document content/PDF
-      PdfViewer.tsx             # Embedded PDF.js canvas viewer (height-aware)
-      MermaidDiagram.tsx       # Mermaid renderer (responsive SVG, scroll-safe)
-      ProfilePage.tsx           # Placeholder profile view
-      MorePage.tsx              # Placeholder more/settings/help view
-    services/
-      gemini.ts                # Chunked analysis, JSON prompts, API calls, response mapping
-    types/
-      legal.ts                 # Core types including Clause, RolePerspective, DocumentAnalysis
-      chat.ts                  # Chat message and request types
-    App.tsx, main.tsx, index.css
-  vite.config.ts, tailwind.config.js, tsconfig*.json
-```
-
-### Core Data Model (TypeScript)
-
-```ts
-export type SimplificationLevel = "professional" | "simple" | "eli5";
-
-export type RoleType =
-  | "Tenant"
-  | "Landlord"
-  | "Employee"
-  | "Employer"
-  | "Consumer"
-  | "Business";
-
-export interface RolePerspective {
-  role: RoleType;
-  interpretation: string;
-  obligations: string[];
-  risks: string[];
-}
-
-export interface Clause {
-  id: string;
-  title: string;
-  originalText: string;
-  simplifiedText: string;
-  riskLevel: "low" | "medium" | "high";
-  explanation: string;
-  rolePerspectives?: RolePerspective[];
-}
-
-export interface Risk {
-  id: string;
-  clause: string;
-  description: string;
-  severity: "low" | "medium" | "high";
-  recommendation: string;
-}
-
-export interface Citation {
-  title: string;
-  url: string;
-  description: string;
-}
-
-export interface DocumentAnalysis {
-  id: string;
-  documentType: string;
-  plainSummary: string;
-  clauses: Clause[];
-  risks: Risk[];
-  actionPoints: string[];
-  citations: Citation[];
-}
-```
-
-### Prompting, Chunking and Response Mapping
-
-The `src/services/gemini.ts` file builds strict JSON-only prompts and maps responses into the strongly typed `DocumentAnalysis` shape. It performs chunked analysis to improve reliability on long documents.
-
-- The prompts instruct Gemini to:
-  - Identify clauses with `title`, `originalText`, `simplifiedText`, `riskLevel`, `explanation`.
-  - Include `rolePerspectives` per clause where relevant. Each item includes `role`, `interpretation`, `obligations`, `risks`.
-  - Provide risks, action points, and citations only if confidently inferable.
-  - Respect selected language (English/Hindi) and simplification level.
-- Chunking strategy:
-  - Splits text into ~4k-character chunks with ~400-character overlap, tries to end at paragraph boundaries.
-  - Analyzes each chunk independently with a chunk-focused prompt.
-  - Merges and de-duplicates results across chunks (stable keys for clauses/risks, URL validation for citations).
-  - Synthesizes a final plain summary if needed based on merged items.
-- The mapper is defensive:
-  - Parses JSON only; any non-JSON output raises a parsing error.
-  - Falls back to defaults for missing fields and validates enum values.
-
-### UI Flow
-
-1. User lands in the sidebar shell; Upload page shows `DocumentInput` (paste/upload/sample + language + simplification).
-2. App calls `analyzeDocumentWithGemini` with chunking enabled.
-3. Results page shows `AnalysisResults` with five tabs:
-   - Plain Summary
-   - Clause Lens (with role-specific views inside each clause accordion)
-   - Risk Radar
-   - Action Points
-   - Legal Citations
-4. Sticky Original Document panel (with PDF viewer) stays fixed at the right.
-5. Visualizations appear below Analysis (flows, timelines, responsibilities), each with Fullscreen.
-6. Optional chat available via floating button or Chat page.
-
-Notes:
-
-- Sample selector (EN/HI) auto-fills text and immediately triggers analysis.
-- Flowchart and Timeline panels are scrollable and have fullscreen modals.
-
-### Visualization Outputs (Timelines, Flows, Responsibilities)
-
-- Use `generateVisualizationsWithGemini` to produce a `VisualizationBundle` with:
-  - `timelines`: obligations as milestones with when-descriptions (absolute or relative)
-  - `flows`: process graphs for termination/renewal/disputes with nodes and edges
-  - `responsibilities`: a side-by-side matrix comparing responsibilities for two parties
-- Example:
-
-```ts
-import { generateVisualizationsWithGemini } from "./src/services/gemini";
-
-const visuals = await generateVisualizationsWithGemini({
-  document: contractText,
-  language: "en",
-  partyALabel: "Tenant",
-  partyBLabel: "Landlord",
-});
-
-// visuals.timelines -> Gantt-ready data
-// visuals.flows -> can be converted to Mermaid/flowchart-js
-// visuals.responsibilities -> table-ready data
-```
-
-Rendering:
-
-- Flowchart and Timeline are rendered with Mermaid inside fixed-height, scrollable containers to prevent overlap.
-- Fullscreen buttons open large modal views for detailed inspection.
-
-### Role-specific Views in the UI
-
-In `AnalysisResults.tsx`, each expanded clause shows a "Role-specific views" section when `rolePerspectives` is present. For each role, it renders:
-
-- **Interpretation**: A concise explanation of the clause from that role’s perspective.
-- **Obligations**: Bullet points listing what that role must do/avoid.
-- **Risks**: Bullet points listing risks or watch-outs.
-
-### Internationalization (English/Hindi)
-
-- The analysis prompt switches language for `plainSummary` and explanations based on user selection.
-- The UI text uses a small translation map (`en`/`hi`) for common labels.
-
-### Styling & Theming
-
-- Tailwind CSS utility classes with a light, accessible theme.
-- Components use soft borders, subtle shadows, and a responsive grid.
-- Dark mode uses `dark` class on `document.documentElement` (configured via `tailwind.config.js` with `darkMode: "class"`). Toggle is in the sidebar bottom.
-
-### Performance Considerations
-
-- **Model selection**: Uses `gemini-2.0-flash` (or current Gemini Flash) for fast, cost-effective responses.
-- **Token usage**: Prompt compaction for chat; JSON-only responses for analysis.
-- **Client rendering**: Clause accordions virtualize content by expanding on demand.
-
-### Security and Reliability
-
-- API key is never committed; supplied via Vite env var `VITE_GEMINI_API_KEY`.
-- The app logs raw model output and the mapped object to aid debugging during development. Remove or reduce logging for production builds.
-- Defensive JSON parsing and minimal runtime validation to avoid UI breakage.
-
-### Extensibility Guide
-
-- **Add more roles**: Extend `RoleType` in `types/legal.ts`, update prompt roles, and optionally add UI badges.
-- **Add languages**: Extend the UI translations and pass the new language flag through to prompting.
-- **Add models**: Swap `MODEL_NAME` in `services/gemini.ts` or add a selector in settings.
-- **Server-side proxy**: If you need to hide the key fully, add a small server (e.g., Cloud Functions/Node) that proxies requests to Gemini.
-
-### Troubleshooting
-
-- "Missing Gemini API key": Ensure `.env` contains `VITE_GEMINI_API_KEY` and that you restarted `npm run dev`.
-- "Failed to parse Gemini response as JSON": The model returned text around JSON. Reduce temperature or retry. The current prompt already requests JSON-only; transient errors can still occur.
-- Nothing appears under Role-specific views: The model may have deemed roles irrelevant given the text. Try specifying document type hints in the document or re-run with a different simplification level.
-- Flowchart/Timeline overlap: Containers are now scrollable; if a diagram still looks clipped, use the Fullscreen button.
-
-### Scripts
-
-```bash
-# Start dev server
-npm run dev
-
-# Type-check and build
-npm run build
-
-# Preview production build locally
-npm run preview
-```
-
-## 📖 Documentation
-
-This project includes comprehensive documentation:
-
-- **[PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)** - Complete project overview, architecture, components, and technical details
-- **[API_SERVICES_DOCUMENTATION.md](./API_SERVICES_DOCUMENTATION.md)** - Detailed API integration guide, services, and error handling
-- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Step-by-step deployment instructions, environment setup, and troubleshooting
-
-### Quick Start
-
-For a quick start, follow the basic setup below. For detailed instructions, refer to the comprehensive documentation files.
-
-#### 1) Prerequisites
-
-- Node.js 18+
-- A Google Gemini API key
-- Firebase project setup
-
-#### 2) Install dependencies
-
-```bash
-npm install
-```
-
-#### 3) Environment variables
-
-Create a `.env` file in the project root:
-
-```bash
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-#### 4) Start the dev server
-
-```bash
-npm run dev
-```
-
-#### 5) Build for production
-
-```bash
-npm run build
-npm run preview
-```
-
-## License
-
-This project is provided as-is for demonstration and educational purposes. Review and adapt before using in production. AI-generated content is not legal advice.
+# LegalEase AI - Documentation Index
+
+Welcome to the comprehensive documentation for **LegalEase AI - Document Analyzer**. This folder contains all technical and user documentation for the project.
+
+## 📚 Documentation Files
+
+### For Users
+
+- **[USER_GUIDE.md](./USER_GUIDE.md)** - Complete user guide with step-by-step instructions
+  - Getting started
+  - Analyzing documents
+  - Understanding results
+  - Using features  
+  - Tips and troubleshooting
+
+### For Developers
+
+#### Architecture & Design
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture and design
+  - Technology stack
+  - Component hierarchy
+  - State management
+  - Data flow
+  - Design principles
+
+- **[THEME_AND_STYLING.md](./THEME_AND_STYLING.md)** - Design system documentation
+  - Color system and CSS variables
+  - Tailwind configuration
+  - Component styling patterns
+  - Animations and transitions
+  - Responsive design approach
+
+#### Components & Features
+
+- **[COMPONENTS.md](./COMPONENTS.md)** - Complete component documentation
+  - 40+ components with props and usage
+  - Core, analysis, chat, and page components
+  - PDF and map components
+  - UI utilities
+
+- **[FEATURES.md](./FEATURES.md)** - Feature-by-feature documentation
+  - Document analysis (chunking, role perspectives)
+  - Visualizations (flows, timelines, matrices)
+  - Chat system
+  - Lawyer locator
+  - PDF operations
+  - Authentication and user management
+  - Analysis history
+  - Theme system
+  - Language support
+  - Authenticity check
+
+#### Services & Integration
+
+- **[API_SERVICES_DOCUMENTATION.md](./API_SERVICES_DOCUMENTATION.md)** - API and services documentation
+  - Gemini API integration  
+  - Firebase services (Auth, Firestore)
+  - PDF processing (extraction, OCR, generation)
+  - Chat system integration
+  - Error handling and retry logic
+  - Rate limiting
+
+#### Project & Workflow
+
+- **[PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)** - Project overview
+  - Executive summary
+  - Key features
+  - Core workflows
+  - Data models
+  - Roadmap
+
+- **[WORKFLOW_DOCUMENTATION.md](./WORKFLOW_DOCUMENTATION.md)** - User workflows
+  - Document analysis workflow
+  - Visualization generation
+  - Chat interaction
+  - User authentication
+  - Analysis history management
+
+#### Deployment
+
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Deployment instructions
+  - Environment setup
+  - Firebase configuration
+  - Build and deploy process
+  - CI/CD setup
+  - Troubleshooting
 
 ---
 
-**Created by Sourabh Singh** - For educational and demonstration purposes.
+## 🚀 Quick Start
+
+### For New Users
+1. Read <strong>[USER_GUIDE.md](./USER_GUIDE.md)</strong> to learn how to use the application
+2. Check out the video showcase in the app for visual tutorials
+
+### For New Developers
+1. Start with **[ARCHITECTURE.md](./ARCHITECTURE.md)** for system overview
+2. Read **[PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)** for features and workflows
+3. Refer to **[COMPONENTS.md](./COMPONENTS.md)** and **[API_SERVICES_DOCUMENTATION.md](./API_SERVICES_DOCUMENTATION.md)** for implementation details
+4. Check **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** for setup instructions
+
+### For Contributors
+1. Understand architecture from **[ARCHITECTURE.md](./ARCHITECTURE.md)**
+2. Follow styling guidelines in **[THEME_AND_STYLING.md](./THEME_AND_STYLING.md)**
+3. Reference existing components in **[COMPONENTS.md](./COMPONENTS.md)**
+4. Test workflows from **[WORKFLOW_DOCUMENTATION.md](./WORKFLOW_DOCUMENTATION.md)**
+
+---
+
+## 📖 Document Overview
+
+### ARCHITECTURE.md
+**Purpose**: Technical architecture and system design
+
+**Contents**:
+- System overview diagram
+- Technology stack details
+- Architecture patterns (component-based, service layer, type-driven)
+- Component hierarchy
+- State management (React state, localStorage, Firestore)
+- Routing system
+- Data flow diagrams
+- Module dependencies
+- Design principles
+
+**Target Audience**: Developers, architects, technical leads
+
+---
+
+### COMPONENTS.md
+**Purpose**: Complete component reference
+
+**Contents**:
+- Core components (AppShell, DocumentInput, etc.)
+- Analysis components (AnalysisResults, HistorySidebar)
+- Chat components (ChatPanel, ChatFloating)
+- Map/Lawyer locator components
+- PDF components
+- Page components (10 pages documented)
+- UI utility components
+- Props interfaces and usage examples for each
+
+**Target Audience**: Frontend developers, UI engineers
+
+---
+
+### FEATURES.md
+**Purpose**: Feature-by-feature documentation
+
+**Contents**:
+- Document Analysis (chunking, role perspectives, multilingual)
+- Visualizations (flowcharts, timelines, responsibilities)
+- Chat System (context-aware, bilingual)
+- Lawyer Locator (map integration, filtering)
+- PDF Operations (upload, extraction, generation)
+- Authentication & User Management
+- Analysis History (local and cloud storage)
+- Theme System (light/dark mode)
+- Language Support (EN/HI)
+- Authenticity Check
+- Settings & Preferences
+
+**Target Audience**: Product managers, developers, users
+
+---
+
+### THEME_AND_STYLING.md
+**Purpose**: Design system and styling guide
+
+**Contents**:
+- Theme system overview
+- Color system (semantic tokens, light/dark palettes)
+- CSS custom properties
+- Tailwind configuration
+- Component styling patterns
+- Animation system (Framer Motion, CSS)
+- Responsive design patterns
+- Typography guidelines
+- Spacing and layout
+- Accessibility standards
+
+**Target Audience**: UI/UX designers, frontend developers
+
+---
+
+### USER_GUIDE.md
+**Purpose**: End-user documentation
+
+**Contents**:
+- Getting started (first-time setup)
+- Analyzing documents (upload, paste, samples)
+- Understanding analysis results (all tabs explained)
+- Using visualizations
+- Chatting about documents
+- Finding lawyers
+- Managing history
+- Customizing settings
+- Tips and best practices
+- Troubleshooting common issues
+
+**Target Audience**: End users, non-technical users
+
+---
+
+### API_SERVICES_DOCUMENTATION.md
+**Purpose**: API and service layer documentation
+
+**Contents**:
+- Gemini API integration (analysis, visualization, chat)
+- Firebase services (Auth, Firestore)
+- PDF processing (PDF.js, Tesseract OCR, jsPDF)
+- Chat system integration
+- Error handling and retry logic
+- API rate limiting
+- Service configuration
+- Performance optimization
+- Security considerations
+
+**Target Audience**: Backend developers, DevOps engineers
+
+---
+
+### PROJECT_DOCUMENTATION.md
+**Purpose**: High-level project overview
+
+**Contents**:
+- Executive summary
+- Key features list
+- Architecture overview
+- Data models
+- Core workflows
+- UI flow
+- Sample contracts
+- Error handling
+- Roadmap
+
+**Target Audience**: All stakeholders
+
+---
+
+### WORKFLOW_DOCUMENTATION.md
+**Purpose**: Detailed workflow documentation
+
+**Contents**:
+- Document analysis workflow (step-by-step)
+- Visualization generation workflow
+- Chat workflow
+- User authentication flow
+- Analysis history management
+- Lawyer locator workflow
+- PDF operations workflow
+
+**Target Audience**: Product managers, QA engineers, developers
+
+---
+
+### DEPLOYMENT_GUIDE.md
+**Purpose**: Deployment and DevOps guide
+
+**Contents**:
+- Prerequisites
+- Environment variables
+- Firebase setup
+- Build process
+- Deployment to Firebase Hosting
+- CI/CD configuration
+- Monitoring and analytics
+- Troubleshooting deployment issues
+
+**Target Audience**: DevOps engineers, developers
+
+---
+
+## 🎯 Finding What You Need
+
+### I want to...
+
+**...understand how the app works**  
+→ Start with [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md) and [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+**...learn how to use a specific feature**  
+→ Read [USER_GUIDE.md](./USER_GUIDE.md) or [FEATURES.md](./FEATURES.md)
+
+**...implement a new component**  
+→ Reference [COMPONENTS.md](./COMPONENTS.md) and [THEME_AND_STYLING.md](./THEME_AND_STYLING.md)
+
+**...integrate with an API**  
+→ Check [API_SERVICES_DOCUMENTATION.md](./API_SERVICES_DOCUMENTATION.md)
+
+**...deploy the application**  
+→ Follow [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+
+**...understand user workflows**  
+→ Read [WORKFLOW_DOCUMENTATION.md](./WORKFLOW_DOCUMENTATION.md)
+
+**...customize the theme**  
+→ See [THEME_AND_STYLING.md](./THEME_AND_STYLING.md)
+
+**...troubleshoot an issue**  
+→ Check [USER_GUIDE.md](./USER_GUIDE.md) troubleshooting section
+
+---
+
+## 🔧 Development Workflow
+
+1. **Setup**: Follow [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for environment setup
+2. **Architecture**: Understand system from [ARCHITECTURE.md](./ARCHITECTURE.md)
+3. **Components**: Reference [COMPONENTS.md](./COMPONENTS.md) for existing components
+4. **Styling**: Follow [THEME_AND_STYLING.md](./THEME_AND_STYLING.md) guidelines
+5. **Services**: Integrate APIs using [API_SERVICES_DOCUMENTATION.md](./API_SERVICES_DOCUMENTATION.md)
+6. **Testing**: Validate workflows from [WORKFLOW_DOCUMENTATION.md](./WORKFLOW_DOCUMENTATION.md)
+7. **Deploy**: Use [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for deployment
+
+---
+
+## 📞 Getting Help
+
+- **For Users**: See [USER_GUIDE.md](./USER_GUIDE.md) troubleshooting section
+- **For Developers**: Check relevant technical documentation
+- **For Deployment Issues**: Refer to [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+
+---
+
+## 🤝 Contributing
+
+When contributing to the project:
+1. Follow architecture patterns in [ARCHITECTURE.md](./ARCHITECTURE.md)
+2. Match component structure from [COMPONENTS.md](./COMPONENTS.md)
+3. Use styling system from [THEME_AND_STYLING.md](./THEME_AND_STYLING.md)
+4. Update relevant documentation with your changes
+5. Test all workflows from [WORKFLOW_DOCUMENTATION.md](./WORKFLOW_DOCUMENTATION.md)
+
+---
+
+## 📝 Documentation Maintenance
+
+This documentation is maintained alongside the codebase. When making changes:
+- Update relevant documentation files
+- Keep examples current
+- Add new features to [FEATURES.md](./FEATURES.md)
+- Document new components in [COMPONENTS.md](./COMPONENTS.md)
+- Update workflows in [WORKFLOW_DOCUMENTATION.md](./WORKFLOW_DOCUMENTATION.md)
+
+---
+
+**Made with ❤️ by Sourabh Singh**
+
+_Last Updated: November 2025_
