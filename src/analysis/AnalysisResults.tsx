@@ -12,6 +12,7 @@ import {
   Save,
 } from "lucide-react";
 import { DocumentAnalysis, SimplificationLevel } from "../types/legal";
+import RiskMeter from "../components/RiskMeter";
 
 interface AnalysisResultsProps {
   analysis: DocumentAnalysis;
@@ -195,7 +196,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   };
 
   const sections = [
-    { id: "summary", label: translations[language].plainSummary },
+    { id: "summary", label: "Overview" },
     { id: "clauses", label: translations[language].clauseLens },
     { id: "risks", label: translations[language].riskRadar },
     { id: "actions", label: translations[language].actionPoints },
@@ -347,9 +348,9 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       </div>
 
       {/* Modern Segmented Tab Navigation */}
-      <div className="sticky top-0 z-10 bg-gray-50/95 dark:bg-slate-900/95 backdrop-blur-sm py-2 -mx-4 px-4 md:static md:bg-transparent md:p-0 md:mx-0">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md py-2 -mx-4 px-4 md:static md:bg-transparent md:p-0 md:mx-0 transition-all duration-300">
         <div className="flex md:justify-center overflow-x-auto no-scrollbar pb-1 md:pb-0">
-          <div className="flex space-x-2 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl md:w-fit min-w-full md:min-w-0 shadow-inner">
+          <div className="flex space-x-2 bg-white/40 dark:bg-slate-800/40 backdrop-blur-md p-1.5 rounded-2xl md:w-fit min-w-full md:min-w-0 border border-white/20 dark:border-slate-700/30 shadow-lg">
             {sections.map((section) => (
               <button
                 key={section.id}
@@ -369,16 +370,85 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       </div>
 
       {/* Content */}
-      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+      <div className="bg-white/30 dark:bg-slate-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/30 overflow-hidden">
         {activeSection === "summary" && (
-          <div className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-4">
-              {translations[language].plainSummary}
-            </h3>
-            <div className="prose max-w-none">
-              <p className="text-gray-700 dark:text-slate-300 leading-relaxed text-lg">
-                {analysis.plainSummary}
-              </p>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              {/* Main Summary Card - Spans 8 columns */}
+              <div className="md:col-span-8 bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-700/30 shadow-xl">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
+                  {translations[language].plainSummary}
+                </h3>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 dark:text-slate-300 leading-relaxed text-lg">
+                    {analysis.plainSummary}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Column Stack - Spans 4 columns */}
+              <div className="md:col-span-4 space-y-6">
+                {/* Risk Meter Card */}
+                <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-700/30 shadow-xl flex flex-col items-center justify-center">
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+                    Risk Assessment
+                  </h4>
+                  <RiskMeter 
+                    score={analysis.risks.reduce((acc, risk) => {
+                      if (risk.severity === 'high') return acc + 30;
+                      if (risk.severity === 'medium') return acc + 15;
+                      return acc + 5;
+                    }, 0)} 
+                  />
+                </div>
+
+                {/* Authenticity Mini Card */}
+                {analysis.authenticity && (
+                  <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-700/30 shadow-xl">
+                    <h4 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+                      Authenticity
+                    </h4>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-3xl font-bold text-gray-900 dark:text-slate-100">
+                          {analysis.authenticity.authenticityScore}%
+                        </span>
+                        <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                          {analysis.authenticity.authenticityScore >= 80 ? 'Likely Authentic' : 'Verify Source'}
+                        </span>
+                      </div>
+                      <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                        analysis.authenticity.authenticityScore >= 80 ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'
+                      }`}>
+                        <CheckCircle className="w-6 h-6" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Row - Key Actions - Spans full width */}
+              <div className="md:col-span-12 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-700/30 shadow-xl">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center">
+                  <Clock className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
+                  Key Action Items
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {analysis.actionPoints.slice(0, 3).map((action, index) => (
+                    <div key={index} className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-white/20 dark:border-slate-700/30">
+                      <div className="flex items-start space-x-3">
+                        <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        <p className="text-sm text-gray-700 dark:text-slate-300 line-clamp-2">
+                          {action}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -391,11 +461,11 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             {analysis.clauses.map((clause) => (
               <div
                 key={clause.id}
-                className="border border-gray-200 dark:border-slate-700 rounded-lg"
+                className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl overflow-hidden transition-all duration-200 hover:bg-white/50 dark:hover:bg-slate-800/50"
               >
                 <button
                   onClick={() => toggleClause(clause.id)}
-                  className="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                  className="w-full p-4 text-left flex items-center justify-between transition-colors"
                 >
                   <div className="flex items-center space-x-3">
                     <span
@@ -508,11 +578,22 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
               {translations[language].riskRadar}
             </h3>
+            
+            <div className="mb-8">
+              <RiskMeter 
+                score={analysis.risks.reduce((acc, risk) => {
+                  if (risk.severity === 'high') return acc + 30;
+                  if (risk.severity === 'medium') return acc + 15;
+                  return acc + 5;
+                }, 0)} 
+              />
+            </div>
+
             <div className="space-y-4">
               {analysis.risks.map((risk) => (
                 <div
                   key={risk.id}
-                  className="border border-gray-200 dark:border-slate-700 rounded-lg p-6"
+                  className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl p-6 transition-all duration-200 hover:shadow-lg"
                 >
                   <div className="flex items-start space-x-4">
                     <div
@@ -561,7 +642,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               {analysis.actionPoints.map((action, index) => (
                 <div
                   key={index}
-                  className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg"
+                  className="flex items-start space-x-3 p-4 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl transition-all duration-200 hover:bg-white/60 dark:hover:bg-slate-800/60"
                 >
                   <div className="flex-shrink-0 w-6 h-6 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     {index + 1}
@@ -582,7 +663,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               {analysis.citations.map((citation, index) => (
                 <div
                   key={index}
-                  className="border border-gray-200 dark:border-slate-700 rounded-lg p-6 hover:shadow-md dark:hover:shadow-slate-700/50 transition-shadow"
+                  className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl p-6 hover:shadow-lg dark:hover:shadow-slate-700/50 transition-all duration-200"
                 >
                   <div className="flex items-start space-x-4">
                     <ExternalLink className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
@@ -617,7 +698,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Authenticity Score */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl border border-gray-100 dark:border-slate-600">
+              <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-6 rounded-2xl border border-white/20 dark:border-slate-700/30 shadow-lg">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-semibold text-gray-900 dark:text-slate-100">{translations[language].authScore}</h4>
                   <span className={`text-2xl font-bold ${analysis.authenticity.authenticityScore >= 80 ? 'text-green-600' : analysis.authenticity.authenticityScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
@@ -637,7 +718,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               </div>
 
               {/* Safety Score */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl border border-gray-100 dark:border-slate-600">
+              <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-6 rounded-2xl border border-white/20 dark:border-slate-700/30 shadow-lg">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-semibold text-gray-900 dark:text-slate-100">{translations[language].safeScore}</h4>
                   <span className={`text-2xl font-bold ${analysis.authenticity.safetyScore >= 80 ? 'text-green-600' : analysis.authenticity.safetyScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
@@ -660,7 +741,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Compliance & Fake Indication */}
               <div className="space-y-6">
-                 <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6">
+                 <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-2xl p-6 shadow-lg">
                     <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center">
                         <FileText className="w-5 h-5 mr-2 text-blue-500" />
                         {translations[language].complianceStatus}
@@ -680,7 +761,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                     </p>
                  </div>
 
-                 <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6">
+                 <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-2xl p-6 shadow-lg">
                     <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-4 flex items-center">
                         <AlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
                         {translations[language].fakeIndication}
@@ -701,7 +782,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               </div>
 
               {/* Red Flags */}
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl p-6">
+              <div className="bg-red-50/50 dark:bg-red-900/20 backdrop-blur-sm border border-red-100/50 dark:border-red-800/50 rounded-2xl p-6 shadow-lg">
                 <h4 className="font-semibold text-red-800 dark:text-red-300 mb-4 flex items-center">
                     <AlertTriangle className="w-5 h-5 mr-2" />
                     {translations[language].redFlags}
@@ -725,7 +806,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             </div>
 
             {/* Recommendation */}
-            <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl p-6">
+            <div className="mt-6 bg-blue-50/50 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-100/50 dark:border-blue-800/50 rounded-2xl p-6 shadow-lg">
                 <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
                     {translations[language].aiRec}
                 </h4>

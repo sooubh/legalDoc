@@ -1,14 +1,14 @@
 import { db } from './firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  updateDoc, 
-  onSnapshot, 
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  onSnapshot,
   serverTimestamp,
   Timestamp,
-  type FieldValue 
+  type FieldValue
 } from 'firebase/firestore';
 import { getAuth, User } from 'firebase/auth';
 
@@ -31,6 +31,11 @@ export interface UserProfile {
     signupMethod: string;
     mfaEnabled: boolean;
   };
+  // Extended Profile Fields
+  address?: string;
+  bio?: string;
+  occupation?: string;
+  location?: string;
 }
 
 // Helper to convert Firestore Timestamp to Date
@@ -96,7 +101,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
   try {
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       return userSnap.data() as UserProfile;
     }
@@ -128,7 +133,7 @@ export const subscribeToUserProfile = (
   callback: (profile: UserProfile | null) => void
 ): (() => void) => {
   const userRef = doc(db, 'users', uid);
-  
+
   const unsubscribe = onSnapshot(
     userRef,
     (snapshot) => {
@@ -149,13 +154,13 @@ export const subscribeToUserProfile = (
 
 // Update user preferences
 export const updateUserPreferences = async (
-  uid: string, 
+  uid: string,
   preferences: { language?: 'en' | 'hi'; theme?: 'light' | 'dark' }
 ): Promise<void> => {
   try {
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       const currentData = userSnap.data() as UserProfile;
       await updateDoc(userRef, {

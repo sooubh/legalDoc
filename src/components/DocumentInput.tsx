@@ -600,8 +600,8 @@ const DocumentInput: React.FC<DocumentInputProps> = ({
       </div>
 
       {/* Input Section */}
-      <div className="relative rounded-2xl p-6 space-y-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur shadow-[0_10px_30px_rgba(2,6,23,0.06)] border border-slate-200 dark:border-slate-700 max-w-xl mx-auto">
-        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/60" />
+      <div className="relative rounded-3xl p-8 space-y-8 bg-white/30 dark:bg-slate-900/30 backdrop-blur-xl shadow-2xl border border-white/20 dark:border-slate-700/30 max-w-2xl mx-auto overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/10 dark:ring-white/5" />
 
         {/* Upload progress bar */}
         <AnimatePresence>
@@ -634,7 +634,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({
               initial={{ opacity: 0, y: -14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -14 }}
-              className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
+              className="flex items-center space-x-3 p-4 rounded-xl border border-white/20 dark:border-slate-700/30 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm shadow-lg"
             >
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-200">
@@ -661,10 +661,10 @@ const DocumentInput: React.FC<DocumentInputProps> = ({
         </AnimatePresence>
         {/* File Upload */}
         <div
-          className={`relative rounded-xl p-8 text-center transition-all duration-200 ${
+          className={`relative rounded-2xl p-10 text-center transition-all duration-300 group ${
             dragActive
-              ? "border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-sky-50 dark:from-slate-800 dark:to-slate-800 shadow-inner"
-              : "border-2 border-dashed border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-800"
+              ? "border-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-inner scale-[1.02]"
+              : "border-2 border-dashed border-gray-300/50 dark:border-slate-600/50 hover:border-blue-400 dark:hover:border-blue-400 hover:bg-white/40 dark:hover:bg-slate-800/40"
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -710,7 +710,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({
             value={documentText}
             onChange={(e) => setDocumentText(e.target.value)}
             placeholder={translations[language].placeholder}
-            className="w-full h-64 p-4 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm shadow-inner bg-white/70 dark:bg-slate-900/70 dark:text-slate-100"
+            className="w-full h-64 p-6 border border-white/20 dark:border-slate-700/30 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base shadow-inner bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-400 transition-all"
           />
 
           <div className="flex justify-between items-center flex-col gap-5">
@@ -719,7 +719,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({
                 Sample:
               </label>
               <select
-                className="border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 rounded px-2 py-1 text-sm w-20 "
+                className="border border-gray-300 dark:border-slate-600 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm text-gray-800 dark:text-slate-200 rounded-lg px-3 py-1.5 text-sm w-32 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 value={selectedSampleId}
                 onChange={(e) => setSelectedSampleId(e.target.value)}
               >
@@ -740,7 +740,7 @@ const DocumentInput: React.FC<DocumentInputProps> = ({
             <button
               onClick={handleSubmit}
               disabled={!documentText.trim() || isAnalyzing}
-              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:shadow-blue-400/50 hover:shadow-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all flex items-center space-x-2"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center space-x-3 text-lg"
             >
               {isAnalyzing ? (
                 <>
