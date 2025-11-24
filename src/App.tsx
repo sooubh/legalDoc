@@ -868,7 +868,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.2 }}
       >
-        <ProfilePage />
+        <ProfilePage onLogin={() => setRoute("login")} />
       </motion.div>
     )}
 

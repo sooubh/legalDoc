@@ -356,13 +356,52 @@ const AppShell: React.FC<AppShellProps> = ({
                <div className="h-4 w-px bg-border" />
             )}
 
-            <button
-              onClick={() => onNavigate("profile")}
-              className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-              title={t.profile}
-            >
-              <User className="h-4 w-4" />
-            </button>
+            {/* Profile Dropdown */}
+            <div className="relative group">
+              <button
+                onClick={() => onNavigate("profile")}
+                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors relative overflow-hidden"
+                title={t.profile}
+              >
+                {user?.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt="Profile" 
+                    className="h-5 w-5 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4" />
+                )}
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute left-full bottom-0 ml-3 w-48 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-2 group-hover:translate-x-0">
+                <div className="p-3 border-b border-border bg-muted/30">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {user?.displayName || 'User'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {user?.email}
+                  </p>
+                </div>
+                <div className="p-1">
+                  <button
+                    onClick={() => onNavigate("profile")}
+                    className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>{t.profile}</span>
+                  </button>
+                  <button
+                    onClick={onLogout}
+                    className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>{t.logout}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {!isSidebarCollapsed && user && (
                <div className="h-4 w-px bg-border" />
@@ -384,7 +423,7 @@ const AppShell: React.FC<AppShellProps> = ({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
          {/* Desktop Header (Top Bar) - Only visible on desktop inside main area now */}
-         <header className="hidden md:flex h-16 border-b border-border bg-background/80 backdrop-blur items-center justify-between px-6 shrink-0">
+         <header className="hidden md:flex h-16 border-b border-border bg-background/80 backdrop-blur items-center justify-between px-6 shrink-0 relative z-50">
             {/* Left side of header */}
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
@@ -451,13 +490,49 @@ const AppShell: React.FC<AppShellProps> = ({
                     </button>
                   </div>
                ) : (
-                  <div className="flex items-center gap-3">
-                     <div className="text-sm text-right hidden lg:block">
-                        <div className="font-medium text-foreground">{t.welcomeBack}</div>
-                        <div className="text-xs text-muted-foreground">{t.premiumPlan}</div>
-                     </div>
-                     <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
-                        {user.displayName?.[0] || 'U'}
+                  <div className="relative group">
+                     <button
+                        className="flex items-center gap-3 focus:outline-none"
+                     >
+                        <div className="text-sm text-right hidden lg:block">
+                           <div className="font-medium text-foreground">{user.displayName || 'User'}</div>
+                           <div className="text-xs text-muted-foreground">{t.premiumPlan}</div>
+                        </div>
+                        <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md overflow-hidden border-2 border-background ring-2 ring-primary/20">
+                           {user.photoURL ? (
+                              <img src={user.photoURL} alt="Profile" className="h-full w-full object-cover" />
+                           ) : (
+                              user.displayName?.[0] || 'U'
+                           )}
+                        </div>
+                     </button>
+
+                     {/* Header Dropdown */}
+                     <div className="absolute right-0 top-full mt-2 w-56 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0">
+                        <div className="p-4 border-b border-border bg-muted/30">
+                           <p className="font-medium text-foreground truncate">
+                              {user.displayName || 'User'}
+                           </p>
+                           <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {user.email}
+                           </p>
+                        </div>
+                        <div className="p-1">
+                           <button
+                              onClick={() => onNavigate("profile")}
+                              className="w-full text-left px-3 py-2.5 text-sm rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-3"
+                           >
+                              <User className="h-4 w-4" />
+                              <span>{t.profile}</span>
+                           </button>
+                           <button
+                              onClick={onLogout}
+                              className="w-full text-left px-3 py-2.5 text-sm rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors flex items-center gap-3"
+                           >
+                              <LogOut className="h-4 w-4" />
+                              <span>{t.logout}</span>
+                           </button>
+                        </div>
                      </div>
                   </div>
                )}

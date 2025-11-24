@@ -732,3 +732,115 @@ export async function analyzeDocumentAuthenticity(content: string, language: 'en
   }
 }
 
+
+// --- AI Lawyer Services ---
+
+export async function chatWithAILawyer(
+  role: { title: string; systemPrompt: string },
+  message: string,
+  history: { role: 'user' | 'model'; content: string }[]
+): Promise<string> {
+  const genAI = getGenAI();
+  if (!genAI) throw new Error('Missing Gemini API key');
+
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
+  const systemPrompt = `
+    ${role.systemPrompt}
+    
+    Guidelines:
+    - You are a helpful, professional, and empathetic AI legal assistant.
+    - Provide clear, accurate, and relevant legal information.
+    - Always clarify that you are an AI and your advice is for informational purposes only, not a substitute for professional legal counsel.
+    - Use markdown for formatting (bold, lists, etc.).
+    - Keep responses concise but comprehensive.
+  `;
+
+  const chat = model.startChat({
+    history: [
+      { role: 'user', parts: [{ text: systemPrompt }] },
+      { role: 'model', parts: [{ text: `Understood. I am ready to act as a ${role.title} AI assistant.` }] },
+      ...history.map(msg => ({
+        role: msg.role,
+        parts: [{ text: msg.content }]
+      }))
+    ],
+    generationConfig: {
+      temperature: 0.4,
+      maxOutputTokens: 2048,
+    },
+  });
+
+  const result = await chat.sendMessage(message);
+  const response = await result.response;
+  return response.text();
+}
+
+export async function generateLegalSVG(prompt: string): Promise<string> {
+  const genAI = getGenAI();
+  if (!genAI) throw new Error('Missing Gemini API key');
+
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
+  const systemPrompt = `
+    You are an expert SVG artist and legal illustrator.
+    Generate a clean, professional, and VISUALLY RICH SVG image based on the user's request.
+    
+    Requirements:
+    - Return ONLY the raw SVG code.
+    - Style: Modern, flat vector illustration (like Undraw or corporate tech art).
+    - Colors: Use a VIBRANT and PROFESSIONAL palette. Do not use plain black/white. Use gradients, soft shadows, and distinct colors for different elements to make it pop.
+    - Composition: Balanced and scalable (use viewBox).
+    - Content: Visual metaphors for legal concepts (scales, documents, handshakes, shields) but styled creatively.
+    - Ensure the SVG is valid and renders correctly.
+  `;
+
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\nRequest: " + prompt }] }],
+  });
+
+  const text = result.response.text();
+  const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/);
+  return svgMatch ? svgMatch[0] : text.replace(/```xml/g, '').replace(/```svg/g, '').replace(/```/g, '').trim();
+}
+
+export async function generateMindmapCode(topic: string): Promise<string> {
+  const genAI = getGenAI();
+  if (!genAI) throw new Error('Missing Gemini API key');
+
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
+  const systemPrompt = `
+    You are an expert at creating Mermaid.js mindmaps.
+    Generate a STRICTLY CONCISE and COMPACT mindmap for the given legal topic.
+    
+    Requirements:
+    - Return ONLY the raw mermaid code.
+    - Diagram Type: 'mindmap'.
+    - Structure: Deep but balanced hierarchy.
+    - CONTENT RULES:
+      - Node text MUST be 1-3 words MAX. No long sentences.
+      - No descriptions, just keywords.
+      - "Definition" -> "Legal Def"
+      - "Process of filing" -> "Filing Process"
+      - Do NOT use special characters or markdown fences.
+    
+    Example format:
+    mindmap
+      root((Topic))
+        Branch1
+          ItemA
+          ItemB
+        Branch2
+          ItemC
+  `;
+
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\nTopic: " + topic }] }],
+  });
+
+  let text = result.response.text();
+  text = text.replace(/```mermaid/g, '').replace(/```/g, '').trim();
+  return text;
+}
+        

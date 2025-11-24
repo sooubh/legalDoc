@@ -24,7 +24,11 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const ProfilePage: React.FC = () => {
+interface ProfilePageProps {
+  onLogin?: () => void;
+}
+
+const ProfilePage: React.FC<ProfilePageProps> = ({ onLogin }) => {
   const auth = getAuth();
   const storage = getStorage();
   const [user, setUser] = useState<User | null>(null);
@@ -138,6 +142,30 @@ const ProfilePage: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 text-center">
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+          <UserIcon className="w-12 h-12 text-blue-500 dark:text-blue-400" />
+        </div>
+        <div className="space-y-2 max-w-md mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Sign In Required
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400">
+            Please sign in to view and manage your profile settings.
+          </p>
+        </div>
+        <button
+          onClick={onLogin}
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors shadow-lg shadow-blue-500/20"
+        >
+          Sign In
+        </button>
       </div>
     );
   }
