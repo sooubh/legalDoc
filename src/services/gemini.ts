@@ -219,6 +219,11 @@ export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<
     }
   }
 
+  // Final check: Ensure we have at least some summary
+  if (!merged.plainSummary) {
+    merged.plainSummary = "Summary could not be generated. Please review the clauses directly.";
+  }
+
   if (!merged.documentType) merged.documentType = 'Legal Document';
   // eslint-disable-next-line no-console
   console.log('[Gemini][merged]', {
@@ -230,54 +235,7 @@ export async function analyzeDocumentWithGemini(params: AnalyzeParams): Promise<
   return merged;
 }
 
-function buildPrompt(content: string, language: 'en' | 'hi', level: SimplificationLevel): string {
-  return [
-    'You are a legal analyst AI. Analyze the following legal document text and return ONLY a strict JSON object conforming to this schema. Do not include any commentary or markdown fences.',
-    '',
-    'interface Clause {',
-    "  id: string;",
-    "  title: string;",
-    "  originalText: string;",
-    "  simplifiedText: string;",
-    "  riskLevel: 'low' | 'medium' | 'high';",
-    "  explanation: string;",
-    "  rolePerspectives?: { role: 'Tenant' | 'Landlord' | 'Employee' | 'Employer' | 'Consumer' | 'Business'; interpretation: string; obligations: string[]; risks: string[]; }[];",
-    '}',
-    'interface Risk {',
-    "  id: string;",
-    "  clause: string;",
-    "  description: string;",
-    "  severity: 'low' | 'medium' | 'high';",
-    "  recommendation: string;",
-    '}',
-    'interface Citation {',
-    '  title: string;',
-    '  url: string;',
-    '  description: string;',
-    '}',
-    'interface DocumentAnalysis {',
-    '  id: string;',
-    '  documentType: string;',
-    '  plainSummary: string;',
-    '  clauses: Clause[];',
-    '  risks: Risk[];',
-    '  actionPoints: string[];',
-    '  citations: Citation[];',
-    '}',
-    '',
-    `- Language for plainSummary and explanations: ${language === 'hi' ? 'Hindi' : 'English'}.`,
-    `- Simplification level for simplifiedText: ${level} (use ${level === 'eli5' ? 'very simple, everyday language' : level === 'simple' ? 'clear, non-legal language' : 'concise professional tone'
-    }).`,
-    '- Keep clause.originalText as quotes from the input where possible.',
-    "- For each clause, include rolePerspectives with tailored interpretations for relevant roles depending on document type: Tenancy (Tenant/Landlord), Employment (Employee/Employer), Consumer contract (Consumer/Business). If unclear, include the most plausible roles.",
-    '- Each role perspective must include: interpretation (plain-language), obligations (bullet-like strings), risks (bullet-like strings).',
-    '- Provide realistic, non-fabricated citations with working URLs only if clearly inferable; otherwise return an empty citations array.',
-    '- Return ONLY JSON. No markdown, no code fences, no commentary.',
-    '',
-    'Document Text:',
-    content,
-  ].join('\n');
-}
+
 
 function buildChunkPrompt(content: string, language: 'en' | 'hi', level: SimplificationLevel, index: number, total: number): string {
   return [
@@ -286,11 +244,14 @@ function buildChunkPrompt(content: string, language: 'en' | 'hi', level: Simplif
     'interface Clause { id: string; title: string; originalText: string; simplifiedText: string; riskLevel: "low" | "medium" | "high"; explanation: string; rolePerspectives?: { role: "Tenant" | "Landlord" | "Employee" | "Employer" | "Consumer" | "Business"; interpretation: string; obligations: string[]; risks: string[]; }[] }',
     'interface Risk { id: string; clause: string; description: string; severity: "low" | "medium" | "high"; recommendation: string; }',
     'interface Citation { title: string; url: string; description: string; }',
-    'interface DocumentAnalysis { documentType?: string; plainSummary?: string; clauses: Clause[]; risks: Risk[]; actionPoints: string[]; citations: Citation[]; }',
+    'interface NegotiationPoint { id: string; clauseId: string; originalClause: string; issue: string; counterProposal: string; talkingPoint: string; }',
+    'interface DocumentAnalysis { documentType?: string; plainSummary?: string; clauses: Clause[]; risks: Risk[]; actionPoints: string[]; citations: Citation[]; negotiationPoints: NegotiationPoint[]; }',
     '',
     `- Language for explanations: ${language === 'hi' ? 'Hindi' : 'English'}.`,
     `- Simplification level for simplifiedText: ${level}.`,
-    '- Do not fabricate. If a field is not inferable from this chunk, leave it empty (e.g., empty arrays).',
+    '- CRITICAL: You MUST extract "actionPoints" and "citations" if present in this chunk. Do not skip them.',
+    '- For any "high" risk clause, YOU MUST generate a "NegotiationPoint" with a strategic counter-proposal and talking point.',
+    '- Do not fabricate. If a field is not inferable from this chunk, return an empty array.',
     '- Prefer quoting clause.originalText from this chunk.',
     '- Citations must have plausible working URLs; otherwise return an empty array.',
     '- Return ONLY JSON. No commentary.',
@@ -728,7 +689,17 @@ export async function analyzeDocumentAuthenticity(content: string, language: 'en
     };
   } catch (err) {
     console.error('Failed to parse authenticity analysis', err);
-    throw new Error('Failed to analyze authenticity');
+    // Return a safe default instead of throwing, so the UI can still show the section
+    return {
+      authenticityScore: 0,
+      isCompliant: false,
+      compliantWith: 'Analysis Failed',
+      redFlags: ['Could not verify authenticity due to an error.'],
+      safetyScore: 0,
+      safetyAnalysis: 'Authenticity check failed. Please review manually.',
+      fakeIndication: 'High',
+      recommendation: 'Proceed with extreme caution. The AI could not verify this document.',
+    };
   }
 }
 
@@ -843,4 +814,3 @@ export async function generateMindmapCode(topic: string): Promise<string> {
   text = text.replace(/```mermaid/g, '').replace(/```/g, '').trim();
   return text;
 }
-        

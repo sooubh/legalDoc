@@ -81,25 +81,6 @@ The output must be a single <div> block.
 
 Do not include <html>, <head>, or <body> tags.
 
-The HTML must be fully self-contained, clean, and renderable directly.
-
-Ensure accessibility and readability, using spacing, typography, and table structures effectively.
-
-Optional Enhancements for Extra Readability
-
-Use colored section headers: e.g., text-slate-800 for main headings, text-slate-700 for subheadings.
-
-Include horizontal separators (<hr class="my-4 border-slate-300" />) between sections for clarity.
-
-Highlight critical risks or clauses in a subtle background: bg-yellow-50 p-2 rounded-md border-l-4 border-yellow-400.
-
-Include summary tables for quick reference of key findings, dates, parties, obligations, or risks.
-
-    Here is the JSON data:
-
-    \`\`\`json
-    ${JSON.stringify(jsonData, null, 2)}
-    \`\`\`
   `;
 
   try {

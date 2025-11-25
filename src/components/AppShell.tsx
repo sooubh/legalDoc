@@ -18,6 +18,8 @@ import {
   Upload,
   FileText,
   PieChart,
+  ChevronDown,
+  LayoutGrid,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AnalysisHistorySidebar from "../analysis/AnalysisHistorySidebar.tsx";
@@ -37,11 +39,11 @@ interface AppShellProps {
   selectedAnalysisId?: string;
   onSelectAnalysis?: (item: AnalysisHistoryItem) => void;
   onFetchHistory?: () => void;
-  onSave?: () => void;
+
   onDeleteAnalysis?: (id: string) => void;
-  onDownload?: () => void;
-  isSaved?: boolean;
-  isGeneratingPdf?: boolean;
+
+
+
   user?: any;
   onLogout?: () => void;
   onLogin?: () => void;
@@ -58,11 +60,11 @@ const AppShell: React.FC<AppShellProps> = ({
   selectedAnalysisId,
   onSelectAnalysis,
   onFetchHistory,
-  onSave,
+
   onDeleteAnalysis,
-  onDownload,
-  isSaved,
-  isGeneratingPdf,
+
+
+
   user,
   onLogout,
   onLogin,
@@ -95,6 +97,8 @@ const AppShell: React.FC<AppShellProps> = ({
       lightMode: "Light mode",
       darkMode: "Dark mode",
       logout: "Logout",
+      documents: "Documents",
+      utilities: "Utilities",
     },
     hi: {
       upload: "अपलोड",
@@ -120,6 +124,8 @@ const AppShell: React.FC<AppShellProps> = ({
       lightMode: "लाइट मोड",
       darkMode: "डार्क मोड",
       logout: "लॉग आउट",
+      documents: "दस्तावेज़",
+      utilities: "उपयोगिताएँ",
     },
   };
 
@@ -134,6 +140,7 @@ const AppShell: React.FC<AppShellProps> = ({
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isUtilitiesOpen, setIsUtilitiesOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window !== "undefined") {
       return (localStorage.getItem("theme") as "light" | "dark") || "light";
@@ -320,26 +327,52 @@ const AppShell: React.FC<AppShellProps> = ({
         {/* Footer Actions - Pinned to bottom, more compact */}
         <div className="px-3 py-2 border-t border-border bg-muted/50 shrink-0">
           <div className="space-y-0.5">
-            {[
-              { id: 'settings', icon: <Settings className="h-4 w-4" />, label: t.settings, action: () => onNavigate("settings") },
-              { id: 'video', icon: <Video className="h-4 w-4" />, label: t.videoShowcase, action: () => onNavigate("video") },
-              { id: 'more', icon: <MoreHorizontal className="h-4 w-4" />, label: t.more, action: () => onNavigate("more") },
-            ].map((btn) => (
-              <div key={btn.id} className="relative group">
-                <button
-                  onClick={btn.action}
-                  className={`w-full inline-flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isSidebarCollapsed ? 'justify-center' : ''}`}
-                >
-                  {btn.icon}
-                  {!isSidebarCollapsed && <span>{btn.label}</span>}
-                </button>
-                 {isSidebarCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-popover text-popover-foreground border border-border text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl translate-x-2 group-hover:translate-x-0">
-                    {btn.label}
-                  </div>
+            {/* Utilities Dropdown Trigger */}
+            <div className="relative">
+              <button
+                onClick={() => setIsUtilitiesOpen(!isUtilitiesOpen)}
+                className={`w-full inline-flex items-center gap-2 px-2 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}
+              >
+                <div className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4" />
+                  {!isSidebarCollapsed && <span>{t.utilities}</span>}
+                </div>
+                {!isSidebarCollapsed && (
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isUtilitiesOpen ? 'rotate-180' : ''}`} />
                 )}
-              </div>
-            ))}
+              </button>
+
+              {/* Utilities Menu */}
+              <AnimatePresence>
+                {isUtilitiesOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, y: 10 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className={`overflow-hidden ${isSidebarCollapsed ? 'absolute left-full bottom-0 ml-3 w-48 bg-popover border border-border rounded-xl shadow-xl z-50 p-1' : 'mt-1 space-y-0.5 pl-2'}`}
+                  >
+                    {[
+                      { id: 'settings', icon: <Settings className="h-4 w-4" />, label: t.settings, action: () => onNavigate("settings") },
+                      { id: 'video', icon: <Video className="h-4 w-4" />, label: t.videoShowcase, action: () => onNavigate("video") },
+                      { id: 'more', icon: <MoreHorizontal className="h-4 w-4" />, label: t.more, action: () => onNavigate("more") },
+                    ].map((btn) => (
+                      <button
+                        key={btn.id}
+                        onClick={() => {
+                          btn.action();
+                          if (isSidebarCollapsed) setIsUtilitiesOpen(false);
+                        }}
+                        className={`w-full inline-flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isSidebarCollapsed ? 'justify-start px-3 py-2 text-sm' : ''}`}
+                      >
+                        {btn.icon}
+                        <span>{btn.label}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           
           {/* User Profile / Logout Section */}
@@ -430,10 +463,21 @@ const AppShell: React.FC<AppShellProps> = ({
                   <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                   <span className="font-medium">{t.aiActive}</span>
                </div>
+               
+               {/* Documents Link in Header */}
+               <button
+                 onClick={() => onNavigate("documents")}
+                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${current === 'documents' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
+               >
+                 <FileText className="h-4 w-4" />
+                 <span>{t.documents}</span>
+               </button>
             </div>
 
             {/* Right side of header */}
             <div className="flex items-center gap-4">
+
+
                {/* Language Switcher */}
                <div className="relative group">
                   <button

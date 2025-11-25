@@ -10,6 +10,8 @@ import {
   FileText,
   ArrowLeft,
   Save,
+  MessageSquare,
+  Handshake,
 } from "lucide-react";
 import { DocumentAnalysis, SimplificationLevel } from "../types/legal";
 import RiskMeter from "../components/RiskMeter";
@@ -23,6 +25,12 @@ interface AnalysisResultsProps {
   isSaved: boolean;
 }
 
+const EmptySection = ({ message }: { message: string }) => (
+  <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50/50 dark:bg-slate-800/50 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+    <p className="text-gray-500 dark:text-slate-400 font-medium">{message}</p>
+  </div>
+);
+
 const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   analysis,
   language,
@@ -31,7 +39,6 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   onSave,
   isSaved,
 }) => {
-  const [activeSection, setActiveSection] = useState<string>("summary");
   const [expandedClauses, setExpandedClauses] = useState<Set<string>>(
     new Set()
   );
@@ -71,9 +78,10 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       newDocument: "Analyze New Document",
       save: "Save",
       saved: "Saved",
-      plainSummary: "Plain Summary",
+      plainSummary: "Overview",
       clauseLens: "Clause Lens",
       riskRadar: "Risk Radar",
+      negotiation: "Negotiation Assistant",
       actionPoints: "Action Points",
       citations: "Legal Citations",
       documentType: "Document Type",
@@ -113,14 +121,18 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       obligations: "Obligations",
       risks: "Risks",
       viewSource: "View Source",
+      counterProposal: "Counter Proposal",
+      talkingPoint: "Talking Point",
+      issue: "Issue",
     },
     hi: {
       newDocument: "नया दस्तावेज़ विश्लेषण",
       save: "सहेजें",
       saved: "सहेजा गया",
-      plainSummary: "सरल सारांश",
+      plainSummary: "अवलोकन",
       clauseLens: "क्लॉज़ लेंस",
       riskRadar: "जोखिम रडार",
+      negotiation: "बातचीत सहायक",
       actionPoints: "कार्य बिंदु",
       citations: "कानूनी उद्धरण",
       documentType: "दस्तावेज़ प्रकार",
@@ -160,6 +172,9 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
       obligations: "दायित्व",
       risks: "जोखिम",
       viewSource: "स्रोत देखें",
+      counterProposal: "प्रति प्रस्ताव",
+      talkingPoint: "बातचीत का बिंदु",
+      issue: "मुद्दा",
     },
   };
 
@@ -195,13 +210,20 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     }
   };
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+    }
+  };
+
   const sections = [
-    { id: "summary", label: "Overview" },
+    { id: "summary", label: translations[language].plainSummary },
+    { id: "authenticity", label: translations[language].authenticityTab },
     { id: "clauses", label: translations[language].clauseLens },
     { id: "risks", label: translations[language].riskRadar },
+    { id: "negotiation", label: translations[language].negotiation },
     { id: "actions", label: translations[language].actionPoints },
     { id: "citations", label: translations[language].citations },
-    { id: "authenticity", label: translations[language].authenticityTab },
   ];
 
   const levelLabelMap: Record<SimplificationLevel, string> = {
@@ -347,20 +369,15 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
         </div>
       </div>
 
-      {/* Modern Segmented Tab Navigation */}
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md py-2 -mx-4 px-4 md:static md:bg-transparent md:p-0 md:mx-0 transition-all duration-300">
-        <div className="flex md:justify-center overflow-x-auto no-scrollbar pb-1 md:pb-0">
+      {/* Modern Segmented Tab Navigation - Sticky */}
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md py-2 -mx-4 px-4 md:static md:bg-transparent md:p-0 md:mx-0 transition-all duration-300 flex items-center justify-between gap-4">
+        <div className="flex md:justify-center overflow-x-auto no-scrollbar pb-1 md:pb-0 flex-1">
           <div className="flex space-x-2 bg-white/40 dark:bg-slate-800/40 backdrop-blur-md p-1.5 rounded-2xl md:w-fit min-w-full md:min-w-0 border border-white/20 dark:border-slate-700/30 shadow-lg">
             {sections.map((section) => (
               <button
                 key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap
-                  ${
-                    activeSection === section.id
-                      ? "bg-white dark:bg-slate-700 shadow-sm text-purple-600 dark:text-purple-400 scale-[1.02]"
-                      : "text-gray-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-slate-200"
-                  }`}
+                onClick={() => scrollToSection(section.id)}
+                className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap text-gray-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-slate-200"
               >
                 {section.label}
               </button>
@@ -371,8 +388,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
       {/* Content */}
       <div className="bg-white/30 dark:bg-slate-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/30 overflow-hidden">
-        {activeSection === "summary" && (
-          <div className="p-6">
+        <div id="summary" className="p-6 border-b border-white/10 dark:border-slate-700/30">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Main Summary Card - Spans 8 columns */}
               <div className="md:col-span-8 bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-700/30 shadow-xl">
@@ -381,9 +397,13 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                   {translations[language].plainSummary}
                 </h3>
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 dark:text-slate-300 leading-relaxed text-lg">
-                    {analysis.plainSummary}
-                  </p>
+                  {analysis.plainSummary ? (
+                    <p className="text-gray-700 dark:text-slate-300 leading-relaxed text-lg">
+                      {analysis.plainSummary}
+                    </p>
+                  ) : (
+                    <EmptySection message="No summary available for this document." />
+                  )}
                 </div>
               </div>
 
@@ -451,247 +471,10 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               </div>
             </div>
           </div>
-        )}
 
-        {activeSection === "clauses" && (
-          <div className="p-8 space-y-4">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
-              {translations[language].clauseLens}
-            </h3>
-            {analysis.clauses.map((clause) => (
-              <div
-                key={clause.id}
-                className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl overflow-hidden transition-all duration-200 hover:bg-white/50 dark:hover:bg-slate-800/50"
-              >
-                <button
-                  onClick={() => toggleClause(clause.id)}
-                  className="w-full p-4 text-left flex items-center justify-between transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium border ${getRiskColor(
-                        clause.riskLevel
-                      )}`}
-                    >
-                      {getRiskIcon(clause.riskLevel)}
-                      <span className="ml-1">
-                        {translations[language].riskLevels[clause.riskLevel]}
-                      </span>
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-slate-100">
-                      {clause.title}
-                    </span>
-                  </div>
-                  {expandedClauses.has(clause.id) ? (
-                    <ChevronUp className="h-5 w-5 text-gray-400 dark:text-slate-500" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-400 dark:text-slate-500" />
-                  )}
-                </button>
-
-                {expandedClauses.has(clause.id) && (
-                  <div className="px-4 pb-4 space-y-4">
-                    <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-2">
-                        Original Text:
-                      </h4>
-                      <p className="text-sm text-gray-700 dark:text-slate-300 italic">
-                        {clause.originalText}
-                      </p>
-                    </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-2">
-                        {translations[language].plainEnglish}:
-                      </h4>
-                      <p className="text-gray-700 dark:text-slate-300">{clause.simplifiedText}</p>
-                    </div>
-                    <div className="bg-amber-50 dark:bg-amber-900/30 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-2">
-                        {translations[language].analysis}:
-                      </h4>
-                      <p className="text-gray-700 dark:text-slate-300">{clause.explanation}</p>
-                    </div>
-
-                    {clause.rolePerspectives &&
-                      clause.rolePerspectives.length > 0 && (
-                        <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                          <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-3">
-                            {translations[language].roleViews}:
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {clause.rolePerspectives.map((rp, idx) => (
-                              <div
-                                key={idx}
-                                className="border border-gray-200 dark:border-slate-600 rounded-lg p-4 bg-white dark:bg-slate-800"
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">
-                                    {rp.role}
-                                  </span>
-                                </div>
-                                {rp.interpretation && (
-                                  <div className="mb-3">
-                                    <p className="text-sm text-gray-800 dark:text-slate-300">
-                                      {rp.interpretation}
-                                    </p>
-                                  </div>
-                                )}
-                                {rp.obligations &&
-                                  rp.obligations.length > 0 && (
-                                    <div className="mb-3">
-                                      <p className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-1">
-                                        {translations[language].obligations}:
-                                      </p>
-                                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800 dark:text-slate-300">
-                                        {rp.obligations.map((ob, i) => (
-                                          <li key={i}>{ob}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                {rp.risks && rp.risks.length > 0 && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-1">
-                                      {translations[language].risks}:
-                                    </p>
-                                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800 dark:text-slate-300">
-                                      {rp.risks.map((rk, i) => (
-                                        <li key={i}>{rk}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeSection === "risks" && (
-          <div className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
-              {translations[language].riskRadar}
-            </h3>
-            
-            <div className="mb-8">
-              <RiskMeter 
-                score={analysis.risks.reduce((acc, risk) => {
-                  if (risk.severity === 'high') return acc + 30;
-                  if (risk.severity === 'medium') return acc + 15;
-                  return acc + 5;
-                }, 0)} 
-              />
-            </div>
-
-            <div className="space-y-4">
-              {analysis.risks.map((risk) => (
-                <div
-                  key={risk.id}
-                  className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl p-6 transition-all duration-200 hover:shadow-lg"
-                >
-                  <div className="flex items-start space-x-4">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        risk.severity === 'high' ? 'bg-red-50 text-red-700' : risk.severity === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'
-                      }`}
-                    >
-                      {getRiskIcon(risk.severity)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h4 className="font-bold text-gray-900 dark:text-slate-100">
-                          {risk.clause}
-                        </h4>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            risk.severity === 'high' ? 'bg-red-50 text-red-700' : risk.severity === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'
-                          }`}
-                        >
-                          {translations[language].severity[risk.severity]}
-                        </span>
-                      </div>
-                      <p className="text-gray-700 dark:text-slate-300 mb-3">{risk.description}</p>
-                      <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">
-                          {translations[language].recommendation}:
-                        </p>
-                        <p className="text-sm text-blue-800 dark:text-blue-200">
-                          {risk.recommendation}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeSection === "actions" && (
-          <div className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
-              {translations[language].actionPoints}
-            </h3>
-            <div className="space-y-3">
-              {analysis.actionPoints.map((action, index) => (
-                <div
-                  key={index}
-                  className="flex items-start space-x-3 p-4 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl transition-all duration-200 hover:bg-white/60 dark:hover:bg-slate-800/60"
-                >
-                  <div className="flex-shrink-0 w-6 h-6 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    {index + 1}
-                  </div>
-                  <p className="text-gray-800 dark:text-slate-300">{action}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeSection === "citations" && (
-          <div className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
-              {translations[language].citations}
-            </h3>
-            <div className="space-y-4">
-              {analysis.citations.map((citation, index) => (
-                <div
-                  key={index}
-                  className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl p-6 hover:shadow-lg dark:hover:shadow-slate-700/50 transition-all duration-200"
-                >
-                  <div className="flex items-start space-x-4">
-                    <ExternalLink className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-900 dark:text-slate-100 mb-2">
-                        {citation.title}
-                      </h4>
-                      <p className="text-gray-700 dark:text-slate-300 mb-3">
-                        {citation.description}
-                      </p>
-                      <a
-                        href={citation.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
-                      >
-                        {translations[language].viewSource} →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeSection === "authenticity" && analysis.authenticity && (
-          <div className="p-8">
+        <div id="authenticity" className="p-8 border-b border-white/10 dark:border-slate-700/30">
+          {analysis.authenticity ? (
+          <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
               {translations[language].authenticityCheck}
             </h3>
@@ -815,14 +598,308 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                 </p>
             </div>
           </div>
-        )}
-
-        {activeSection === "authenticity" && !analysis.authenticity && (
+          ) : (
             <div className="p-12 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-600 dark:text-slate-400">{translations[language].runningAuth}</p>
             </div>
-        )}
+          )}
+        </div>
+
+        <div id="clauses" className="p-8 space-y-4 border-b border-white/10 dark:border-slate-700/30">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
+              {translations[language].clauseLens}
+            </h3>
+            {analysis.clauses.length > 0 ? (
+              analysis.clauses.map((clause) => (
+              <div
+                key={clause.id}
+                className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl overflow-hidden transition-all duration-200 hover:bg-white/50 dark:hover:bg-slate-800/50"
+              >
+                <button
+                  onClick={() => toggleClause(clause.id)}
+                  className="w-full p-4 text-left flex items-center justify-between transition-colors"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium border ${getRiskColor(
+                        clause.riskLevel
+                      )}`}
+                    >
+                      {getRiskIcon(clause.riskLevel)}
+                      <span className="ml-1">
+                        {translations[language].riskLevels[clause.riskLevel]}
+                      </span>
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-slate-100">
+                      {clause.title}
+                    </span>
+                  </div>
+                  {expandedClauses.has(clause.id) ? (
+                    <ChevronUp className="h-5 w-5 text-gray-400 dark:text-slate-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-400 dark:text-slate-500" />
+                  )}
+                </button>
+
+                {expandedClauses.has(clause.id) && (
+                  <div className="px-4 pb-4 space-y-4">
+                    <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-2">
+                        Original Text:
+                      </h4>
+                      <p className="text-sm text-gray-700 dark:text-slate-300 italic">
+                        {clause.originalText}
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-2">
+                        {translations[language].plainEnglish}:
+                      </h4>
+                      <p className="text-gray-700 dark:text-slate-300">{clause.simplifiedText}</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/30 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-2">
+                        {translations[language].analysis}:
+                      </h4>
+                      <p className="text-gray-700 dark:text-slate-300">{clause.explanation}</p>
+                    </div>
+
+                    {clause.rolePerspectives &&
+                      clause.rolePerspectives.length > 0 && (
+                        <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg">
+                          <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-3">
+                            {translations[language].roleViews}:
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {clause.rolePerspectives.map((rp, idx) => (
+                              <div
+                                key={idx}
+                                className="border border-gray-200 dark:border-slate-600 rounded-lg p-4 bg-white dark:bg-slate-800"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">
+                                    {rp.role}
+                                  </span>
+                                </div>
+                                {rp.interpretation && (
+                                  <div className="mb-3">
+                                    <p className="text-sm text-gray-800 dark:text-slate-300">
+                                      {rp.interpretation}
+                                    </p>
+                                  </div>
+                                )}
+                                {rp.obligations &&
+                                  rp.obligations.length > 0 && (
+                                    <div className="mb-3">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-1">
+                                        {translations[language].obligations}:
+                                      </p>
+                                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800 dark:text-slate-300">
+                                        {rp.obligations.map((ob, i) => (
+                                          <li key={i}>{ob}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                {rp.risks && rp.risks.length > 0 && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-slate-100 mb-1">
+                                      {translations[language].risks}:
+                                    </p>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800 dark:text-slate-300">
+                                      {rp.risks.map((rk, i) => (
+                                        <li key={i}>{rk}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                )}
+              </div>
+            ))
+            ) : (
+              <EmptySection message="No specific clauses were extracted from this document." />
+            )}
+          </div>
+
+        <div id="risks" className="p-8 border-b border-white/10 dark:border-slate-700/30">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
+              {translations[language].riskRadar}
+            </h3>
+            
+            <div className="mb-8">
+              <RiskMeter 
+                score={analysis.risks.reduce((acc, risk) => {
+                  if (risk.severity === 'high') return acc + 30;
+                  if (risk.severity === 'medium') return acc + 15;
+                  return acc + 5;
+                }, 0)} 
+              />
+            </div>
+
+            <div className="space-y-4">
+              {analysis.risks.length > 0 ? (
+                analysis.risks.map((risk) => (
+                <div
+                  key={risk.id}
+                  className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl p-6 transition-all duration-200 hover:shadow-lg"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        risk.severity === 'high' ? 'bg-red-50 text-red-700' : risk.severity === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'
+                      }`}
+                    >
+                      {getRiskIcon(risk.severity)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h4 className="font-bold text-gray-900 dark:text-slate-100">
+                          {risk.clause}
+                        </h4>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            risk.severity === 'high' ? 'bg-red-50 text-red-700' : risk.severity === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'
+                          }`}
+                        >
+                          {translations[language].severity[risk.severity]}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 dark:text-slate-300 mb-3">{risk.description}</p>
+                      <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">
+                          {translations[language].recommendation}:
+                        </p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          {risk.recommendation}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+              ) : (
+                <EmptySection message="No significant risks were identified." />
+              )}
+            </div>
+          </div>
+
+        {/* Negotiation Assistant */}
+        <div id="negotiation" className="p-8 border-b border-white/10 dark:border-slate-700/30">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6 flex items-center">
+            <Handshake className="w-6 h-6 mr-2 text-purple-600 dark:text-purple-400" />
+            {translations[language].negotiation}
+          </h3>
+          {analysis.negotiationPoints && analysis.negotiationPoints.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {analysis.negotiationPoints.map((point) => (
+                <div key={point.id} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl p-6 shadow-lg">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold rounded-full uppercase">
+                      {translations[language].issue}
+                    </span>
+                    <h4 className="font-bold text-gray-900 dark:text-slate-100 line-clamp-1">
+                      {point.issue}
+                    </h4>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
+                      <h5 className="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-2 flex items-center">
+                        <FileText className="w-4 h-4 mr-1" />
+                        {translations[language].counterProposal}
+                      </h5>
+                      <p className="text-sm text-gray-700 dark:text-slate-300 italic">
+                        "{point.counterProposal}"
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                      <h5 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center">
+                        <MessageSquare className="w-4 h-4 mr-1" />
+                        {translations[language].talkingPoint}
+                      </h5>
+                      <p className="text-sm text-gray-700 dark:text-slate-300">
+                        {point.talkingPoint}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptySection message="No specific negotiation points generated. The document may be balanced or low risk." />
+          )}
+        </div>
+
+        <div id="actions" className="p-8 border-b border-white/10 dark:border-slate-700/30">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
+              {translations[language].actionPoints}
+            </h3>
+            <div className="space-y-3">
+              {analysis.actionPoints.length > 0 ? (
+                analysis.actionPoints.map((action, index) => (
+                <div
+                  key={index}
+                  className="flex items-start space-x-3 p-4 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl transition-all duration-200 hover:bg-white/60 dark:hover:bg-slate-800/60"
+                >
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    {index + 1}
+                  </div>
+                  <p className="text-gray-800 dark:text-slate-300">{action}</p>
+                </div>
+              ))
+              ) : (
+                <EmptySection message="No specific action points were found." />
+              )}
+            </div>
+          </div>
+
+        <div id="citations" className="p-8 border-b border-white/10 dark:border-slate-700/30">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">
+              {translations[language].citations}
+            </h3>
+            <div className="space-y-4">
+              {analysis.citations.length > 0 ? (
+                analysis.citations.map((citation, index) => (
+                <div
+                  key={index}
+                  className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm border border-white/20 dark:border-slate-700/30 rounded-xl p-6 hover:shadow-lg dark:hover:shadow-slate-700/50 transition-all duration-200"
+                >
+                  <div className="flex items-start space-x-4">
+                    <ExternalLink className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-900 dark:text-slate-100 mb-2">
+                        {citation.title}
+                      </h4>
+                      <p className="text-gray-700 dark:text-slate-300 mb-3">
+                        {citation.description}
+                      </p>
+                      <a
+                        href={citation.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+                      >
+                        {translations[language].viewSource} →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))
+              ) : (
+                <EmptySection message="No legal citations or references were found." />
+              )}
+            </div>
+          </div>
+
+
       </div>
     </div>
   );

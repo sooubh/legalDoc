@@ -37,6 +37,7 @@ import VideoShowcaseModal from "./components/VideoShowcaseModal";
 import SettingsPage from "./pages/SettingsPage";
 import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import DocumentLibraryPage from "./pages/DocumentLibraryPage";
 
   // Define a type for the route
   export type Route =
@@ -52,7 +53,8 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
     | "video"
     | "settings"
     | "terms"
-    | "privacy";
+    | "privacy"
+    | "documents";
 
   function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -87,7 +89,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
     );
     const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>();
     const [showLoginModal, setShowLoginModal] = useState(false);
-    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  
 
     // Load local analyses from localStorage
     const loadLocalAnalyses = (): AnalysisHistoryItem[] => {
@@ -267,6 +269,20 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
             setAnalysis(prev => prev ? { ...prev, authenticity: authResult } : null);
         } catch (e) {
             console.error("Authenticity check failed", e);
+             // Even if it fails (which it shouldn't with the new service logic), ensure we don't crash
+             setAnalysis(prev => prev ? { 
+                 ...prev, 
+                 authenticity: {
+                    authenticityScore: 0,
+                    isCompliant: false,
+                    compliantWith: 'Error',
+                    redFlags: ['Authenticity check failed'],
+                    safetyScore: 0,
+                    safetyAnalysis: 'Could not perform authenticity check.',
+                    fakeIndication: 'High',
+                    recommendation: 'Manual review required.'
+                 } 
+             } : null);
         }
 
         // Save unsaved analysis to localStorage
@@ -340,21 +356,6 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
       }
     };
 
-    const handleDownloadPdf = async () => {
-      if (!analysis || !visuals) return;
-
-      setIsGeneratingPdf(true);
-      try {
-        const { generatePdfHtmlFromAnalysis } = await import("./pdfDownlode/generatePdfFromAnalysis.ts");
-        await generatePdfHtmlFromAnalysis(analysis);
-      } catch (error) {
-        console.error("Failed to generate PDF:", error);
-        alert("Failed to generate PDF. Please try again.");
-      } finally {
-        setIsGeneratingPdf(false);
-      }
-    };
-
     const handleLogout = async () => {
       try {
         await signOut(getAuth());
@@ -381,7 +382,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
       try {
         // Optimistic update
-        const previousHistory = [...analysisHistory];
+
         setAnalysisHistory(prev => prev.filter(item => item.id !== id));
 
         // If it's the currently selected analysis, clear it
@@ -617,12 +618,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
             onSelectAnalysis={handleSelectAnalysis}
             onFetchHistory={handleFetchHistory}
             onDeleteAnalysis={handleDeleteAnalysis}
-            onSave={handleSaveAnalysis}
-            onDownload={handleDownloadPdf}
-            isSaved={analysisHistory.some(
-              (item) => item.id === selectedAnalysisId
-            )}
-            isGeneratingPdf={isGeneratingPdf}
+
             user={user}
             onLogout={handleLogout}
                   onLogin={() => {
@@ -670,6 +666,23 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
       </motion.div>
     )}
 
+    {route === "documents" && (
+      <motion.div
+        key="documents"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+      >
+        <DocumentLibraryPage
+          analysisHistory={analysisHistory}
+          onSelectAnalysis={handleSelectAnalysis}
+          onDeleteAnalysis={handleDeleteAnalysis}
+          language={language}
+        />
+      </motion.div>
+    )}
+
     {route === "results" && (
       <motion.div
         key="results"
@@ -711,19 +724,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
                 />
               </div>
 
-              {/* Visualizations */}
-              <div className="bg-card text-card-foreground rounded-2xl shadow border border-border p-4 md:p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="font-semibold text-foreground">Visualizations</div>
-                  <button
-                    onClick={() => setFs({ key: "visuals" })}
-                    className="text-xs px-3 py-1 rounded border border-input hover:bg-accent hover:text-accent-foreground"
-                  >
-                    Fullscreen
-                  </button>
-                </div>
-                <Visualizations visuals={visuals} isLoading={isVisualsLoading} />
-              </div>
+
             </div>
 
             {/* Original Document */}

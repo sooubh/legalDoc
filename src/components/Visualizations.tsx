@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import type { VisualizationBundle, ProcessFlow } from "../types/legal";
 import MermaidDiagram from "./MermaidDiagram";
-import LegalNoticeTimelinePOV from "./LegalNoticeTimelinePOV";
+import SmartTimeline from "./SmartTimeline";
 interface VisualizationsProps {
   visuals: VisualizationBundle | null;
   isLoading?: boolean;
@@ -222,7 +222,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
             </div>
           </div>
           <div className="max-h-[600px] overflow-auto">
-            <LegalNoticeTimelinePOV
+            <SmartTimeline
               pov={selectedPOV}
               timelineData={visuals?.povTimeline}
               isLoading={isLoading}
@@ -325,7 +325,7 @@ const Visualizations: React.FC<VisualizationsProps> = ({
               </div>
             </div>
             <div className="flex-1 overflow-auto p-4">
-              <LegalNoticeTimelinePOV
+              <SmartTimeline
                 pov={selectedPOV}
                 timelineData={visuals.povTimeline}
                 isLoading={isLoading}

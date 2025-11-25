@@ -37,41 +37,6 @@ export interface TimelineEvent {
   date: string;
   event: string;
   summary: string;
-}
-
-export interface AuthenticityAnalysis {
-  authenticityScore: number; // 0-100
-  isCompliant: boolean;
-  compliantWith: string; // e.g., "Indian Contract Act, 1872"
-  redFlags: string[];
-  safetyScore: number; // 0-100
-  safetyAnalysis: string;
-  fakeIndication: "Low" | "Medium" | "High";
-  recommendation: string;
-}
-
-export interface DocumentAnalysis {
-  id: string;
-  documentType: string;
-  plainSummary: string;
-  clauses: Clause[];
-  risks: Risk[];
-  actionPoints: string[];
-  citations: Citation[];
-  timeline?: TimelineEvent[];
-  overallRiskLevel?: 'low' | 'medium' | 'high';
-  authenticity?: AuthenticityAnalysis;
-}
-
-export type EnforceabilityStatus = 'enforceable' | 'restricted' | 'not_enforceable' | 'uncertain';
-
-export interface ClauseEnforceabilityResult {
-  clause: string;
-  jurisdiction: string;
-  simplifiedMeaning: string;
-  status: EnforceabilityStatus;
-  jurisdictionNotes: string;
-  references: Citation[]; // legal principles, statutes, or cases if available
   alternatives?: string[]; // suggested alternative interpretations or language
 }
 
@@ -82,7 +47,10 @@ export interface POVTimelineEvent {
   date: string;
   description: string;
   color: string;
-  icon: 'file' | 'clock' | 'warning' | 'check';
+  icon: 'file' | 'clock' | 'warning' | 'check' | 'money' | 'calendar' | 'contract' | 'alert';
+  type?: 'deadline' | 'obligation' | 'event';
+  consequence?: string;
+  timeRemaining?: string;
 }
 
 export interface POVTimelineData {
@@ -132,4 +100,36 @@ export interface VisualizationBundle {
   flows: ProcessFlow[];
   responsibilities: ResponsibilityMatrix | null;
   povTimeline?: POVTimelineData; // New POV-based timeline data
+}
+
+export interface AuthenticityAnalysis {
+  authenticityScore: number;
+  safetyScore: number;
+  isCompliant: boolean;
+  compliantWith: string;
+  fakeIndication: 'Low' | 'Medium' | 'High';
+  redFlags: string[];
+  recommendation: string;
+}
+
+export interface NegotiationPoint {
+  id: string;
+  clauseId: string;
+  originalClause: string;
+  issue: string;
+  counterProposal: string;
+  talkingPoint: string;
+}
+
+export interface DocumentAnalysis {
+  id: string;
+  documentType: string;
+  plainSummary: string;
+  clauses: Clause[];
+  risks: Risk[];
+  actionPoints: string[];
+  citations: Citation[];
+  negotiationPoints: NegotiationPoint[];
+  authenticity?: AuthenticityAnalysis;
+  timeline?: POVTimelineData;
 }
