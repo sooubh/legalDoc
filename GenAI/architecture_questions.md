@@ -34,3 +34,4 @@ Error handling and resilience are built into the communication patterns. The gem
 
 The real-time synchronization capabilities demonstrate how components react to external state changes. When a user profile is updated in Firestore (potentially from another device or session), the real-time subscription callback in the App component automatically receives the update and synchronizes the local state, ensuring that language preferences, theme settings, and other user preferences are immediately reflected in the UI without requiring page refreshes or manual synchronization actions.
 
+how
